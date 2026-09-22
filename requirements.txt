@@ -1,0 +1,5 @@
+ultralytics>=8.4.0,<9
+opencv-python>=4.8,<6
+numpy>=1.26,<3
+# ByteTrack's assignment solver; explicit so offline runs never auto-install it.
+lap>=0.5.12,<0.6
