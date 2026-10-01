@@ -7,9 +7,9 @@ No model training, web server, or real-time requirements.
 
 ## Side-view demo
 
-[![Watch the side-view sample video](docs/sideview-preview.jpg)](assets/sideview.MOV)
+[![Watch the annotated side-view demo](docs/sideview-preview.jpg)](docs/sideview-annotated.mp4)
 
-[Watch or download the side-view video](assets/sideview.MOV) (MOV, approximately 20 seconds). This is source footage used to test the tracking pipeline.
+[Watch or download the annotated side-view video](docs/sideview-annotated.mp4) (MP4, approximately 20 seconds), showing player and ball tracking with the stats overlay.
 
 ## Setup and run
 

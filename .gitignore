@@ -14,5 +14,5 @@ input/*
 output/*
 !output/.gitkeep
 
-# Include the source video linked from the README demo.
-!assets/sideview.MOV
+# Include the annotated video linked from the README demo.
+!docs/sideview-annotated.mp4
