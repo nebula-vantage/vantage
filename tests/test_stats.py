@@ -1,6 +1,7 @@
 import unittest
 
-from stats import aggregate, crossing_events, speed_series
+from stats import aggregate, crossing_events, event_records, speed_series, tracking_summary
+from records import BounceEvent, Detection, FrameRecord
 from tests.helpers import record, sample, settings
 
 
@@ -55,3 +56,30 @@ class StatsTests(unittest.TestCase):
         self.assertEqual(result['in_out_calls'], [])
         self.assertEqual(result['quality']['ball_detection_coverage'], 0)
         self.assertTrue(any('Low ball' in w for w in result['quality']['warnings']))
+        self.assertEqual(result['quality']['status'], 'insufficient_evidence')
+
+    def test_event_counts_rally_evidence_and_chronological_ledger(self):
+        samples = [sample(i, y=5+i/10) for i in range(40)]
+        records = [record(i) for i in range(40)]
+        bounce = BounceEvent(5, 5/30, (100, 100), (2, 3), 'IN', .8, ['heuristic_bounce'])
+        result, _, _ = aggregate(records, samples, [bounce], 30, 640, 360, self.cfg)
+        self.assertEqual(result['shot_count'], sum(result['shots_per_rally']))
+        self.assertEqual(result['rallies'][0]['ball_observation_coverage'], 1)
+        self.assertAlmostEqual(result['rallies'][0]['duration_s'], 39/30)
+        events = event_records(result)
+        self.assertEqual([e['type'] for e in events], ['bounce_candidate', 'net_crossing'])
+        self.assertEqual(events[1]['rally_id'], 1)
+        self.assertEqual([e['event_id'] for e in events], [1, 2])
+
+    def test_player_track_visibility_and_ball_contiguity(self):
+        records = [record(i, track_id=1 if i < 3 else 2) for i in range(5)]
+        player = Detection((20, 20, 40, 80), .9, 7, 0)
+        for i in (0, 1, 4):
+            records[i].players = [player]
+        records[2].ball = None
+        result = tracking_summary(records, 30)
+        self.assertEqual(result['player_detection_coverage'], 3/5)
+        self.assertEqual(result['player_track_count'], 1)
+        self.assertAlmostEqual(result['player_tracks'][0]['observed_duration_s'], 3/30)
+        self.assertEqual(result['ball_track_count'], 2)
+        self.assertAlmostEqual(result['longest_contiguous_ball_observation_s'], 2/30)

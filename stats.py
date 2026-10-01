@@ -119,6 +119,60 @@ def segment_rallies(records, samples, crossings, speeds, config):
     return rallies
 
 
+def tracking_summary(records, fps):
+    """Observation coverage and per-track visibility, not player identities."""
+    players = {}
+    ball_ids = set()
+    player_frames = 0
+    longest_run = run = 0
+    previous_ball_id = None
+    for record in records:
+        player_frames += bool(record.players)
+        seen = set()
+        for player in record.players:
+            if player.track_id is None or player.track_id in seen:
+                continue
+            seen.add(player.track_id)
+            entry = players.setdefault(player.track_id, {
+                "track_id": player.track_id, "first_seen_s": record.time_s,
+                "last_seen_s": record.time_s, "observed_frames": 0})
+            entry["last_seen_s"] = record.time_s
+            entry["observed_frames"] += 1
+        ball = record.ball
+        if ball is None:
+            run = 0
+            previous_ball_id = None
+        else:
+            if ball.track_id is not None:
+                ball_ids.add(ball.track_id)
+            run = run + 1 if run and ball.track_id == previous_ball_id else 1
+            previous_ball_id = ball.track_id
+            longest_run = max(longest_run, run)
+    for entry in players.values():
+        entry["observed_duration_s"] = entry["observed_frames"] / fps
+    return {"player_detection_coverage": player_frames / len(records) if records else 0.0,
+            "frames_with_players": player_frames,
+            "max_simultaneous_player_detections": max((len(r.players) for r in records), default=0),
+            "player_track_count": len(players),
+            "player_tracks": sorted(players.values(), key=lambda p: p["track_id"]),
+            "ball_track_count": len(ball_ids),
+            "longest_contiguous_ball_observation_s": longest_run / fps}
+
+
+def event_records(stats):
+    """Timestamped evidence for review; inferred events are explicitly labeled."""
+    events = []
+    for crossing in stats["crossing_events"]:
+        rally_id = next((r["id"] for r in stats["rallies"]
+                         if crossing["time_s"] in r["crossing_times_s"]), None)
+        events.append({**crossing, "type": "net_crossing", "rally_id": rally_id,
+                       "quality_flags": ["heuristic_net_crossing"]})
+    events.extend({**bounce, "type": "bounce_candidate"} for bounce in stats["in_out_calls"])
+    events.extend(stats.get("motion", {}).get("hit_candidates", []))
+    events.sort(key=lambda event: (event["time_s"], event["type"]))
+    return [{"event_id": i + 1, **event} for i, event in enumerate(events)]
+
+
 def aggregate(records, samples, bounces, fps, width, height, config):
     speeds, durations = speed_series(samples, config)
     crossings = crossing_events(samples, config)
@@ -129,11 +183,22 @@ def aggregate(records, samples, bounces, fps, width, height, config):
     duration = sum(durations)
     average = sum(s * dt for s, dt in zip(speeds, durations) if s is not None) / duration if duration else None
     coverage = observed / len(records) if records else 0.0
+    status = "insufficient_evidence" if not observed else (
+        "limited_evidence" if coverage < config["stats"]["low_coverage_fraction"] else "heuristic")
+    rally_details = []
+    for rally in rallies:
+        supported = [s for r, s in zip(records, samples) if rally.start_s <= r.time_s <= rally.end_s]
+        rally_coverage = sum(s is not None and s.source == "observed" for s in supported) / len(supported)
+        rally_details.append({**asdict(rally), "shots": rally.shots,
+                              "duration_s": rally.end_s - rally.start_s,
+                              "ball_observation_coverage": rally_coverage,
+                              "quality_flags": ["heuristic_rally"] + (
+                                  ["low_ball_coverage"] if rally_coverage < config["stats"]["low_coverage_fraction"] else [])})
     warnings = [
         "Speed is a court-plane projection, not true airborne ball speed.",
         "Bounce calls and net-crossing shot counts are heuristic estimates.",
         "Rallies are grouped by ball inactivity/loss, not official scoring rules.",
-        "ByteTrack IDs can change after occlusion; COCO may miss pickleballs and paddles.",
+        "Ball track IDs change after prolonged loss; COCO may miss pickleballs and paddles.",
     ]
     if coverage < config["stats"]["low_coverage_fraction"]:
         warnings.append("Low ball detection coverage: zero counts do not establish that no play occurred.")
@@ -146,16 +211,21 @@ def aggregate(records, samples, bounces, fps, width, height, config):
         "video": {"width": width, "height": height, "fps": fps,
                   "frame_count": len(records), "duration_s": len(records) / fps},
         "rally_count": len(rallies),
+        "shot_count": len(crossings),
+        "crossing_events": crossings,
         "shots_per_rally": [r.shots for r in rallies],
         "longest_rally": max((r.shots for r in rallies), default=0),
         "avg_ball_speed_kmh": average,
         "in_out_calls": [asdict(b) for b in bounces],
-        "rallies": [{**asdict(r), "shots": r.shots} for r in rallies],
-        "quality": {"ball_detection_coverage": coverage,
+        "bounce_candidate_count": len(bounces),
+        "rallies": rally_details,
+        "tracking_summary": tracking_summary(records, fps),
+        "quality": {"status": status, "ball_detection_coverage": coverage,
                     "observed_frames": observed, "interpolated_frames": interpolated,
                     "coasted_frames": coasted,
                     "interpolation_fraction": interpolated / len(records) if records else 0.0,
                     "valid_speed_duration_s": duration,
+                    "valid_speed_coverage": duration / (len(records) / fps) if records else 0.0,
                     "measurement_type": "heuristic_court_projection",
                     "warnings": warnings},
     }

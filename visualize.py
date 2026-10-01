@@ -1,5 +1,6 @@
 """Native-resolution overlays and checked MP4 encoding."""
 from collections import deque
+from bisect import bisect_right
 from pathlib import Path
 import math
 
@@ -8,7 +9,7 @@ import numpy as np
 
 
 class Overlay:
-    def __init__(self, width, height, bounces, rallies, config):
+    def __init__(self, width, height, bounces, rallies, config, ball_coverage=None):
         self.config = config
         self.visual = config["visual"]
         self.width, self.height = width, height
@@ -22,6 +23,8 @@ class Overlay:
         self.bounce_index = 0
         self.active_bounces = deque()
         self.rally_index = -1
+        self.crossing_times = sorted(t for rally in rallies for t in rally.crossing_times_s)
+        self.ball_coverage = ball_coverage
 
     def point(self, point):
         # Clip extreme homography/detector values before passing C integer APIs.
@@ -44,7 +47,7 @@ class Overlay:
             label = f"Player {player.track_id}" if player.track_id is not None else "Player ?"
             self.box(frame, player, v["player_color"], label)
         if record.ball is not None:
-            self.box(frame, record.ball, v["ball_color"])
+            self.box(frame, record.ball, v["ball_color"], f"Ball {record.ball.track_id}")
         if sample is None or sample.segment_id != self.segment:
             self.trail.clear()
         self.segment = sample.segment_id if sample is not None else None
@@ -75,11 +78,7 @@ class Overlay:
         while (self.rally_index + 1 < len(self.rallies) and
                self.rallies[self.rally_index + 1].crossing_times_s[0] <= record.time_s):
             self.rally_index += 1
-        rally = self.rallies[self.rally_index] if self.rally_index >= 0 else None
-        shots = sum(t <= record.time_s for t in rally.crossing_times_s) if rally else 0
-        lines = [f"Rallies (est.): {self.rally_index + 1} | Shots: {shots}",
-                 f"Projected speed: {speed:.1f} km/h" if speed is not None else "Projected speed: unavailable",
-                 "Ball: " + (sample.source if sample else "not detected")]
+        lines = self.stats_lines(record, sample, speed)
         margin = max(1, round(v["margin"] * self.scale))
         line_height = max(1, round(v["line_height"] * self.scale))
         panel_width = min(self.width, max(cv2.getTextSize(s, cv2.FONT_HERSHEY_SIMPLEX, self.font, self.stroke)[0][0] for s in lines) + 2 * margin)
@@ -90,6 +89,19 @@ class Overlay:
         for i, line in enumerate(lines):
             self.text(frame, line, (margin, margin + (i + 1) * line_height), v["text_color"])
         return frame
+
+    def stats_lines(self, record, sample, speed):
+        rally = self.rallies[self.rally_index] if self.rally_index >= 0 else None
+        active = rally is not None and rally.start_s <= record.time_s <= rally.end_s
+        shots = bisect_right(rally.crossing_times_s, record.time_s) if active else 0
+        lines = [f"Rallies (est.): {self.rally_index + 1} | Shots (est.): {bisect_right(self.crossing_times, record.time_s)}",
+                 f"Current rally: {rally.id} | Shots: {shots}" if active else "Current rally: no supported rally",
+                 f"Projected speed: {speed:.1f} km/h" if speed is not None else "Projected speed: unavailable",
+                 f"Ball: {sample.source if sample else 'not detected'} | Players: {len(record.players)}"]
+        if self.ball_coverage is not None:
+            status = "limited evidence" if self.ball_coverage < self.config["stats"]["low_coverage_fraction"] else "estimated stats"
+            lines.append(f"Video ball coverage: {self.ball_coverage:.0%} | {status}")
+        return lines
 
 
 def encoded_size(width, height):
@@ -107,7 +119,8 @@ def render_video(input_path: Path, output_path: Path, records, samples, bounces,
             raise RuntimeError("Could not reopen input for annotation.")
         if not writer.isOpened():
             raise RuntimeError("Could not initialize MP4 writer. Check output permissions and OpenCV codec support.")
-        overlay = Overlay(width, height, bounces, rallies, config)
+        coverage = sum(r.ball is not None for r in records) / len(records) if records else 0.0
+        overlay = Overlay(width, height, bounces, rallies, config, coverage)
         for i, record in enumerate(records):
             ok, frame = capture.read()
             if not ok:

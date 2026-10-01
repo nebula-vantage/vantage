@@ -13,3 +13,6 @@ input/*
 !input/.gitkeep
 output/*
 !output/.gitkeep
+
+# Include the source video linked from the README demo.
+!assets/sideview.MOV

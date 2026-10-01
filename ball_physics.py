@@ -141,6 +141,12 @@ def detect_bounces(records: list[FrameRecord], samples: list[TrajectorySample | 
             court_point = project(contact, homography, config["court"]["projection_epsilon"])
             if court_point is None:
                 continue
+            # Airborne turns near the projective horizon can map tens of metres
+            # beyond the court. Do not label those as supported floor contacts.
+            margin = cfg["max_outside_court_m"]
+            if not (-margin <= court_point[0] <= config["court"]["width_m"] + margin
+                    and -margin <= court_point[1] <= config["court"]["length_m"] + margin):
+                continue
             call, flags = in_out(court_point, config)
             candidates.append(BounceEvent(sample.frame_index, t, contact, court_point,
                                            call, improvement, ["heuristic_bounce", *flags]))

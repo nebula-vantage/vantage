@@ -1,57 +1,36 @@
-"""Pretrained YOLO + persistent ByteTrack; no training or custom tracker."""
+"""One YOLO inference pass, player ByteTrack, and independent ball motion tracking."""
 import contextlib
 import math
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
+from ball_tracker import BallTracker
 from records import Detection, FrameRecord
-
-
-class BallSelector:
-    def __init__(self, config: dict, width: int, height: int):
-        self.config = config["detection"]
-        self.diagonal = math.hypot(width, height)
-        self.last: tuple[float, Detection] | None = None
-
-    def select(self, candidates: list[Detection], time_s: float) -> Detection | None:
-        candidates = [b for b in candidates if b.confidence >= self.config["ball_confidence"]]
-        if self.last is not None:
-            last_time, last_ball = self.last
-            dt = time_s - last_time
-            if dt <= self.config["candidate_reset_s"]:
-                limit = self.diagonal * (self.config["motion_slack_diagonals"]
-                                        + self.config["max_motion_diagonals_s"] * dt)
-                candidates = [b for b in candidates
-                              if math.dist(b.center, last_ball.center) <= limit]
-        selected = max(candidates, key=lambda b: b.confidence, default=None)
-        if selected is not None:
-            self.last = (time_s, selected)
-        return selected
 
 
 class Detector:
     def __init__(self, config: dict, width: int, height: int, fps: float, work_dir: Path):
         self.config = config
-        self.selector = BallSelector(config, width, height)
-        self.tracker_path = work_dir / "bytetrack.yaml"
+        self.ball_tracker = BallTracker(config, width, height)
+        self.raw_balls: list[Detection] = []
         tracker = dict(config["tracker"])
-        # Ultralytics initializes ByteTrack with a nominal 30 FPS; its buffer is
-        # expressed in frames, so convert using the actual input frame rate here.
+        # BYTETracker's buffer is measured in frames. Older releases default
+        # to a nominal 30 FPS (unit scaling); newer releases use frames directly.
         tracker["track_buffer"] = max(1, round(tracker.pop("track_buffer_s") * fps))
-        self.tracker_path.write_text("\n".join(
-            f"{key}: {str(value).lower() if isinstance(value, bool) else value}"
-            for key, value in tracker.items()) + "\n")
         try:
             with contextlib.redirect_stdout(sys.stderr):
                 from ultralytics import YOLO
+                from ultralytics.trackers.byte_tracker import BYTETracker
                 from ultralytics.utils import LOGGER
                 for handler in LOGGER.handlers:
                     if hasattr(handler, "setStream"):
                         handler.setStream(sys.stderr)
                 self.model = YOLO(config["model"]["path"])
+                self.player_tracker = BYTETracker(SimpleNamespace(**tracker))
         except Exception as exc:
             raise RuntimeError(
-                f"Could not load model {config['model']['path']!r}. Install requirements.txt; "
+                f"Could not load model {config['model']['path']!r} or player tracker. Install requirements.txt; "
                 "the first run needs internet to download weights. "
                 "For offline use, pre-download weights and set CONFIG['model']['path']. "
                 f"Details: {exc}") from exc
@@ -63,29 +42,41 @@ class Detector:
         cfg = self.config["detection"]
         classes = self.config["model"]["classes"]
         with contextlib.redirect_stdout(sys.stderr):
-            result = self.model.track(
-                frame, persist=True, tracker=str(self.tracker_path),
-                classes=list(classes.values()), conf=cfg["confidence"], iou=cfg["iou"],
+            result = self.model.predict(
+                frame, classes=list(classes.values()), conf=cfg["confidence"], iou=cfg["iou"],
                 imgsz=cfg["image_size"], device=cfg["device"],
                 max_det=cfg["max_detections"], verbose=False, save=False)[0]
         record = FrameRecord(index, time_s)
-        balls = []
+        self.raw_balls = []
         boxes = result.boxes
-        if boxes is None:
-            return record
-        ids = boxes.id.cpu().tolist() if boxes.id is not None else [None] * len(boxes)
-        for box, score, class_id, track_id in zip(
-                boxes.xyxy.cpu().tolist(), boxes.conf.cpu().tolist(),
-                boxes.cls.cpu().tolist(), ids):
-            if not all(math.isfinite(v) for v in [*box, score]):
-                continue
-            detection = Detection(tuple(box), float(score),
-                                  int(track_id) if track_id is not None else None, int(class_id))
-            if class_id == classes["player"] and score >= cfg["player_confidence"]:
-                record.players.append(detection)
-            elif class_id == classes["ball"]:
-                balls.append(detection)
-            elif class_id == classes["paddle"] and score >= cfg["paddle_confidence"]:
-                record.paddles.append(detection)
-        record.ball = self.selector.select(balls, time_s)
+        if boxes is not None:
+            boxes = boxes.cpu()
+            player_indices = []
+            for i, (box, score, class_id) in enumerate(zip(
+                    boxes.xyxy.tolist(), boxes.conf.tolist(), boxes.cls.tolist())):
+                if (not all(math.isfinite(v) for v in [*box, score, class_id])
+                        or box[2] <= box[0] or box[3] <= box[1]):
+                    continue
+                detection = Detection(tuple(box), float(score), None, int(class_id))
+                if class_id == classes["player"]:
+                    player_indices.append(i)
+                elif class_id == classes["ball"]:
+                    self.raw_balls.append(detection)
+                elif class_id == classes["paddle"] and score >= cfg["paddle_confidence"]:
+                    # Paddles are raw observations for contact suppression, not identities.
+                    record.paddles.append(detection)
+            # Update even on empty player frames so missing-track lifetimes advance.
+            tracked = self.player_tracker.update(boxes[player_indices].numpy(), frame)
+            for row in tracked:
+                x1, y1, x2, y2, track_id, score, class_id, _ = row
+                if score >= cfg["player_confidence"]:
+                    record.players.append(Detection((float(x1), float(y1), float(x2), float(y2)),
+                                                    float(score), int(track_id), int(class_id)))
+        else:
+            # Standard detection Results use empty Boxes rather than None, but
+            # still age the player tracker if an adapter returns no boxes.
+            import numpy as np
+            from ultralytics.engine.results import Boxes
+            self.player_tracker.update(Boxes(np.empty((0, 6)), frame.shape[:2]), frame)
+        record.ball = self.ball_tracker.select(self.raw_balls, time_s)
         return record
