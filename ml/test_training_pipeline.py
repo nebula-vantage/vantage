@@ -90,6 +90,23 @@ class DatasetTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 external_samples(folder, [{"dir": "ws__proj__v1", "classes": {"Pickleball": "pickle"}}])
 
+    def test_external_caps_and_only_with_ball(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "ds"
+            (root / "train" / "images").mkdir(parents=True)
+            (root / "train" / "labels").mkdir(parents=True)
+            for i in range(10):
+                (root / "train" / "images" / f"{i}.jpg").write_bytes(b"x")
+                (root / "train" / "labels" / f"{i}.txt").write_text("0 0.5 0.5 0.01 0.01\n" if i % 2 else "")
+            (root / "data.yaml").write_text(yaml.safe_dump({"names": ["ball"]}))
+            entry = {"dir": "ds", "classes": {"ball": "ball"}}
+            self.assertEqual(len(external_samples(folder, [entry])), 10)
+            only = external_samples(folder, [{**entry, "only_with_ball": True}])
+            self.assertEqual(sorted(s[1] for s in only), [f"ds__train__{i}" for i in (1, 3, 5, 7, 9)])
+            capped = external_samples(folder, [{**entry, "max_train": 3}])
+            self.assertEqual(len(capped), 3)
+            self.assertEqual(capped, external_samples(folder, [{**entry, "max_train": 3}]), "deterministic")
+
 
 if __name__ == "__main__":
     unittest.main()

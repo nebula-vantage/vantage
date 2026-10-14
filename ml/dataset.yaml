@@ -10,16 +10,33 @@ val_fraction: 0.15
 # Hand labels from ml/label_ball.py: every ml/labels/*.json except holdout videos.
 labels: ml/labels
 
-# Public datasets downloaded with ml/fetch_roboflow.py into ml/external/<dir>.
-# classes maps each dataset class name to player | ball | paddle; other classes are dropped.
-# Example:
-#   - dir: someworkspace__pickleball-ball__v2
-#     classes: {pickleball: ball}
-external: []
+# Public datasets downloaded with ml/fetch_roboflow.py into ml/external/<dir>
+# (attribution in ml/DATA_SOURCES.md). classes maps the dataset's class names to
+# player | ball | paddle; unmapped classes are dropped. Player is always pseudo-labeled by
+# the teacher for consistency (sources disagree on spectators/officials); paddle comes from
+# the two sources with thorough paddle labels. max_train/max_val cap each source so no single
+# broadcast dominates; only_with_ball drops images from sources that leave many visible balls
+# unlabeled. Reviewed visually 2026-10-14. Excluded: hughs-workspace (tennis-ball close-ups),
+# noahs-workspace (tennis broadcasts), pickleball-5pshr (padel courts).
+external:
+  - {dir: dustins-workspace-huvdc__pickleball-pen-ball-tracking__v1, classes: {pickleball: ball}, max_train: 2000, max_val: 150}
+  - {dir: michael-chen-debbx__pickleball-6douw__v5, classes: {Ball: ball}, max_train: 1200, max_val: 150}
+  - {dir: hemel__pickleball-cedmo__v13, classes: {ball: ball}, max_train: 1200, max_val: 150}
+  - {dir: pickleball-ball-detection__pickleball-detector__v3, classes: {pickleball: ball}, max_train: 1000, max_val: 150}
+  - {dir: solarpanel-ypuxj__pickleball-perception__v2, classes: {ball: ball, paddle: paddle}, max_train: 1000, max_val: 150}
+  - {dir: dallin-ott-zvkrj__pickleball-aoyfy__v4, classes: {pickleball: ball}, max_val: 150}
+  - {dir: racket-ai__pickleball-iiv9m__v1, classes: {ball: ball, paddle: paddle}, max_val: 150}
+  - {dir: simplygabe-uvihf__pickleball-yeglr__v1, classes: {ball: ball}, only_with_ball: true, max_val: 150}
+  - {dir: akture-ml__waterloo-pickleball__v1, classes: {pickleball: ball}}
+  - {dir: s-workspace-zbpen__pickleball-7kgpr__v3, classes: {ball: ball}}
+  - {dir: pickle-ball-mflop__pickle-ball-detection-side-view__v1, classes: {Ball: ball}}
+  - {dir: luiss-workspace-99bfi__pickleball-night-i7s4u__v2, classes: {ball: ball}, only_with_ball: true}
+  - {dir: fahads-team__pickleball-detection-tqihn__v1, classes: {ball: ball}, max_train: 200, max_val: 50}
 
-# Classes a source does not label (player/paddle for ball-only data) are pseudo-labeled
-# by the generic COCO model so the fine-tuned model keeps detecting them.
+# Classes a source does not label (player everywhere, paddle for most sources) are
+# pseudo-labeled by the generic COCO model so the fine-tuned model keeps detecting them.
 teacher:
   weights: yolo26n.pt
   imgsz: 1280
+  device: mps
   confidence: {player: 0.40, paddle: 0.30}

@@ -69,6 +69,7 @@ def external_samples(external_root, entries):
         unknown = [c for c in entry["classes"].values() if c not in TRAIN_CLASSES]
         if unknown:
             raise SystemExit(f"{entry['dir']}: unknown target classes {unknown}; use {TRAIN_CLASSES}")
+        per_split = {"train": [], "val": []}
         for folder, split in (("train", "train"), ("test", "train"), ("valid", "val")):
             for image in sorted((root / folder / "images").glob("*")) if (root / folder / "images").exists() else []:
                 if image.suffix.lower() not in IMAGE_SUFFIXES:
@@ -82,8 +83,18 @@ def external_samples(external_root, entries):
                     target = mapping.get(int(parts[0]))
                     if target:
                         rows.append((target, [float(v) for v in parts[1:]]))
-                samples.append((split, f"{entry['dir']}__{folder}__{image.stem}", entry["dir"], image, rows,
-                                set(entry["classes"].values())))
+                # Datasets that leave many visible balls unlabeled would teach the model to
+                # ignore real balls; only_with_ball keeps just the images with a ball label.
+                if entry.get("only_with_ball") and not any(c == "ball" for c, _ in rows):
+                    continue
+                per_split[split].append((split, f"{entry['dir']}__{folder}__{image.stem}", entry["dir"], image, rows,
+                                         set(entry["classes"].values())))
+        for split, items in per_split.items():
+            cap = entry.get(f"max_{split}")
+            if cap is not None and len(items) > cap:
+                # Deterministic subsample: same images on every build.
+                items = sorted(items, key=lambda s: hashlib.sha1(s[1].encode()).hexdigest())[:cap]
+            samples.extend(sorted(items, key=lambda s: s[1]))
     return samples
 
 
@@ -94,6 +105,7 @@ class Teacher:
         from ultralytics import YOLO
         self.model = YOLO(str(ROOT / spec["weights"]))
         self.imgsz = spec["imgsz"]
+        self.device = spec.get("device")
         self.confidence = spec["confidence"]
         self.ids = {i: vantage_class(n) for i, n in self.model.names.items() if vantage_class(n) in self.confidence}
 
@@ -102,7 +114,7 @@ class Teacher:
         if not wanted:
             return []
         result = self.model.predict(image, imgsz=self.imgsz, conf=min(self.confidence.values()),
-                                    classes=wanted, verbose=False)[0]
+                                    classes=wanted, device=self.device, verbose=False)[0]
         return [(self.ids[int(c)], b) for b, c, s in zip(result.boxes.xyxy.tolist(), result.boxes.cls.tolist(),
                                                          result.boxes.conf.tolist())
                 if s >= self.confidence[self.ids[int(c)]]]

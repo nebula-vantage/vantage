@@ -23,6 +23,7 @@ def main():
     parser.add_argument("--weights", type=Path, default=ROOT / "yolo26n.pt")
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--patience", type=int, default=20, help="stop after this many epochs without improvement")
+    parser.add_argument("--hours", type=float, help="time budget; overrides --epochs and fits the LR schedule to it")
     parser.add_argument("--imgsz", type=int, default=1280)
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--device", default="mps")
@@ -38,7 +39,8 @@ def main():
     model = YOLO(str(args.weights))
     model.train(data=str(args.data), epochs=args.epochs, patience=args.patience, imgsz=args.imgsz,
                 batch=args.batch, device=args.device, workers=args.workers, project=str(project),
-                name=args.name, exist_ok=args.overwrite, seed=0, deterministic=False, plots=True)
+                name=args.name, exist_ok=args.overwrite, seed=0, deterministic=False, plots=True,
+                **({"time": args.hours} if args.hours else {}))
 
     run = project / args.name
     data_manifest = Path(args.data).parent / "manifest.json"
