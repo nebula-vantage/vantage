@@ -95,8 +95,10 @@ diagonal (`--radius-diagonals`). `--export-centers` writes the
 ## 4. Fine-tune
 
 ```sh
-# a. Public data (needs a free key: roboflow.com -> Settings -> API Keys)
-export ROBOFLOW_API_KEY=...
+# a. Public data (free key: roboflow.com -> Settings -> API Keys). Store it once, privately,
+#    outside the repo (or export ROBOFLOW_API_KEY for the session):
+mkdir -p ~/.config/vantage && read -rs "?Roboflow API key: " KEY && printf %s "$KEY" > ~/.config/vantage/roboflow_api_key \
+  && chmod 600 ~/.config/vantage/roboflow_api_key && unset KEY
 .venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION --info   # check license/classes
 .venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION          # download + attribution
 #    then add it to ml/dataset.yaml under external: with its class mapping

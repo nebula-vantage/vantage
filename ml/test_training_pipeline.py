@@ -6,6 +6,10 @@ import unittest
 import yaml
 
 from build_dataset import external_samples, split_for, video_samples, yolo_line
+import os
+from unittest import mock
+
+import fetch_roboflow
 from fetch_roboflow import license_problem, parse_id
 from labeling import save_labels
 from vantage_classes import canonical_map, vantage_class
@@ -26,6 +30,17 @@ class LicenseTests(unittest.TestCase):
             self.assertIsNone(license_problem(ok), ok)
         for bad in ("CC BY-NC 4.0", "CC BY-NC-SA 4.0", "CC BY-ND 4.0", "", None, "Private"):
             self.assertIsNotNone(license_problem(bad), bad)
+
+    def test_api_key_from_environment_then_private_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            key_file = Path(folder) / "roboflow_api_key"
+            with mock.patch.object(fetch_roboflow, "KEY_FILE", key_file), \
+                    mock.patch.dict(os.environ, {}, clear=True):
+                self.assertIsNone(fetch_roboflow.api_key())
+                key_file.write_text("file-key\n")
+                self.assertEqual(fetch_roboflow.api_key(), "file-key")
+                with mock.patch.dict(os.environ, {"ROBOFLOW_API_KEY": "env-key"}):
+                    self.assertEqual(fetch_roboflow.api_key(), "env-key")
 
     def test_parse_id(self):
         self.assertEqual(parse_id("acme/pickle-ball/3"), ("acme", "pickle-ball", 3))

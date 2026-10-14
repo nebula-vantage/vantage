@@ -1,7 +1,10 @@
 """Download a public Roboflow Universe dataset version in YOLO format, with a license check.
 
-    export ROBOFLOW_API_KEY=...          # free account: roboflow.com -> Settings -> API Keys
     .venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION
+
+The API key (free account: roboflow.com -> Settings -> API Keys) is read from the
+ROBOFLOW_API_KEY environment variable, else from ~/.config/vantage/roboflow_api_key
+(outside the repository, so it cannot be committed). Never put the key in the repo.
 
 The ID is the last part of a Universe URL:
 https://universe.roboflow.com/WORKSPACE/PROJECT/dataset/VERSION
@@ -26,6 +29,15 @@ ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.roboflow.com"
 EXTERNAL = ROOT / "ml" / "external"
 SOURCES = ROOT / "ml" / "DATA_SOURCES.md"
+KEY_FILE = Path.home() / ".config" / "vantage" / "roboflow_api_key"
+
+
+def api_key():
+    """Key from the environment, else the private key file; None if neither is set."""
+    key = os.environ.get("ROBOFLOW_API_KEY", "").strip()
+    if not key and KEY_FILE.is_file():
+        key = KEY_FILE.read_text().strip()
+    return key or None
 
 
 def license_problem(name):
@@ -86,12 +98,12 @@ def main():
     parser.add_argument("--allow-license", help="explicitly accept this license string after reviewing it")
     parser.add_argument("--info", action="store_true", help="print project metadata and exit")
     args = parser.parse_args()
-    api_key = os.environ.get("ROBOFLOW_API_KEY")
-    if not api_key:
-        parser.error("Set ROBOFLOW_API_KEY (free account: roboflow.com -> Settings -> API Keys).")
+    key = api_key()
+    if not key:
+        parser.error(f"No Roboflow API key: set ROBOFLOW_API_KEY or write it to {KEY_FILE}.")
     workspace, project, version = parse_id(args.dataset)
 
-    info = get_json(f"{API}/{workspace}/{project}", api_key).get("project", {})
+    info = get_json(f"{API}/{workspace}/{project}", key).get("project", {})
     license_name = info.get("license")
     classes = sorted((info.get("classes") or {}).keys())
     print(json.dumps({"name": info.get("name"), "license": license_name, "images": info.get("images"),
@@ -106,7 +118,7 @@ def main():
     destination = EXTERNAL / f"{workspace}__{project}__v{version}"
     if destination.exists():
         raise SystemExit(f"{destination} already exists; delete it to re-download.")
-    link = export_link(workspace, project, version, api_key, args.format)
+    link = export_link(workspace, project, version, key, args.format)
     print("Downloading export...")
     with urllib.request.urlopen(link, timeout=600) as response:
         archive = zipfile.ZipFile(io.BytesIO(response.read()))
