@@ -15,7 +15,8 @@ xcodebuild -project mobile/ios/VantageMobile.xcodeproj -scheme VantageMobile -co
 xcrun devicectl device install app --device "$DEVICE" "$DERIVED/Build/Products/Debug-iphoneos/VantageMobile.app"
 xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID" || cat >&2 <<'EOF'
 
-Launch blocked. First run with a free Apple ID: on the iPhone open
-Settings > General > VPN & Device Management > Apple Development: <your email> > Trust,
-then rerun this script (or tap the app icon).
+Installed, but could not launch (see the reason above). Common causes:
+- "Locked": unlock the iPhone, then tap the app icon.
+- "Security"/"not been explicitly trusted" (first install with a free Apple ID): on the iPhone open
+  Settings > General > VPN & Device Management > Apple Development: <your email> > Trust.
 EOF
