@@ -83,6 +83,33 @@ class BallTrackerTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.tracker.select([ball(120)], time_s)
 
+    def test_persistent_static_clutter_is_suppressed(self):
+        # A leaf detected every frame jitters by about 1 px. Before the filter engages
+        # (1 s), the tracker can follow it until the stationary release; after that,
+        # it is never selected again, so no new identities are created for it.
+        leaf = lambda i: ball(500 + (i % 2), confidence=.3)
+        selected = [self.tracker.select([leaf(i)], i/30) for i in range(90)]
+        self.assertTrue(all(s is None for s in selected[31:]))
+        # A moving ball elsewhere is still acquired while the leaf is suppressed.
+        self.assertIsNone(self.tracker.select([leaf(90), ball(100)], 90/30))
+        self.assertEqual(self.tracker.select([leaf(91), ball(115)], 91/30).center, (115, 100))
+
+    def test_ball_crossing_same_spot_twice_is_not_suppressed(self):
+        # Out and back along the same line, 1.5 s apart: each spot is seen at most twice.
+        times = [i/30 for i in range(60)]
+        xs = [100 + 8*i if i < 30 else 100 + 8*(59 - i) for i in range(60)]
+        selected = [self.tracker.select([ball(x)], t) for x, t in zip(xs, times)]
+        self.assertEqual(sum(s is not None for s in selected), 59)
+        self.assertEqual(len({s.track_id for s in selected if s}), 1)
+
+    def test_static_suppression_is_frame_rate_independent(self):
+        for fps in (30, 120):
+            tracker = BallTracker(self.cfg, 640, 360)
+            for i in range(2 * fps):
+                tracker.select([ball(500, confidence=.3)], i/fps)
+            kept = tracker._without_static([ball(500), ball(100)], 2 + 1/fps, 2)
+            self.assertEqual([c.center for c in kept], [(100, 100)], fps)
+
     def test_capture_fps_does_not_change_speed_or_gap_lifetime(self):
         for fps in (30, 120):
             tracker = BallTracker(self.cfg, 640, 360)

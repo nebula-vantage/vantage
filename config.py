@@ -26,6 +26,13 @@ CONFIG = {
         "turn_window_s": 0.10,  # Permit abrupt direction changes over short gaps.
         "stationary_timeout_s": 0.40,  # Release a track stuck on background clutter.
         "stationary_radius_diagonals": 0.004,  # Tolerate stationary detection jitter.
+        # Static-clutter suppression: ignore candidates at a spot that keeps producing
+        # detections (leaves, debris, signs). Time-based, so independent of frame rate.
+        "static_memory_s": 3.0,  # Candidate history window.
+        "static_min_age_s": 1.0,  # Spot must have been seen at least this long ago...
+        "static_min_observed_s": 0.25,  # ...for at least this much frame time in the window.
+        "static_radius_diagonals": 0.006,  # Same-spot distance.
+        "static_max_frame_gap_s": 0.10,  # Cap one frame's observation weight across gaps.
     },
     "tracker": {
         "tracker_type": "bytetrack",  # Player tracking only; balls use motion association.

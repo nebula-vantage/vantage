@@ -128,6 +128,11 @@ this is not a transactional multi-file filesystem commit.
   within 0.20 s. Short gaps retain the ball identity without producing measurements;
   longer losses require confirmation and a new identity. Stationary candidates are
   suppressed heuristically, so a resting ball may intentionally be unreported.
+  Spots that keep producing ball candidates (leaves, debris, signs) are ignored: a
+  candidate is dropped when detections within 0.6% of the frame diagonal were first
+  seen at least 1 s earlier and total at least 0.25 s of frame time in the last 3 s
+  (`static_*` in `CONFIG['ball_tracker']`). A ball crossing a spot once or twice is
+  unaffected; a ball held still before a serve is ignored like clutter.
 - Generic COCO weights often miss small pickleballs and pickleball paddles.
   Motion tracking cannot recover observations that the model never produced and
   may still follow moving false positives or balls on adjacent courts.

@@ -20,6 +20,8 @@ class BallTracker:
         self.anchor: tuple[float, tuple[float, float]] | None = None
         self.last_update: float | None = None
         self.next_id = 1
+        # (time, center, observed frame time) of recent valid candidates, oldest first.
+        self.history: list[tuple[float, tuple[float, float], float]] = []
 
     def _limit(self, dt: float) -> float:
         return self.diagonal * (self.detection["motion_slack_diagonals"]
@@ -40,11 +42,36 @@ class BallTracker:
                 and x2 > x1 and y2 > y1
                 and 0 <= x < self.width and 0 <= y < self.height)
 
+    def _without_static(self, candidates: list[Detection], time_s: float,
+                        previous_update: float | None) -> list[Detection]:
+        """Drop candidates at spots that keep producing detections (leaves, debris).
+
+        A spot is static when candidates within the radius were first seen at least
+        static_min_age_s ago and add up to static_min_observed_s of frame time within
+        static_memory_s. A ball passing a spot once, or twice in a rally, never qualifies.
+        """
+        cfg = self.config
+        self.history = [h for h in self.history if time_s - h[0] <= cfg["static_memory_s"]]
+        radius = self.diagonal * cfg["static_radius_diagonals"]
+        kept = []
+        for candidate in candidates:
+            near = [(t, weight) for t, center, weight in self.history
+                    if math.dist(candidate.center, center) <= radius]
+            if (near and time_s - near[0][0] >= cfg["static_min_age_s"]
+                    and sum(weight for _, weight in near) >= cfg["static_min_observed_s"]):
+                continue
+            kept.append(candidate)
+        weight = (0.0 if previous_update is None
+                  else min(time_s - previous_update, cfg["static_max_frame_gap_s"]))
+        # Record every valid candidate, including suppressed ones, so clutter stays known.
+        self.history.extend((time_s, candidate.center, weight) for candidate in candidates)
+        return kept
+
     def select(self, candidates: list[Detection], time_s: float) -> Detection | None:
         if not math.isfinite(time_s) or (self.last_update is not None and time_s <= self.last_update):
             raise ValueError("Ball tracker timestamps must be finite and strictly increasing.")
-        self.last_update = time_s
-        candidates = [c for c in candidates if self._valid(c)]
+        previous_update, self.last_update = self.last_update, time_s
+        candidates = self._without_static([c for c in candidates if self._valid(c)], time_s, previous_update)
         window = self.config["confirmation_window_s"]
         self.pending = [(t, c) for t, c in self.pending if time_s - t <= window]
         if self.last and time_s - self.last[0] > self.detection["candidate_reset_s"]:
