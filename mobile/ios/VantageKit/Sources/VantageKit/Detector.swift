@@ -9,6 +9,8 @@ public final class Detector {
     private let request: VNCoreMLRequest
     private let context = CIContext()
     private let size: Int
+    /// Model class index -> canonical DetectionClass ID, from the model's `names` metadata.
+    public let classMap: [Int: Int]
 
     public init(url: URL) throws {
         let configuration = MLModelConfiguration()
@@ -19,6 +21,14 @@ public final class Detector {
             throw AnalysisError.message("Expected a square image-input model.")
         }
         size = constraint.pixelsWide
+        let metadata = model.modelDescription.metadata[.creatorDefinedKey] as? [String: String] ?? [:]
+        guard let names = metadata["names"] else {
+            throw AnalysisError.message("Model has no class-name metadata. Export it with mobile/model/export_model.py.")
+        }
+        classMap = DetectionClass.canonicalMap(namesMetadata: names)
+        guard Set(classMap.values).contains(DetectionClass.ball) else {
+            throw AnalysisError.message("Model has no ball class (expected 'sports ball', 'ball', or 'pickleball').")
+        }
         request = VNCoreMLRequest(model: try VNCoreMLModel(for: model))
         request.imageCropAndScaleOption = .scaleFill
     }
@@ -49,8 +59,7 @@ public final class Detector {
             func value(_ column: Int) -> Double { output[[0, NSNumber(value: row), NSNumber(value: column)]].doubleValue }
             let values = (0..<6).map(value)
             guard values.allSatisfy({ $0.isFinite }), values[4] >= 0.10 else { continue }
-            let cls = Int(values[5])
-            guard DetectionClass.all.contains(cls) else { continue }
+            guard let cls = classMap[Int(values[5])] else { continue }
             let box = [max(0, min(width, (values[0]-left)/gain)),
                        max(0, min(height, (values[1]-top)/gain)),
                        max(0, min(width, (values[2]-left)/gain)),

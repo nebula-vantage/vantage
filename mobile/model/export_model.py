@@ -32,7 +32,9 @@ def main():
     import ultralytics
     import torch
 
-    package = YOLO(str(checkpoint)).export(
+    yolo = YOLO(str(checkpoint))
+    names = {int(k): v for k, v in yolo.names.items()}
+    package = yolo.export(
         format="coreml", imgsz=args.size, batch=1, dynamic=False,
         nms=False, quantize=args.precision, device="cpu", max_det=100,
     )
@@ -42,7 +44,8 @@ def main():
         "source_sha256": hashlib.sha256(args.weights.read_bytes()).hexdigest(),
         "source": str(args.weights.resolve()), "package": str(Path(package).resolve()),
         "size": args.size, "precision": f"FP{args.precision}", "nms": False,
-        "max_detections": 100, "classes": {"player": 0, "ball": 32, "paddle": 38},
+        "max_detections": 100, "model_classes": names,
+        "note": "The app maps classes to canonical IDs by name (DetectionClass.canonicalMap).",
         "confidence": 0.10, "ultralytics": ultralytics.__version__,
         "torch": torch.__version__, "coremltools": ct.__version__,
         "inputs": [str(x) for x in spec.description.input],

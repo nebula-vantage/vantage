@@ -1,12 +1,35 @@
 import CoreGraphics
 import Foundation
 
-/// COCO class IDs used as proxies, matching the desktop pipeline's config.py.
+/// Vantage's canonical class IDs, used in every Detection and detections.jsonl regardless
+/// of the model. They follow COCO numbering so runs made with the generic COCO model stay
+/// valid; other models (e.g. a fine-tuned player/ball/paddle model) are mapped by class name.
 public enum DetectionClass {
     public static let player = 0
     public static let ball = 32
-    public static let paddle = 38  // "tennis racket"; a pickleball-paddle proxy.
+    public static let paddle = 38  // COCO "tennis racket" is the proxy in generic models.
     public static let all: Set<Int> = [player, ball, paddle]
+
+    /// Model class names accepted for each canonical class.
+    static let aliases: [String: Int] = [
+        "person": player, "player": player,
+        "sports ball": ball, "ball": ball, "pickleball": ball,
+        "tennis racket": paddle, "paddle": paddle,
+    ]
+
+    /// Maps model class indices to canonical IDs from an Ultralytics `names` metadata string,
+    /// e.g. "{0: 'person', 1: 'bicycle', ...}". Classes without an alias are dropped.
+    public static func canonicalMap(namesMetadata: String) -> [Int: Int] {
+        let pattern = try! Regex(#"(\d+)\s*:\s*['"]([^'"]*)['"]"#)
+        var map: [Int: Int] = [:]
+        for match in namesMetadata.matches(of: pattern) {
+            if let index = match[1].substring.flatMap({ Int($0) }),
+               let name = match[2].substring, let canonical = aliases[name.lowercased()] {
+                map[index] = canonical
+            }
+        }
+        return map
+    }
 }
 
 /// One raw detector output.

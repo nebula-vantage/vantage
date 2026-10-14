@@ -167,6 +167,12 @@ Regenerate tracker parity fixtures after changing either tracker (from the repos
 
 ### Detector details
 
+Any Ultralytics YOLO export works: the detector reads the model's `names` metadata and
+maps classes to canonical IDs by name (`person`/`player` -> 0, `sports ball`/`ball`/
+`pickleball` -> 32, `tennis racket`/`paddle` -> 38; see `DetectionClass`). The generic
+COCO model and a fine-tuned player/ball/paddle model (see `ml/README.md`) both produce
+the same detections.jsonl IDs. A model without a ball class is rejected.
+
 The detector explicitly letterboxes with 114-valued padding, then calls Vision
 with an already-square input to avoid an additional crop. It requests CPU and
 Neural Engine execution; actual operation placement remains Core ML's decision.
