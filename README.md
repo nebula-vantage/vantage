@@ -7,7 +7,8 @@ No model training, web server, or real-time requirements.
 
 An on-device iPhone version (Core ML detector, saved runs, playback with detection
 overlays) and the model export tooling live in [`mobile/`](mobile/README.md); they are
-independent of this desktop pipeline.
+independent of this desktop pipeline. Ball labeling, accuracy evaluation, and detector
+training data live in [`ml/`](ml/README.md).
 
 ## Side-view demo
 
