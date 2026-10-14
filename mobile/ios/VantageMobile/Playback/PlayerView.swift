@@ -1,6 +1,7 @@
 import AVFoundation
 import SwiftUI
 import UIKit
+import VantageKit
 
 /// Plays a run's copied video with its detections drawn on top.
 struct PlayerView: View {
@@ -32,7 +33,17 @@ struct PlayerView: View {
         .navigationTitle(run.sourceName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-        .task { await loadTimeline() }
+        .task {
+            await loadTimeline()
+            #if DEBUG
+            // UI check hook: `simctl launch ... -openLatestRun -seek 7.5`.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let flag = arguments.firstIndex(of: "-seek"), flag + 1 < arguments.count,
+               let seconds = Double(arguments[flag + 1]) {
+                controller.seek(to: seconds)
+            }
+            #endif
+        }
         .onDisappear { controller.tearDown() }
     }
 
@@ -47,6 +58,7 @@ struct PlayerView: View {
                 let frame = index.flatMap { timeline?.frames[$0] }
                 ZStack(alignment: .topLeading) {
                     DetectionOverlay(frame: frame,
+                                     ball: index.flatMap { timeline?.ballSamples[$0] },
                                      trail: index.map { timeline?.ballTrail(endingAt: $0, window: 0.5) ?? [] } ?? [],
                                      options: options)
                     hud(frame: frame, index: index)
@@ -66,9 +78,8 @@ struct PlayerView: View {
             ProgressView().padding(8)
         } else if let frame, let index {
             let players = frame.detections.filter { $0.classID == DetectionClass.player }.count
-            let ball = DetectionTimeline.bestBall(in: frame)
             Text("frame \(index + 1)  ·  \(Int(frame.inferenceMilliseconds)) ms  ·  \(players) players  ·  "
-                 + (ball.map { String(format: "ball %.2f", $0.confidence) } ?? "no ball"))
+                 + ballStatus(frame: frame, sample: timeline?.ballSamples[index]))
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6).padding(.vertical, 3)
@@ -123,9 +134,17 @@ struct PlayerView: View {
             HStack(spacing: 14) {
                 legendItem("Players", DetectionOverlay.playerColor)
                 legendItem("Ball", DetectionOverlay.ballColor)
+                legendItem("Gap-filled", DetectionOverlay.estimatedColor)
                 legendItem("Paddles", DetectionOverlay.paddleColor)
             }
-            Text("Raw on-device detections (confidence ≥ 0.10). Not yet tracked: a ring may be a false positive, and gaps are missed detections.")
+            if let timeline {
+                Text("Ball tracked in \(timeline.trackedFrameCount) of \(timeline.frames.count) frames · "
+                     + "\(timeline.trackCount) track\(timeline.trackCount == 1 ? "" : "s")")
+                    .monospacedDigit()
+            }
+            Text("The ball is tracked from raw detections with the desktop motion tracker (#ID = track). "
+                 + "Orange dashed positions are interpolated across short gaps, not detections. "
+                 + "A new ID means the track was lost; static clutter can still be followed briefly.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .font(.caption)
@@ -142,8 +161,9 @@ struct PlayerView: View {
         ToolbarItemGroup(placement: .topBarTrailing) {
             Menu {
                 Toggle("Players", isOn: $options.players)
-                Toggle("Ball", isOn: $options.ball)
+                Toggle("Tracked ball", isOn: $options.ball)
                 Toggle("Ball trail", isOn: $options.trail)
+                Toggle("Raw ball candidates", isOn: $options.rawBalls)
                 Toggle("Paddles", isOn: $options.paddles)
                 Toggle("Player confidence", isOn: $options.playerLabels)
             } label: { Image(systemName: "square.on.square.dashed") }
@@ -164,6 +184,16 @@ struct PlayerView: View {
             }.value
         } catch {
             loadError = "Could not load detections: \(error.localizedDescription)"
+        }
+    }
+
+    private func ballStatus(frame: FrameDetections, sample: BallSample?) -> String {
+        switch sample?.source {
+        case .observed: return String(format: "ball #%d %.2f", sample!.trackID, sample!.confidence ?? 0)
+        case .interpolated: return "ball #\(sample!.trackID) est."
+        case nil:
+            let raw = frame.balls.count
+            return raw == 0 ? "no ball" : "no ball (\(raw) raw)"
         }
     }
 

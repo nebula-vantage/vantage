@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import VantageKit
 
 /// Home screen: import a video to analyze, and reopen previous runs for playback.
 struct RunListView: View {
@@ -103,6 +104,7 @@ struct RunListView: View {
                 let run = AnalysisRun(
                     id: id, createdAt: .now, sourceName: source.lastPathComponent,
                     videoFileName: video.lastPathComponent, frames: result.frames, ballFrames: result.ballFrames,
+                    trackedBallFrames: result.trackedBallFrames,
                     averageMilliseconds: result.averageMilliseconds, width: result.width, height: result.height,
                     durationSeconds: result.durationSeconds)
                 try store.add(run)
@@ -123,6 +125,12 @@ private struct RunRow: View {
     let run: AnalysisRun
     let thumbnail: URL
 
+    private var ballSummary: String {
+        let percent = FloatingPointFormatStyle<Double>.Percent().precision(.fractionLength(0))
+        if let tracked = run.trackedBallFraction { return "ball tracked \(tracked.formatted(percent))" }
+        return "ball seen \(run.ballFrameFraction.formatted(percent))"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Group {
@@ -141,7 +149,7 @@ private struct RunRow: View {
                 Text(run.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption).foregroundStyle(.secondary)
                 Text("\(Duration.seconds(run.durationSeconds).formatted(.time(pattern: .minuteSecond))) · "
-                     + "\(run.frames) frames · ball \(run.ballFrameFraction.formatted(.percent.precision(.fractionLength(0)))) · "
+                     + "\(run.frames) frames · \(ballSummary) · "
                      + "\(Int(run.averageMilliseconds)) ms/frame")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
             }

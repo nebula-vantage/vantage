@@ -1,10 +1,13 @@
 # XcodeGen spec kept in sync with VantageMobile.xcodeproj (which is committed and
-# does not require XcodeGen). Sources use a folder-synced group: any file added under
-# VantageMobile/ is compiled automatically.
+# does not require XcodeGen). App sources use a folder-synced group: any file added under
+# VantageMobile/ is compiled automatically. Shared logic is the local VantageKit package.
 name: VantageMobile
 options:
   deploymentTarget:
     iOS: '18.0'
+packages:
+  VantageKit:
+    path: VantageKit
 settings:
   base:
     SWIFT_VERSION: '5.0'
@@ -17,6 +20,8 @@ targets:
       - path: VantageMobile
         type: syncedFolder
       - path: ../artifacts/yolo26n-1280/VantageDetector.mlpackage
+    dependencies:
+      - package: VantageKit
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

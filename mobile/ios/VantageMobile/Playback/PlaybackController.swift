@@ -46,7 +46,9 @@ final class PlaybackController {
 
     /// Precise seeks land on the exact frame; imprecise ones keep scrubbing responsive.
     func seek(to seconds: Double, precise: Bool = true) {
-        let time = CMTime(seconds: max(0, min(seconds, duration)), preferredTimescale: 600)
+        // Duration is 0 until the asset loads; don't clamp against an unknown length.
+        let upper = duration > 0 ? duration : seconds
+        let time = CMTime(seconds: max(0, min(seconds, upper)), preferredTimescale: 600)
         let tolerance = precise ? CMTime.zero : CMTime(seconds: 0.1, preferredTimescale: 600)
         player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance)
         currentTime = time.seconds

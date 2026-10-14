@@ -1,4 +1,4 @@
-// Build together with ios/Sources/Detector.swift on macOS; no Xcode required.
+// Build with ios/VantageKit/Sources/VantageKit/{Detection,Detector}.swift on macOS (see mobile/README.md).
 import CoreML
 import CoreImage
 import Foundation
@@ -7,7 +7,7 @@ import Foundation
 struct VisionSmoke {
     static func main() throws {
         guard CommandLine.arguments.count == 3 else {
-            throw PrototypeError.message("Usage: vision-smoke model.mlpackage image.png")
+            throw AnalysisError.message("Usage: vision-smoke model.mlpackage image.png")
         }
         let package = URL(fileURLWithPath: CommandLine.arguments[1])
         let compiled = try MLModel.compileModel(at: package)
@@ -15,7 +15,7 @@ struct VisionSmoke {
         let detector = try Detector(url: compiled)
         guard let image = CIImage(contentsOf: URL(fileURLWithPath: CommandLine.arguments[2]),
                                   options: [.applyOrientationProperty: true]) else {
-            throw PrototypeError.message("Cannot load image.")
+            throw AnalysisError.message("Cannot load image.")
         }
         let detections = try detector.detect(image)
         let encoder = JSONEncoder()

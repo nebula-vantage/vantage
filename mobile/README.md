@@ -10,13 +10,18 @@ mobile/
 ├── ios/                      iPhone app (SwiftUI)
 │   ├── VantageMobile.xcodeproj
 │   ├── project.yml           XcodeGen spec mirroring the project (optional)
-│   └── VantageMobile/        Sources (folder-synced: new files build automatically)
-│       ├── App/              App entry point and run list (import + history)
-│       ├── Analysis/         Core ML detector and video frame analysis
-│       ├── Library/          Saved runs on disk (Documents/Runs/<id>/)
-│       └── Playback/         Video player with detection overlay
-├── model/                    Core ML export, parity checks, crop experiment (Python)
+│   ├── VantageMobile/        App sources (folder-synced: new files build automatically)
+│   │   ├── App/              App entry point and run list (import + history)
+│   │   ├── Library/          Saved runs on disk (Documents/Runs/<id>/)
+│   │   └── Playback/         Video player with detection/track overlay
+│   └── VantageKit/           Swift package: UI-free logic, testable on the Mac
+│       ├── Sources/VantageKit/       Detection records, Core ML detector, video analyzer,
+│       │                             ball tracker + trajectory, playback timeline
+│       ├── Sources/vantage-analyze/  Mac CLI running the same analysis on a video
+│       └── Tests/                    Tracker parity (vs Python), behavior, timeline
+├── model/                    Core ML export, parity checks, tracker fixtures, crop experiment (Python)
 ├── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
+├── scripts/test.sh           Run all mobile tests (Swift + Python)
 ├── artifacts/                Exported .mlpackage files (generated, git-ignored)
 └── reports/                  Comparison and experiment outputs (generated, git-ignored)
 ```
@@ -34,19 +39,49 @@ Current features:
 - Each analysis is saved as a run (`Documents/Runs/<id>/`: the copied video,
   `detections.jsonl`, `thumbnail.jpg`, `run.json`). Runs are listed on the home
   screen; swipe to delete. Interrupted analyses are discarded on next launch.
-- Playback: tap a run to watch the video with players (green), ball (yellow ring
-  with confidence, plus a 0.5 s trail of earlier detections), and paddles (cyan)
-  drawn on top. Play/pause (or tap the video), scrub, step frame by frame, and
+- Playback: tap a run to watch the video with players (green), the tracked ball
+  (yellow ring with track ID and confidence; orange dashed when interpolated), a
+  0.5 s trail of that one track, and paddles (cyan) drawn on top. Raw ball
+  candidates can be shown from the overlay menu to judge the detector. Play/pause (or tap the video), scrub, step frame by frame, and
   slow down to 0.5× / 0.25×. The overlay toggles live in the toolbar menu; the
   share button exports `detections.jsonl`.
 
 The overlay reads the player's current time every display frame and looks up the
 analyzed frame by source timestamp, so boxes stay aligned when scrubbing or stepping.
 
-Not yet included: tracking IDs, court calibration, speed, match stats, or
-heatmaps. Detections are raw candidates; the ball-frame count is not
-ball-tracking accuracy. Paddle class 38 remains a tennis-racket proxy, as in the
-desktop pipeline.
+### Ball tracking
+
+`VantageKit/BallTracker.swift` is a port of the desktop `ball_tracker.py`: motion
+prediction, speed gating, short-loss retention, turn fallback, stationary-clutter
+release, and two-observation acquisition, all in capture-time seconds.
+`BallTrajectory` ports the desktop interpolation of gaps up to 0.20 s within one
+track (not its display-only smoothing or coasting). Interpolated positions are
+never counted as detections.
+
+Tracking runs from the saved raw detections when a run is opened, so runs analyzed
+before tracking existed are tracked too, and tuning `BallTrackerConfig` needs no
+re-analysis. The analyzer also tracks inline to store the tracked-frame count
+(`trackedBallFrames` in `run.json`; absent on older runs, which show "ball seen").
+
+**Parity with the desktop:** `make_tracker_fixtures.py` feeds the raw ball
+candidates of real on-device runs through the Python tracker and records each
+frame's selection. The Swift tests replay the same candidates and require
+identical boxes, confidences, track IDs, and interpolated frames. Current fixtures:
+
+| Clip | Frames | Tracked | Interpolated | Tracks |
+| --- | ---: | ---: | ---: | ---: |
+| sideview | 606 | 604 | 1 | 1 |
+| backcorner60fps | 456 | 244 | 35 | 22 |
+| topcorner60fps | 1244 | 713 | 99 | 56 |
+
+All 2,306 frames match exactly; a test also fails if Swift defaults drift from
+`config.py`. Tracker parity is not detector parity: Core ML's square-letterboxed
+input yields more ball candidates than the desktop's rectangular input (for
+topcorner, 713 tracked frames on-device vs 409 on desktop), and track
+fragmentation (many IDs) reflects the generic COCO detector, not the port.
+
+Not yet included: player track IDs, court calibration, speed, match stats, or
+heatmaps. Paddle class 38 remains a tennis-racket proxy, as in the desktop pipeline.
 
 ### Run on your iPhone (free Apple ID, no paid developer program)
 
@@ -97,9 +132,33 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
 ```
 
 Core ML runs on CPU in the simulator, so timings there are not representative.
-Debug builds accept a `-openLatestRun` launch argument that opens the newest run,
-for screenshot checks without UI interaction:
-`xcrun simctl launch <sim> com.vantage.detectorprototype -openLatestRun`.
+Debug builds accept `-openLatestRun` (open the newest run) and `-seek <seconds>`
+launch arguments for screenshot checks without UI interaction:
+`xcrun simctl launch <sim> com.vantage.detectorprototype -openLatestRun -seek 3.06`.
+
+### Tests and Mac tools
+
+```sh
+mobile/scripts/test.sh    # VantageKit swift tests + mobile/model python tests
+```
+
+`swift test` needs a scratch path outside `~/Documents` (the script sets it): the
+test bundle is codesigned, which fails on iCloud-synced files.
+
+Run the exact on-device analysis on the Mac (same model, preprocessing, tracker):
+
+```sh
+cd mobile/ios/VantageKit
+swift run -c release --scratch-path ~/Library/Caches/VantageKit-build vantage-analyze \
+  ../../artifacts/yolo26n-1280/VantageDetector.mlpackage ../../../assets/pickleball/sideview.MOV /tmp/sideview.jsonl
+```
+
+Regenerate tracker parity fixtures after changing either tracker (from the repository root):
+
+```sh
+.venv/bin/python mobile/model/make_tracker_fixtures.py /tmp/sideview.jsonl \
+  mobile/ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
+```
 
 ### Detector details
 
@@ -128,7 +187,7 @@ mobile/.venv/bin/python mobile/model/compare.py \
   --samples 24 --output mobile/reports/my-sideview-run
 ```
 
-Tests: `.venv/bin/python -m unittest discover -s mobile/model`
+Tests: `mobile/scripts/test.sh` (includes `.venv/bin/python -m unittest discover -s mobile/model`).
 
 Export and comparison commands refuse to overwrite an existing output directory.
 Use a new `--output` path for subsequent runs. For another export size, provide
@@ -176,7 +235,7 @@ iPhone or sustained-thermal benchmark).
 
 ```sh
 swiftc -module-cache-path /private/tmp/vantage-swift-module-cache \
-  mobile/ios/VantageMobile/Analysis/Detector.swift mobile/model/vision_smoke.swift \
+  mobile/ios/VantageKit/Sources/VantageKit/{Detection,Detector}.swift mobile/model/vision_smoke.swift \
   -o /private/tmp/vantage-vision-smoke
 /private/tmp/vantage-vision-smoke \
   mobile/artifacts/yolo26n-1280/VantageDetector.mlpackage \
@@ -185,9 +244,9 @@ swiftc -module-cache-path /private/tmp/vantage-swift-module-cache \
 
 ## Next steps
 
-1. Port the desktop ball tracker and player ByteTrack, with fixture comparisons
-   against Python. Preserve observed-versus-estimated distinctions.
-2. Port calibration and analytics, then heatmaps.
+1. Player tracking (ByteTrack port or per-court-quadrant identity), with fixture
+   comparisons against Python like the ball tracker.
+2. Port calibration and analytics (shots, bounces, rallies), then heatmaps.
 3. Fine-tune the detector on pickleball (ball/paddle/player) and re-export.
 4. Benchmark sustained processing, memory, and thermals on iPhone 17 Pro;
    evaluate smaller inputs, crop-assisted detection, and live capture.
