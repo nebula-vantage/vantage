@@ -53,7 +53,8 @@ analyzed frame by source timestamp, so boxes stay aligned when scrubbing or step
 
 `VantageKit/BallTracker.swift` is a port of the desktop `ball_tracker.py`: motion
 prediction, speed gating, short-loss retention, turn fallback, stationary-clutter
-release, and two-observation acquisition, all in capture-time seconds.
+release, static-clutter suppression (spots that keep producing detections, such
+as leaves), and two-observation acquisition, all in capture-time seconds.
 `BallTrajectory` ports the desktop interpolation of gaps up to 0.20 s within one
 track (not its display-only smoothing or coasting). Interpolated positions are
 never counted as detections.
@@ -71,14 +72,18 @@ identical boxes, confidences, track IDs, and interpolated frames. Current fixtur
 | Clip | Frames | Tracked | Interpolated | Tracks |
 | --- | ---: | ---: | ---: | ---: |
 | sideview | 606 | 604 | 1 | 1 |
-| backcorner60fps | 456 | 244 | 35 | 22 |
-| topcorner60fps | 1244 | 713 | 99 | 56 |
+| backcorner60fps | 456 | 122 | 18 | 16 |
+| topcorner60fps | 1244 | 377 | 125 | 23 |
+
+Static-clutter suppression removed leaf/debris tracking: frames tracked on objects
+that never move fell from 350 to 4 (topcorner) and 51 to 17 (backcorner), and
+track fragments from 56 to 23 and 22 to 16, with sideview unchanged.
 
 All 2,306 frames match exactly; a test also fails if Swift defaults drift from
 `config.py`. Tracker parity is not detector parity: Core ML's square-letterboxed
-input yields more ball candidates than the desktop's rectangular input (for
-topcorner, 713 tracked frames on-device vs 409 on desktop), and track
-fragmentation (many IDs) reflects the generic COCO detector, not the port.
+input yields more ball candidates than the desktop's rectangular input, and the
+remaining fragmentation (missed frames) reflects the generic COCO detector, not
+the port. Track IDs are internal; the player shows a single "ball".
 
 Not yet included: player track IDs, court calibration, speed, match stats, or
 heatmaps. Paddle class 38 remains a tennis-racket proxy, as in the desktop pipeline.

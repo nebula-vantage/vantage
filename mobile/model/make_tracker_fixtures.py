@@ -43,6 +43,11 @@ def swift_config():
         "turnWindowSeconds": b["turn_window_s"],
         "stationaryTimeoutSeconds": b["stationary_timeout_s"],
         "stationaryRadiusDiagonals": b["stationary_radius_diagonals"],
+        "staticMemorySeconds": b["static_memory_s"],
+        "staticMinAgeSeconds": b["static_min_age_s"],
+        "staticMinObservedSeconds": b["static_min_observed_s"],
+        "staticRadiusDiagonals": b["static_radius_diagonals"],
+        "staticMaxFrameGapSeconds": b["static_max_frame_gap_s"],
         "interpolateGapSeconds": t["interpolate_gap_s"],
     }
 

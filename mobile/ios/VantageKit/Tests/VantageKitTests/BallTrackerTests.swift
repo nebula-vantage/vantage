@@ -89,6 +89,32 @@ final class BallTrackerTests: XCTestCase {
         }
     }
 
+    func testPersistentStaticClutterIsSuppressed() {
+        let leaf = { (i: Int) in self.ball(500 + Double(i % 2), confidence: 0.3) }
+        let selected = (0..<90).map { select([leaf($0)], Double($0) / 30) }
+        XCTAssertTrue(selected[31...].allSatisfy { $0 == nil })
+        XCTAssertNil(select([leaf(90), ball(100)], 90.0 / 30))
+        XCTAssertEqual(select([leaf(91), ball(115)], 91.0 / 30)?.center, CGPoint(x: 115, y: 100))
+    }
+
+    func testBallCrossingSameSpotTwiceIsNotSuppressed() {
+        let xs = (0..<60).map { i in 100 + 8 * Double(i < 30 ? i : 59 - i) }
+        let selected = xs.enumerated().map { select([ball($1)], Double($0) / 30) }
+        XCTAssertEqual(selected.compactMap { $0 }.count, 59)
+        XCTAssertEqual(Set(selected.compactMap { $0?.trackID }).count, 1)
+    }
+
+    func testStaticSuppressionIsFrameRateIndependent() {
+        for fps in [30, 120] {
+            var tracker = BallTracker(width: 640, height: 360)
+            for i in 0..<(2 * fps) { _ = try! tracker.select([ball(500, confidence: 0.3)], at: Double(i) / Double(fps)) }
+            // The leaf is suppressed; a new ball at another spot is a valid seed (no selection yet).
+            XCTAssertNil(try! tracker.select([ball(500), ball(100)], at: 2 + 1 / Double(fps)))
+            XCTAssertEqual(try! tracker.select([ball(500), ball(110)], at: 2 + 2 / Double(fps))?.center,
+                           CGPoint(x: 110, y: 100), "fps \(fps)")
+        }
+    }
+
     func testCaptureFPSDoesNotChangeSpeedOrGapLifetime() {
         for fps in [30, 120] {
             var tracker = BallTracker(width: 640, height: 360)

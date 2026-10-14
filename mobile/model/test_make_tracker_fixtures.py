@@ -24,7 +24,7 @@ class MakeTrackerFixturesTests(unittest.TestCase):
     def test_config_uses_swift_property_names(self):
         config = swift_config()
         self.assertEqual(config["confidenceWeight"], 0.15)
-        self.assertEqual(len(config), 14)
+        self.assertEqual(len(config), 19)
 
 
 if __name__ == "__main__":

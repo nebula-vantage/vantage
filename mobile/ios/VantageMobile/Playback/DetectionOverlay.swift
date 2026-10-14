@@ -91,13 +91,13 @@ struct DetectionOverlay: View {
                     }
                     let ring = circle(center, radius)
                     context.stroke(ring, with: .color(Self.ballColor), lineWidth: 2)
-                    label("#\(ball.trackID) " + String(format: "%.2f", ball.confidence ?? 0), Self.ballColor,
+                    label(String(format: "%.2f", ball.confidence ?? 0), Self.ballColor,
                           above: ring.boundingRect)
                 case .interpolated:
                     let ring = circle(center, 8)
                     context.stroke(ring, with: .color(Self.estimatedColor),
                                    style: StrokeStyle(lineWidth: 2, dash: [3, 3]))
-                    label("#\(ball.trackID) est.", Self.estimatedColor, above: ring.boundingRect)
+                    label("est.", Self.estimatedColor, above: ring.boundingRect)
                 }
             }
         }

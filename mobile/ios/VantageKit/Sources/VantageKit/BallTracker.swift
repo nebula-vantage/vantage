@@ -20,6 +20,12 @@ public struct BallTrackerConfig: Codable, Sendable, Equatable {
     public var turnWindowSeconds = 0.10
     public var stationaryTimeoutSeconds = 0.40
     public var stationaryRadiusDiagonals = 0.004
+    // Static-clutter suppression (leaves, debris, signs); time-based, frame-rate independent.
+    public var staticMemorySeconds = 3.0
+    public var staticMinAgeSeconds = 1.0
+    public var staticMinObservedSeconds = 0.25
+    public var staticRadiusDiagonals = 0.006
+    public var staticMaxFrameGapSeconds = 0.10
     // CONFIG["trajectory"]
     public var interpolateGapSeconds = 0.20
 
@@ -52,6 +58,8 @@ public struct BallTracker: Sendable {
     private var anchor: (time: Double, center: CGPoint)?
     private var lastUpdate: Double?
     private var nextID = 1
+    /// Recent valid candidates (time, center, observed frame time), oldest first.
+    private var history: [(time: Double, center: CGPoint, weight: Double)] = []
 
     public init(width: Double, height: Double, config: BallTrackerConfig = .init()) {
         self.config = config
@@ -80,14 +88,42 @@ public struct BallTracker: Sendable {
             && 0 <= center.x && center.x < width && 0 <= center.y && center.y < height
     }
 
+    /// Drops candidates at spots that keep producing detections (leaves, debris). A spot is
+    /// static when nearby candidates were first seen at least `staticMinAgeSeconds` ago and
+    /// add up to `staticMinObservedSeconds` of frame time within `staticMemorySeconds`.
+    /// Port of `BallTracker._without_static`.
+    private mutating func withoutStatic(_ candidates: [Detection], at time: Double,
+                                        previousUpdate: Double?) -> [Detection] {
+        history.removeAll { time - $0.time > config.staticMemorySeconds }
+        let radius = diagonal * config.staticRadiusDiagonals
+        var kept: [Detection] = []
+        for candidate in candidates {
+            var oldest: Double?
+            var observed = 0.0
+            for entry in history where distance(candidate.center, entry.center) <= radius {
+                if oldest == nil { oldest = entry.time }
+                observed += entry.weight
+            }
+            if let oldest, time - oldest >= config.staticMinAgeSeconds, observed >= config.staticMinObservedSeconds {
+                continue
+            }
+            kept.append(candidate)
+        }
+        let weight = previousUpdate.map { min(time - $0, config.staticMaxFrameGapSeconds) } ?? 0
+        // Record every valid candidate, including suppressed ones, so clutter stays known.
+        history += candidates.map { (time, $0.center, weight) }
+        return kept
+    }
+
     /// Selects this frame's ball from raw ball candidates (in detector order).
     /// Times must be finite and strictly increasing.
     public mutating func select(_ candidates: [Detection], at time: Double) throws -> TrackedBall? {
         if !time.isFinite || (lastUpdate.map { time <= $0 } ?? false) {
             throw BallTrackerError.nonIncreasingTime(time)
         }
+        let previousUpdate = lastUpdate
         lastUpdate = time
-        let candidates = candidates.filter(isValid)
+        let candidates = withoutStatic(candidates.filter(isValid), at: time, previousUpdate: previousUpdate)
         let window = config.confirmationWindowSeconds
         pending.removeAll { time - $0.time > window }
         if let last, time - last.time > config.candidateResetSeconds {

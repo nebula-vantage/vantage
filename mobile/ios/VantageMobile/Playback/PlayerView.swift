@@ -138,13 +138,12 @@ struct PlayerView: View {
                 legendItem("Paddles", DetectionOverlay.paddleColor)
             }
             if let timeline {
-                Text("Ball tracked in \(timeline.trackedFrameCount) of \(timeline.frames.count) frames · "
-                     + "\(timeline.trackCount) track\(timeline.trackCount == 1 ? "" : "s")")
+                Text("Ball tracked in \(timeline.trackedFrameCount) of \(timeline.frames.count) frames")
                     .monospacedDigit()
             }
-            Text("The ball is tracked from raw detections with the desktop motion tracker (#ID = track). "
-                 + "Orange dashed positions are interpolated across short gaps, not detections. "
-                 + "A new ID means the track was lost; static clutter can still be followed briefly.")
+            Text("The ball is tracked from raw detections with the desktop motion tracker; spots that keep "
+                 + "producing detections (leaves, debris) are ignored. Orange dashed positions are interpolated "
+                 + "across short gaps, not detections. Gaps longer than 0.2 s are shown as no ball.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .font(.caption)
@@ -189,8 +188,8 @@ struct PlayerView: View {
 
     private func ballStatus(frame: FrameDetections, sample: BallSample?) -> String {
         switch sample?.source {
-        case .observed: return String(format: "ball #%d %.2f", sample!.trackID, sample!.confidence ?? 0)
-        case .interpolated: return "ball #\(sample!.trackID) est."
+        case .observed: return String(format: "ball %.2f", sample!.confidence ?? 0)
+        case .interpolated: return "ball est."
         case nil:
             let raw = frame.balls.count
             return raw == 0 ? "no ball" : "no ball (\(raw) raw)"
