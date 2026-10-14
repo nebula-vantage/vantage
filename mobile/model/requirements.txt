@@ -1,0 +1,5 @@
+# Install only into mobile/.venv, never the desktop environment.
+ultralytics==8.4.159
+torch==2.14.0
+coremltools==9.0
+numpy==2.3.5

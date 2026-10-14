@@ -1,0 +1,17 @@
+# Isolated Python environment and caches for model tooling.
+.venv/
+.cache/
+__pycache__/
+
+# Generated: Core ML exports (recreate with model/export_model.py) and reports.
+artifacts/
+reports/
+
+# Xcode build output. Prefer DerivedData outside ~/Documents (see scripts/run_on_iphone.sh).
+build/
+build-simulator/
+
+# Per-user Xcode state.
+xcuserdata/
+*.xcuserstate
+ios/VantageMobile.xcodeproj/project.xcworkspace/
