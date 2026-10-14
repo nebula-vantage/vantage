@@ -7,7 +7,7 @@ export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 cd "$(dirname "$0")/../.."  # repository root
 BUNDLE_ID=com.vantage.detectorprototype
 DERIVED="$HOME/Library/Developer/Xcode/DerivedData/VantageMobile-device"
-DEVICE="${1:-$(xcrun devicectl list devices 2>/dev/null | awk '/physical/ && /available/ && /iPhone/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{16}$/) print $i}' | head -1)}"
+DEVICE="${1:-$(xcrun devicectl list devices 2>/dev/null | awk '/physical/ && (/available/ || /connected/) && /iPhone/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{16}$/) print $i}' | head -1)}"
 [ -n "$DEVICE" ] || { echo "No available iPhone. Connect/unlock it, trust this Mac, enable Developer Mode." >&2; exit 1; }
 echo "Device: $DEVICE"
 xcodebuild -project mobile/ios/VantageMobile.xcodeproj -scheme VantageMobile -configuration Debug \
