@@ -3,11 +3,22 @@ import Vision
 import CoreImage
 import Foundation
 
-struct BallDetection: Codable, Sendable {
+/// COCO class IDs used as proxies, matching the desktop pipeline's config.py.
+enum DetectionClass {
+    static let player = 0
+    static let ball = 32
+    static let paddle = 38  // "tennis racket"; a pickleball-paddle proxy.
+    static let all: Set<Int> = [player, ball, paddle]
+}
+
+struct Detection: Codable, Sendable, Hashable {
     let classID: Int
     let confidence: Double
-    // Top-left origin, pixels in the oriented source image.
+    // [x1, y1, x2, y2], top-left origin, pixels in the oriented source image.
     let box: [Double]
+
+    var center: CGPoint { CGPoint(x: (box[0] + box[2]) / 2, y: (box[1] + box[3]) / 2) }
+    var rect: CGRect { CGRect(x: box[0], y: box[1], width: box[2] - box[0], height: box[3] - box[1]) }
 }
 
 enum PrototypeError: LocalizedError {
@@ -37,7 +48,7 @@ final class Detector {
         request.imageCropAndScaleOption = .scaleFill
     }
 
-    func detect(_ image: CIImage) throws -> [BallDetection] {
+    func detect(_ image: CIImage) throws -> [Detection] {
         let width = image.extent.width, height = image.extent.height
         let gain = min(Double(size)/width, Double(size)/height)
         let resizedWidth = (width*gain).rounded(.toNearestOrEven)
@@ -58,19 +69,19 @@ final class Detector {
         guard let output = arrays.first(where: { $0.shape.count == 3 && $0.shape[0].intValue == 1 && $0.shape[2].intValue == 6 }) else {
             throw PrototypeError.message("Expected YOLO26 NMS-free output [1, N, 6]. Re-export with mobile/export_model.py.")
         }
-        var detections: [BallDetection] = []
+        var detections: [Detection] = []
         for row in 0..<output.shape[1].intValue {
             func value(_ column: Int) -> Double { output[[0, NSNumber(value: row), NSNumber(value: column)]].doubleValue }
             let values = (0..<6).map(value)
             guard values.allSatisfy({ $0.isFinite }), values[4] >= 0.10 else { continue }
             let cls = Int(values[5])
-            guard [0, 32, 38].contains(cls) else { continue }
+            guard DetectionClass.all.contains(cls) else { continue }
             let box = [max(0, min(width, (values[0]-left)/gain)),
                        max(0, min(height, (values[1]-top)/gain)),
                        max(0, min(width, (values[2]-left)/gain)),
                        max(0, min(height, (values[3]-top)/gain))]
             guard box[2] > box[0], box[3] > box[1] else { continue }
-            detections.append(BallDetection(classID: cls, confidence: values[4], box: box))
+            detections.append(Detection(classID: cls, confidence: values[4], box: box))
         }
         return detections
     }

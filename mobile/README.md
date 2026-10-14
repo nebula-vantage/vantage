@@ -11,8 +11,10 @@ mobile/
 │   ├── VantageMobile.xcodeproj
 │   ├── project.yml           XcodeGen spec mirroring the project (optional)
 │   └── VantageMobile/        Sources (folder-synced: new files build automatically)
-│       ├── App/              App entry point and screens
-│       └── Analysis/         Core ML detector and video frame analysis
+│       ├── App/              App entry point and run list (import + history)
+│       ├── Analysis/         Core ML detector and video frame analysis
+│       ├── Library/          Saved runs on disk (Documents/Runs/<id>/)
+│       └── Playback/         Video player with detection overlay
 ├── model/                    Core ML export, parity checks, crop experiment (Python)
 ├── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
 ├── artifacts/                Exported .mlpackage files (generated, git-ignored)
@@ -25,8 +27,21 @@ building the app; the Xcode project bundles
 
 ## iPhone app
 
-Current features: import a video from Files, run the detector on every frame
-on-device, show progress/timing, cancel, and share timestamped JSONL detections.
+Current features:
+
+- Import a video from Files and run the detector on every frame on-device, with
+  progress and cancel. The screen stays awake during analysis; keep the app open.
+- Each analysis is saved as a run (`Documents/Runs/<id>/`: the copied video,
+  `detections.jsonl`, `thumbnail.jpg`, `run.json`). Runs are listed on the home
+  screen; swipe to delete. Interrupted analyses are discarded on next launch.
+- Playback: tap a run to watch the video with players (green), ball (yellow ring
+  with confidence, plus a 0.5 s trail of earlier detections), and paddles (cyan)
+  drawn on top. Play/pause (or tap the video), scrub, step frame by frame, and
+  slow down to 0.5× / 0.25×. The overlay toggles live in the toolbar menu; the
+  share button exports `detections.jsonl`.
+
+The overlay reads the player's current time every display frame and looks up the
+analyzed frame by source timestamp, so boxes stay aligned when scrubbing or stepping.
 
 Not yet included: tracking IDs, court calibration, speed, match stats, or
 heatmaps. Detections are raw candidates; the ball-frame count is not
@@ -82,6 +97,9 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
 ```
 
 Core ML runs on CPU in the simulator, so timings there are not representative.
+Debug builds accept a `-openLatestRun` launch argument that opens the newest run,
+for screenshot checks without UI interaction:
+`xcrun simctl launch <sim> com.vantage.detectorprototype -openLatestRun`.
 
 ### Detector details
 

@@ -7,14 +7,16 @@ struct FrameDetections: Codable, Sendable {
     let width: Double
     let height: Double
     let inferenceMilliseconds: Double
-    let detections: [BallDetection]
+    let detections: [Detection]
 }
 
 struct AnalysisResult: Sendable {
     let frames: Int
     let ballFrames: Int
     let averageMilliseconds: Double
-    let file: URL
+    let width: Double
+    let height: Double
+    let durationSeconds: Double
 }
 
 actor VideoAnalyzer {
@@ -30,7 +32,9 @@ actor VideoAnalyzer {
         }
     }
 
-    func analyze(video: URL, model: URL,
+    /// Writes one `FrameDetections` JSON line per decoded frame to `destination`.
+    /// The file is removed if analysis fails or is cancelled.
+    func analyze(video: URL, model: URL, destination: URL,
                  progress: @Sendable (Double) async -> Void) async throws -> AnalysisResult {
         let detector = try Detector(url: model)
         let asset = AVURLAsset(url: video)
@@ -46,13 +50,13 @@ actor VideoAnalyzer {
         guard reader.canAdd(output) else { throw PrototypeError.message("Unsupported video format.") }
         reader.add(output)
         guard reader.startReading() else { throw reader.error ?? PrototypeError.message("Cannot decode video.") }
-        let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let destination = folder.appendingPathComponent("detections-\(UUID().uuidString).jsonl")
         FileManager.default.createFile(atPath: destination.path, contents: nil)
         let file = try FileHandle(forWritingTo: destination)
         defer { try? file.close(); reader.cancelReading() }
         var frames = 0, ballFrames = 0
         var totalMilliseconds = 0.0
+        var size = CGSize.zero
+        let encoder = JSONEncoder()
         do {
             while let sample = output.copyNextSampleBuffer() {
                 try Task.checkCancellation()
@@ -66,10 +70,11 @@ actor VideoAnalyzer {
                     return FrameDetections(timeSeconds: time, width: image.extent.width, height: image.extent.height,
                         inferenceMilliseconds: (CFAbsoluteTimeGetCurrent()-start)*1000, detections: detections)
                 }
-                try file.write(contentsOf: JSONEncoder().encode(record))
+                size = CGSize(width: record.width, height: record.height)
+                try file.write(contentsOf: encoder.encode(record))
                 try file.write(contentsOf: Data([10]))
                 frames += 1
-                ballFrames += record.detections.contains(where: { $0.classID == 32 }) ? 1 : 0
+                ballFrames += record.detections.contains(where: { $0.classID == DetectionClass.ball }) ? 1 : 0
                 totalMilliseconds += record.inferenceMilliseconds
                 if frames % 10 == 0 { await progress(duration > 0 ? min(1, max(0, time/duration)) : 0) }
             }
@@ -77,7 +82,8 @@ actor VideoAnalyzer {
             guard frames > 0 else { throw PrototypeError.message("No frames decoded.") }
             await progress(1)
             return AnalysisResult(frames: frames, ballFrames: ballFrames,
-                                  averageMilliseconds: totalMilliseconds/Double(frames), file: destination)
+                                  averageMilliseconds: totalMilliseconds/Double(frames),
+                                  width: size.width, height: size.height, durationSeconds: duration)
         } catch {
             // Never present a truncated run as a completed export.
             try? FileManager.default.removeItem(at: destination)

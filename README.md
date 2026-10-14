@@ -5,6 +5,10 @@ a separate motion tracker for the ball on one fixed-camera video. It calibrates
 the court with four clicks and exports an annotated video and estimated statistics.
 No model training, web server, or real-time requirements.
 
+An on-device iPhone version (Core ML detector, saved runs, playback with detection
+overlays) and the model export tooling live in [`mobile/`](mobile/README.md); they are
+independent of this desktop pipeline.
+
 ## Side-view demo
 
 [![Watch the annotated side-view demo](docs/sideview-preview.jpg)](docs/sideview-annotated.mp4)
