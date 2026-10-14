@@ -18,6 +18,18 @@ struct AnalysisResult: Sendable {
 }
 
 actor VideoAnalyzer {
+    /// Maps a track's preferredTransform (defined in top-left/y-down coordinates) to the
+    /// equivalent image orientation. Applying the transform directly to a CIImage (y-up)
+    /// rotates portrait video 180° from what AVPlayer displays.
+    static func orientation(for transform: CGAffineTransform) -> CGImagePropertyOrientation {
+        switch Int((atan2(transform.b, transform.a) * 180 / .pi).rounded()) {
+        case 90: return .right
+        case -90: return .left
+        case 180, -180: return .down
+        default: return .up
+        }
+    }
+
     func analyze(video: URL, model: URL,
                  progress: @Sendable (Double) async -> Void) async throws -> AnalysisResult {
         let detector = try Detector(url: model)
@@ -25,7 +37,7 @@ actor VideoAnalyzer {
         guard let track = try await asset.loadTracks(withMediaType: .video).first else {
             throw PrototypeError.message("No video track found.")
         }
-        let transform = try await track.load(.preferredTransform)
+        let orientation = VideoAnalyzer.orientation(for: try await track.load(.preferredTransform))
         let duration = try await asset.load(.duration).seconds
         let reader = try AVAssetReader(asset: asset)
         let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
@@ -48,7 +60,7 @@ actor VideoAnalyzer {
                 let time = CMSampleBufferGetPresentationTimeStamp(sample).seconds
                 guard time.isFinite else { throw PrototypeError.message("Invalid video timestamp.") }
                 let record: FrameDetections = try autoreleasepool {
-                    let image = CIImage(cvPixelBuffer: buffer).transformed(by: transform)
+                    let image = CIImage(cvPixelBuffer: buffer).oriented(orientation)
                     let start = CFAbsoluteTimeGetCurrent()
                     let detections = try detector.detect(image)
                     return FrameDetections(timeSeconds: time, width: image.extent.width, height: image.extent.height,
