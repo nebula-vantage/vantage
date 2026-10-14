@@ -26,9 +26,19 @@ mobile/
 └── reports/                  Comparison and experiment outputs (generated, git-ignored)
 ```
 
-`artifacts/` is not committed. On a fresh clone, run the export (below) before
-building the app; the Xcode project bundles
-`artifacts/yolo26n-1280/VantageDetector.mlpackage`.
+`artifacts/` is not committed. The app bundles the fine-tuned pickleball model,
+`artifacts/pickleball-v1-1280/VantageDetector.mlpackage`. On a fresh clone, export it
+from the committed weights before building:
+
+```sh
+mobile/.venv/bin/python mobile/model/export_model.py --weights ml/models/pickleball-v1.pt \
+  --ball-confidence 0.20 --output mobile/artifacts/pickleball-v1-1280
+```
+
+On the held-out topcorner clip it tracks the ball in 61.6% of visible-ball frames at
+96.2% precision on-device, versus 39.6% / 97.0% for the generic COCO model (details in
+`ml/models/pickleball-v1.json` and `ml/README.md`). To compare against COCO, export
+`yolo26n.pt` to `artifacts/yolo26n-1280` and run `vantage-analyze` with each package.
 
 ## iPhone app
 

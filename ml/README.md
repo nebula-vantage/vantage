@@ -26,9 +26,19 @@ git-ignored `ml/external/`, `ml/datasets/`, and `ml/runs/`.
 | --- | --- | ---: | ---: |
 | Generic COCO YOLO26n | on-device (Core ML) | 39.6% | 97.0% |
 | Generic COCO YOLO26n | PyTorch (`predict_video.py`) | 40.2% | 97.1% |
+| **pickleball-v1** (ball conf ≥ 0.20) | **on-device (Core ML)** | **61.6%** | **96.2%** |
+| pickleball-v1 (ball conf ≥ 0.20) | PyTorch | 62.8% | 97.2% |
+| pickleball-v1 (ball conf ≥ 0.10) | PyTorch | 64.0% | 90.5% |
 
-57% of visible balls get no detection at all (median 8 px), so the detector, not the
-tracker, limits recall. A fine-tuned model must beat these numbers on this held-out clip.
+With the COCO model, 57% of visible balls got no detection at all (median 8 px); with
+pickleball-v1, 29%. The app ships pickleball-v1. Its weights and model card (data,
+training, validation, held-out results, known errors, export command) are in
+`ml/models/`. The 0.20 operating point was chosen on this clip; confirm it on another
+labeled clip (e.g. backcorner60fps) before relying on the exact numbers.
+
+Each model's ball-confidence threshold is stored in its Core ML metadata
+(`export_model.py --ball-confidence`, read by the app's `Detector`), so the app always
+uses the threshold that model was evaluated with.
 
 ## Why
 

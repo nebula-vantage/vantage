@@ -19,7 +19,7 @@ targets:
     sources:
       - path: VantageMobile
         type: syncedFolder
-      - path: ../artifacts/yolo26n-1280/VantageDetector.mlpackage
+      - path: ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage
     dependencies:
       - package: VantageKit
     settings:

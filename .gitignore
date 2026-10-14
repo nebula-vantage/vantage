@@ -5,6 +5,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.pt
+# Trained Vantage models are small (~5 MB) and versioned with their model cards.
+!ml/models/*.pt
 *.onnx
 *.mp4
 *.mov

@@ -1,0 +1,74 @@
+{
+  "model": "pickleball-v1",
+  "weights": "ml/models/pickleball-v1.pt",
+  "sha256": "8387f0917367d844c9a46d75d718b379eceffda8b4900fddd03c67f463a6e10c",
+  "base": "yolo26n.pt (COCO)",
+  "classes": {
+    "0": "player",
+    "1": "ball",
+    "2": "paddle"
+  },
+  "training": {
+    "imgsz": 1280,
+    "batch": 8,
+    "epochs_completed": 21,
+    "time_budget_hours": 6,
+    "device": "Apple M4 Pro (MPS)",
+    "note": "still improving at the time limit"
+  },
+  "data": {
+    "spec": "ml/dataset.yaml",
+    "totals": {
+      "train_images": 10182,
+      "train_ball": 10614,
+      "train_player": 57593,
+      "train_paddle": 7661,
+      "val_images": 1067,
+      "val_ball": 1168,
+      "val_player": 7133,
+      "val_paddle": 855
+    },
+    "sources": "13 public Roboflow datasets (ml/DATA_SOURCES.md); player and most paddle labels from the COCO teacher",
+    "holdout_videos": [
+      "backcorner60fps",
+      "topcorner60fps"
+    ]
+  },
+  "validation_last_epoch_all_classes": {
+    "mAP50": 0.77255,
+    "mAP50-95": 0.56146,
+    "precision": 0.7926,
+    "recall": 0.7185
+  },
+  "operating_point": {
+    "ball_confidence": 0.2,
+    "chosen_on": "topcorner60fps sweep (0.10-0.40); confirm on another labeled clip"
+  },
+  "held_out_topcorner60fps": {
+    "labels": "164 visible balls in 224 labeled frames",
+    "match_radius": "1% of frame diagonal",
+    "coco_yolo26n_on_device": {
+      "tracked_recall": 0.396,
+      "tracked_precision": 0.97
+    },
+    "pickleball_v1_pytorch_conf_0.10": {
+      "tracked_recall": 0.64,
+      "tracked_precision": 0.905
+    },
+    "pickleball_v1_pytorch_conf_0.20": {
+      "tracked_recall": 0.628,
+      "tracked_precision": 0.972
+    },
+    "pickleball_v1_on_device_conf_0.20": {
+      "tracked_recall": 0.616,
+      "tracked_precision": 0.962,
+      "ms_per_frame_mac": 11.0
+    }
+  },
+  "known_errors": [
+    "leaves on court before static-clutter suppression engages (~1 s)",
+    "neon-yellow clothing",
+    "paddle quality bounded by COCO tennis-racket pseudo-labels"
+  ],
+  "export": "mobile/.venv/bin/python mobile/model/export_model.py --weights ml/models/pickleball-v1.pt --ball-confidence 0.20 --output mobile/artifacts/pickleball-v1-1280"
+}

@@ -11,6 +11,8 @@ public final class Detector {
     private let size: Int
     /// Model class index -> canonical DetectionClass ID, from the model's `names` metadata.
     public let classMap: [Int: Int]
+    /// Minimum ball confidence for this model (`vantage_ball_confidence` metadata, default 0.10).
+    public let ballConfidence: Double
 
     public init(url: URL) throws {
         let configuration = MLModelConfiguration()
@@ -26,6 +28,7 @@ public final class Detector {
             throw AnalysisError.message("Model has no class-name metadata. Export it with mobile/model/export_model.py.")
         }
         classMap = DetectionClass.canonicalMap(namesMetadata: names)
+        ballConfidence = metadata["vantage_ball_confidence"].flatMap(Double.init) ?? 0.10
         guard Set(classMap.values).contains(DetectionClass.ball) else {
             throw AnalysisError.message("Model has no ball class (expected 'sports ball', 'ball', or 'pickleball').")
         }
@@ -60,6 +63,7 @@ public final class Detector {
             let values = (0..<6).map(value)
             guard values.allSatisfy({ $0.isFinite }), values[4] >= 0.10 else { continue }
             guard let cls = classMap[Int(values[5])] else { continue }
+            if cls == DetectionClass.ball && values[4] < ballConfidence { continue }
             let box = [max(0, min(width, (values[0]-left)/gain)),
                        max(0, min(height, (values[1]-top)/gain)),
                        max(0, min(width, (values[2]-left)/gain)),

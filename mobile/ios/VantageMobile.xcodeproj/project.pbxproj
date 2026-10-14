@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		000000000000000000000021 /* ../artifacts/yolo26n-1280/VantageDetector.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000D /* ../artifacts/yolo26n-1280/VantageDetector.mlpackage */; };
+		000000000000000000000021 /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */; };
 		000000000000000000000032 /* VantageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000031 /* VantageKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		00000000000000000000000D /* ../artifacts/yolo26n-1280/VantageDetector.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = "../artifacts/yolo26n-1280/VantageDetector.mlpackage"; sourceTree = "<group>"; };
+		00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = "../artifacts/pickleball-v1-1280/VantageDetector.mlpackage"; sourceTree = "<group>"; };
 		00000000000000000000000E /* VantageMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VantageMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000033 /* VantageKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = VantageKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -42,7 +42,7 @@
 			children = (
 				00000000000000000000000F /* VantageMobile */,
 				000000000000000000000033 /* VantageKit */,
-				00000000000000000000000D /* ../artifacts/yolo26n-1280/VantageDetector.mlpackage */,
+				00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */,
 				000000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -125,7 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000000021 /* ../artifacts/yolo26n-1280/VantageDetector.mlpackage in Sources */,
+				000000000000000000000021 /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
