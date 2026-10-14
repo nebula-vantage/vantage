@@ -16,3 +16,8 @@ output/*
 
 # Include the annotated video linked from the README demo.
 !docs/sideview-annotated.mp4
+
+# Training data and runs (large, regenerable); labels and dataset specs are committed.
+ml/datasets/
+ml/external/
+ml/runs/

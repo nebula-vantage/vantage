@@ -26,8 +26,10 @@ if str(ROOT) not in sys.path:
 from ball_tracker import BallTracker  # noqa: E402
 from config import CONFIG  # noqa: E402
 from records import Detection  # noqa: E402
+from vantage_classes import CANONICAL  # noqa: E402
 
-BALL = CONFIG["model"]["classes"]["ball"]
+# detections.jsonl always uses canonical IDs, whatever model produced it.
+BALL = CANONICAL["ball"]
 SCHEMA = 1
 
 

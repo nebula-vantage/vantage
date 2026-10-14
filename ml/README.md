@@ -8,10 +8,27 @@ app; Core ML export and conversion checks stay in `mobile/model/`.
 | --- | --- |
 | `label_ball.py` | OpenCV labeling tool, pre-filled from the pipeline |
 | `evaluate_ball.py` | Recall/precision of detector and tracker against labels |
-| `labeling.py` | Label format, session logic, evaluation (UI-free, tested) |
+| `fetch_roboflow.py` | Download a public Roboflow dataset, refusing NC/ND/unknown licenses |
+| `dataset.yaml` | Training-set spec: holdout clips, label folders, external datasets, teacher |
+| `build_dataset.py` | Build the YOLO training set (player, ball, paddle) from the spec |
+| `train.py` | Fine-tune YOLO26n at 1280 px on the Apple GPU |
+| `predict_video.py` | Run any checkpoint on a video, writing app-format detections.jsonl |
+| `labeling.py`, `vantage_classes.py` | Label format, session logic, evaluation, class mapping |
 | `labels/` | Committed labels, one JSON file per video |
+| `DATA_SOURCES.md` | Attribution for downloaded datasets (written by fetch_roboflow.py) |
 
-Tests: `.venv/bin/python -m unittest discover -s ml`
+Tests: `.venv/bin/python -m unittest discover -s ml`. Generated data lives in the
+git-ignored `ml/external/`, `ml/datasets/`, and `ml/runs/`.
+
+## Current baseline (topcorner60fps evaluation set, 164 visible balls)
+
+| Model | Path | Tracked recall | Tracked precision |
+| --- | --- | ---: | ---: |
+| Generic COCO YOLO26n | on-device (Core ML) | 39.6% | 97.0% |
+| Generic COCO YOLO26n | PyTorch (`predict_video.py`) | 40.2% | 97.1% |
+
+57% of visible balls get no detection at all (median 8 px), so the detector, not the
+tracker, limits recall. A fine-tuned model must beat these numbers on this held-out clip.
 
 ## Why
 
@@ -74,6 +91,39 @@ for the detector alone (`raw best`), the tracker, and the tracker without
 static-clutter suppression. A prediction counts as correct within 1% of the frame
 diagonal (`--radius-diagonals`). `--export-centers` writes the
 `{frame: [x, y] | null}` format accepted by `mobile/model/crop_experiment.py --labels`.
+
+## 4. Fine-tune
+
+```sh
+# a. Public data (needs a free key: roboflow.com -> Settings -> API Keys)
+export ROBOFLOW_API_KEY=...
+.venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION --info   # check license/classes
+.venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION          # download + attribution
+#    then add it to ml/dataset.yaml under external: with its class mapping
+
+# b. Build, train, evaluate on the held-out clip
+.venv/bin/python ml/build_dataset.py
+.venv/bin/python ml/train.py --data ml/datasets/pickleball-v1/data.yaml --name pickleball-v1
+.venv/bin/python ml/predict_video.py --weights ml/runs/pickleball-v1/weights/best.pt \
+  --video assets/pickleball/topcorner60fps.mov --output /tmp/topcorner-v1.jsonl
+.venv/bin/python ml/evaluate_ball.py --labels ml/labels/topcorner60fps.json --detections /tmp/topcorner-v1.jsonl
+
+# c. If it beats the baseline: export for the app and confirm on the Core ML path
+mobile/.venv/bin/python mobile/model/export_model.py \
+  --weights ml/runs/pickleball-v1/weights/best.pt --output mobile/artifacts/pickleball-v1-1280
+```
+
+The fine-tuned model has classes player, ball, paddle. Player and paddle labels are
+pseudo-labels from the generic COCO model wherever a source does not label them, so the
+new model keeps detecting people and paddles (paddle quality is bounded by the COCO
+racket proxy). The app maps classes to its canonical IDs by name, so a new model is a
+drop-in replacement; for the desktop pipeline set
+`CONFIG["model"] = {"path": ".../best.pt", "classes": {"player": 0, "ball": 1, "paddle": 2}}`.
+
+Smoke test lesson: fine-tuning on 150 frames of one clip (sideview) dropped held-out
+recall from 40% to 1.8%. A model learns the clips it sees, so varied data (courts,
+angles, lighting, ball colors) matters more than volume from one recording, and every
+model must be checked on the held-out clips before it replaces the current one.
 
 ## Labeling plan
 

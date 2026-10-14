@@ -1,0 +1,25 @@
+# Training-set spec for ml/build_dataset.py. Output: ml/datasets/<name>/ (git-ignored).
+name: pickleball-v1
+
+# Evaluation-only clips: their labels are never put in train/val, so scores stay honest.
+holdout_videos: [topcorner60fps, backcorner60fps]
+
+# Fraction of hand-labeled video time (in 2-second blocks) used for validation.
+val_fraction: 0.15
+
+# Hand labels from ml/label_ball.py: every ml/labels/*.json except holdout videos.
+labels: ml/labels
+
+# Public datasets downloaded with ml/fetch_roboflow.py into ml/external/<dir>.
+# classes maps each dataset class name to player | ball | paddle; other classes are dropped.
+# Example:
+#   - dir: someworkspace__pickleball-ball__v2
+#     classes: {pickleball: ball}
+external: []
+
+# Classes a source does not label (player/paddle for ball-only data) are pseudo-labeled
+# by the generic COCO model so the fine-tuned model keeps detecting them.
+teacher:
+  weights: yolo26n.pt
+  imgsz: 1280
+  confidence: {player: 0.40, paddle: 0.30}
