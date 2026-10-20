@@ -31,15 +31,15 @@ This is not a validated improvement in accuracy, and production code was not cha
 
 ## Visual evidence
 
-- [Close-up sequence, frames 161–172](../output/ball-diagnostic/sequence-161-172.jpg):
+- [Close-up sequence, frames 161–172](../../output/ball-diagnostic/sequence-161-172.jpg):
   the visible ball has no raw detection in frames 163–164. Frames 162 and 165 have
   correctly located raw detections but no post-tracker ball. Tracking retains
   detections in frames 166–169, then drops correctly located raw detections in
   frames 170–172 (confidence approximately 0.255, 0.202, 0.198).
-- [False-positive example, frame 105](../output/ball-diagnostic/raw_dropped-00105.jpg):
+- [False-positive example, frame 105](../../output/ball-diagnostic/raw_dropped-00105.jpg):
   a wall sign is labeled as a sports ball. More raw candidates do not necessarily
   mean more correct detections.
-- [Side-by-side first 30 seconds](../output/ball-diagnostic/comparison-first-30s.mp4):
+- [Side-by-side first 30 seconds](../../output/ball-diagnostic/comparison-first-30s.mp4):
   raw candidates on the left, post-ByteTrack candidates on the right. Added circles
   make tiny boxes easier to see. Video verified by decoding all 900 frames at
   1280×400 with source FPS; no audio.
@@ -61,9 +61,9 @@ remaining detector misses. A runtime migration alone would not resolve these fai
 ## Reproduce and inspect
 
 These are historical results from the combined-ByteTrack implementation. The current
-`.venv/bin/python diagnostics/check_ball_detection.py` measures the new motion tracker;
+`uv run python pipeline/diagnostics/check_ball_detection.py` measures the new motion tracker;
 it does not recreate the old tracking stage.
 See [diagnostic instructions](README.md). Raw per-frame observations are in
-[frames.jsonl](../output/ball-diagnostic/frames.jsonl); configuration and counts in
-[summary.json](../output/ball-diagnostic/summary.json); full-run equality validation
-and raw-selector replay in [validation.json](../output/ball-diagnostic/validation.json).
+[frames.jsonl](../../output/ball-diagnostic/frames.jsonl); configuration and counts in
+[summary.json](../../output/ball-diagnostic/summary.json); full-run equality validation
+and raw-selector replay in [validation.json](../../output/ball-diagnostic/validation.json).

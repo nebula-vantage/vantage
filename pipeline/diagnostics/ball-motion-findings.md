@@ -35,10 +35,10 @@ Visual review confirms recovery of the actual ball in frames 162, 165, and 170â€
 which the former tracking stage dropped. Frames 163â€“164 remain missing because there
 was no raw detector observation; the tracker does not fabricate replacements.
 
-- [Before/after video, first 30 seconds](../output/ball-motion-replay/comparison-first-30s.mp4)
-- [Recovered observation at frame 170](../output/ball-motion-replay/comparison-170.jpg)
-- [Full replay measurements and configuration](../output/ball-motion-replay/summary.json)
-- [Fresh inference diagnostic](../output/ball-motion-diagnostic/summary.json)
+- [Before/after video, first 30 seconds](../../output/ball-motion-replay/comparison-first-30s.mp4)
+- [Recovered observation at frame 170](../../output/ball-motion-replay/comparison-170.jpg)
+- [Full replay measurements and configuration](../../output/ball-motion-replay/summary.json)
+- [Fresh inference diagnostic](../../output/ball-motion-diagnostic/summary.json)
 
 The comparison video uses cached detections, verified against fresh inference, and
 was fully decoded to verify 900 frames at the source FPS. Its circles highlight
@@ -70,9 +70,9 @@ in the main README. No iPhone performance benchmark has been run.
 ## Reproduce
 
 ```sh
-.venv/bin/python -m unittest discover -v
-.venv/bin/python diagnostics/replay_ball_tracking.py
-.venv/bin/python diagnostics/check_ball_detection.py --max-frames 900
+uv run python -m unittest discover -s pipeline/tests -v
+uv run python pipeline/diagnostics/replay_ball_tracking.py
+uv run python pipeline/diagnostics/check_ball_detection.py --max-frames 900
 ```
 
 Replay requires the previous raw-detection diagnostic under `output/ball-diagnostic/`.

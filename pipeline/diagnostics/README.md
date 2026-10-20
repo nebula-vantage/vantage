@@ -3,7 +3,7 @@
 Run from the repository root:
 
 ```sh
-.venv/bin/python diagnostics/check_ball_detection.py
+uv run python pipeline/diagnostics/check_ball_detection.py
 ```
 
 Use `--input VIDEO`, `--output-dir DIRECTORY`, or `--max-frames 900` to change the

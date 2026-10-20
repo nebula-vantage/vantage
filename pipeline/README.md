@@ -1,47 +1,49 @@
-# Vantage — offline pickleball video analysis
+# Desktop pipeline — offline pickleball video analysis
 
 A Python CLI that runs pretrained YOLO26 nano with ByteTrack for players and
 a separate motion tracker for the ball on one fixed-camera video. It calibrates
 the court with four clicks and exports an annotated video and estimated statistics.
 No model training, web server, or real-time requirements.
 
-An on-device iPhone version (Core ML detector, saved runs, playback with detection
-overlays) and the model export tooling live in [`mobile/`](mobile/README.md); they are
-independent of this desktop pipeline. Ball labeling, accuracy evaluation, and detector
-training data live in [`ml/`](ml/README.md).
+The on-device iPhone app (Core ML detector, saved runs, playback with detection
+overlays) is in [`ios/`](../ios/README.md) and the Core ML export tooling in
+[`tools/coreml/`](../tools/coreml/README.md); both are independent of this pipeline. Ball
+labeling, accuracy evaluation, and detector training data live in [`ml/`](../ml/README.md).
+The package code is in [`vantage/`](vantage/), tests in [`tests/`](tests/).
 
 ## Side-view demo
 
-[![Watch the annotated side-view demo](docs/sideview-preview.jpg)](docs/sideview-annotated.mp4)
+[![Watch the annotated side-view demo](../docs/sideview-preview.jpg)](../docs/sideview-annotated.mp4)
 
-[Watch or download the annotated side-view video](docs/sideview-annotated.mp4) (MP4, approximately 20 seconds), showing player and ball tracking with the stats overlay.
+[Watch or download the annotated side-view video](../docs/sideview-annotated.mp4) (MP4, approximately 20 seconds), showing player and ball tracking with the stats overlay.
 
 ## Setup and run
 
-Python 3.10+ is supported; Python 3.13 is the tested environment.
+Run everything from the repository root after `uv sync` (see the
+[root README](../README.md)). Python 3.13 is the tested environment.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
+uv sync
 mkdir -p input
 # Put your fixed-camera game video at input/sample.mp4, then:
-python main.py --input input/sample.mp4
+uv run vantage --input input/sample.mp4
 ```
 
 For the video already supplied with this project:
 
 ```bash
-python main.py --input assets/videoplayback.mp4
+uv run vantage --input assets/sideview.MOV
 ```
+
+`python -m vantage` is equivalent inside the environment.
 
 `--input` defaults to `input/sample.mp4`; `--output-dir` defaults to `output`.
 Missing input produces an actionable error before importing the ML libraries.
 Paths are relative to the current working directory. For offline processing,
-first install requirements and download `yolo26n.pt` while online:
+first run `uv sync` and download `yolo26n.pt` while online:
 
 ```bash
-python -c 'from ultralytics import YOLO; YOLO("yolo26n.pt")'
+uv run python -c 'from ultralytics import YOLO; YOLO("yolo26n.pt")'
 ```
 
 `lap` is explicitly installed because ByteTrack needs its assignment solver;
@@ -65,7 +67,7 @@ to x=0–6.10 m and y=0–13.41 m, with the net at y=6.705 m.
 
 The program saves `output/homography.npy` and `output/calibration.json`. A matching
 calibration is reused on subsequent runs. If the camera moves, zooms, or crops,
-run `python main.py --recalibrate`. A resolution mismatch triggers recalibration
+run `uv run vantage --recalibrate`. A resolution mismatch triggers recalibration
 automatically. For separate camera setups, use separate output directories.
 
 ## Outputs
@@ -96,7 +98,7 @@ Stdout contains **only the final statistics JSON**. Progress and diagnostics go
 to stderr, so redirecting is safe:
 
 ```bash
-python main.py --input input/sample.mp4 > run-stats.json
+uv run vantage --input input/sample.mp4 > run-stats.json
 ```
 
 Detection and rendering use two video passes. Only compact records are retained,
@@ -156,7 +158,7 @@ be identifiable. People outside the court can also be detected as players.
 ## Configuration and code structure
 
 All tunable parameters, units, colours, and thresholds are commented in the one
-`CONFIG` dictionary in `config.py`. To switch models, replace its `model` entry:
+`CONFIG` dictionary in `vantage/config.py`. To switch models, replace its `model` entry:
 
 ```python
 "model": {"path": "pickleball.pt", "classes": {"player": 0, "ball": 1, "paddle": 2}},
@@ -168,24 +170,26 @@ name the requested weights and explain how to prepare an offline run.
 
 | File | Responsibility |
 | --- | --- |
-| `main.py` | CLI, input checks, two-pass orchestration, output publication |
-| `config.py` | Model/class mapping and all tuning parameters |
-| `records.py` | Shared typed frame, detection, trajectory, bounce, rally records |
-| `tracking_cache.py` | Validate cached observations against input, settings, and checksum |
-| `motion_stream.py` | Causal coordinates, per-track distance, projected speed, and hit candidates |
-| `detector.py` | One raw YOLO pass, player-only ByteTrack, raw paddle observations |
-| `ball_tracker.py` | Ball acquisition, velocity prediction, motion matching, loss/reacquisition |
-| `court.py` | Calibration UI, validated cache, projective mapping |
-| `ball_physics.py` | Segments, smoothing, interpolation/coasting, bounce estimates |
-| `stats.py` | Crossings, rally grouping, speed, quality metadata |
-| `visualize.py` | Overlays, fading trails, video writing and decode verification |
-| `heatmap.py` | Court diagram, event density, landing dots, and verified PNG export |
+| `vantage/main.py` | CLI, input checks, two-pass orchestration, output publication |
+| `vantage/config.py` | Model/class mapping and all tuning parameters |
+| `vantage/records.py` | Shared typed frame, detection, trajectory, bounce, rally records |
+| `vantage/tracking_cache.py` | Validate cached observations against input, settings, and checksum |
+| `vantage/motion_stream.py` | Causal coordinates, per-track distance, projected speed, and hit candidates |
+| `vantage/detector.py` | One raw YOLO pass, player-only ByteTrack, raw paddle observations |
+| `vantage/ball_tracker.py` | Ball acquisition, velocity prediction, motion matching, loss/reacquisition |
+| `vantage/court.py` | Calibration UI, validated cache, projective mapping |
+| `vantage/ball_physics.py` | Segments, smoothing, interpolation/coasting, bounce estimates |
+| `vantage/stats.py` | Crossings, rally grouping, speed, quality metadata |
+| `vantage/visualize.py` | Overlays, fading trails, video writing and decode verification |
+| `vantage/heatmap.py` | Court diagram, event density, landing dots, and verified PNG export |
 
 ## Tests
 
 ```bash
-python -m unittest discover -v
+uv run python -m unittest discover -s pipeline/tests -v
 ```
+
+`scripts/test.sh` runs this together with the `ml/`, `tools/coreml/`, and Swift suites.
 
 Tests use synthetic trajectories and generated MP4 files, including an injected
 detector; they do not download weights or open calibration windows. They cover
@@ -193,15 +197,15 @@ calibration geometry/cache validation, ball motion association at 30/120 FPS, ra
 detection routing, missing data, track changes, bounce/paddle ambiguity, boundaries, crossings, rally grouping, speed,
 no-ball output, stdout JSON, and failed-run cleanup.
 
-Tested dependency versions: Python 3.13.7, Ultralytics 8.4.159, OpenCV 5.0.0.93,
-NumPy 2.5.3, and lap 0.5.13. The requirements use compatible ranges so Python 3.10
-can resolve releases that still support it.
+Dependency versions are locked in `uv.lock`: Python 3.13, Ultralytics 8.4.159,
+OpenCV 5.0.0.93, and lap 0.5.13. NumPy is held at 2.3.5 by the Core ML tooling's pin
+(the pipeline was previously tested with 2.5.3).
 
 Reference: [Ultralytics tracking API](https://docs.ultralytics.com/modes/track/).
 
 ## Ball tracking diagnostics
 
-Run `.venv/bin/python diagnostics/check_ball_detection.py --max-frames 900` to compare
+Run `uv run python pipeline/diagnostics/check_ball_detection.py --max-frames 900` to compare
 raw YOLO ball candidates with motion-tracker selections on the first 900 frames.
 See [diagnostic instructions](diagnostics/README.md). Candidate coverage is not
 accuracy; visual or labeled evaluation is needed to assess false positives.
@@ -220,7 +224,7 @@ match scoring, player identities, or verified line calls.
 After a completed run, change the statistics/trajectory/bounce configuration and run:
 
 ```sh
-python main.py --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze
+uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze
 ```
 
 This reuses the completed tracking observations and recalculates statistics, events,
@@ -238,13 +242,13 @@ remain available as the baseline.
 To process a video and print each frame as soon as it is tracked:
 
 ```sh
-.venv/bin/python main.py --input assets/videoplayback.mp4 --output-dir output/combined --stream
+uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --stream
 ```
 
 To stream the existing validated tracking results without rerunning YOLO:
 
 ```sh
-.venv/bin/python main.py --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze --stream
+uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze --stream
 ```
 
 Add `| tee coordinates.jsonl` to watch the stream and save it simultaneously. The
@@ -312,7 +316,7 @@ peak: it shows relative concentration, not landing probability. Different videos
 colours must not be compared as absolute frequencies. White dots retain the actual
 candidate locations beneath the density estimate.
 
-The current sample image is [here](output/combined/landing_heatmap.png). It is labeled
+The combined sample run writes it to `output/combined/landing_heatmap.png`. It is labeled
 **Estimated bounce locations** because incomplete detection and false bounce
 candidates can bias the map. The full-video ball-observation coverage is shown
 prominently; an empty far court is not proof that no balls landed there.

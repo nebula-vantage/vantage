@@ -1,38 +1,34 @@
-# Vantage mobile
+# Vantage iOS app
 
-On-device (iPhone) version of Vantage plus the tooling that converts and validates
-the detector model for Core ML. This folder is independent of the desktop pipeline
-in the repository root: it has its own Python environment, dependencies, model
-copies, and reports. Continue using `.venv/bin/python main.py ...` for Mac analysis.
+On-device (iPhone) version of Vantage. `VantageMobile/` is the SwiftUI app; the analysis
+logic lives in the `VantageKit` Swift package, which has no UI and is testable on a Mac.
+The Core ML model it bundles is exported by [`tools/coreml/`](../tools/coreml/README.md)
+from weights trained in [`ml/`](../ml/README.md). The desktop pipeline in
+[`pipeline/`](../pipeline/README.md) is the reference the Swift tracker is tested against.
 
 ```
-mobile/
-├── ios/                      iPhone app (SwiftUI)
-│   ├── VantageMobile.xcodeproj
-│   ├── project.yml           XcodeGen spec mirroring the project (optional)
-│   ├── VantageMobile/        App sources (folder-synced: new files build automatically)
-│   │   ├── App/              App entry point and run list (import + history)
-│   │   ├── Library/          Saved runs on disk (Documents/Runs/<id>/)
-│   │   └── Playback/         Video player with detection/track overlay
-│   └── VantageKit/           Swift package: UI-free logic, testable on the Mac
-│       ├── Sources/VantageKit/       Detection records, Core ML detector, video analyzer,
-│       │                             ball tracker + trajectory, playback timeline
-│       ├── Sources/vantage-analyze/  Mac CLI running the same analysis on a video
-│       └── Tests/                    Tracker parity (vs Python), behavior, timeline
-├── model/                    Core ML export, parity checks, tracker fixtures, crop experiment (Python)
-├── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
-├── scripts/test.sh           Run all mobile tests (Swift + Python)
-├── artifacts/                Exported .mlpackage files (generated, git-ignored)
-└── reports/                  Comparison and experiment outputs (generated, git-ignored)
+ios/
+├── VantageMobile.xcodeproj
+├── Config/                   Signing.xcconfig (committed) + your Local.xcconfig (git-ignored)
+├── VantageMobile/            App sources (folder-synced: new files build automatically)
+│   ├── App/                  App entry point and run list (import + history)
+│   ├── Library/              Saved runs on disk (Documents/Runs/<id>/)
+│   └── Playback/             Video player with detection/track overlay
+├── VantageKit/               Swift package: UI-free logic, testable on the Mac
+│   ├── Sources/VantageKit/       Detection records, Core ML detector, video analyzer,
+│   │                             ball tracker + trajectory, playback timeline
+│   ├── Sources/vantage-analyze/  Mac CLI running the same analysis on a video
+│   └── Tests/                    Tracker parity (vs Python), behavior, timeline
+└── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
 ```
 
-`artifacts/` is not committed. The app bundles the fine-tuned pickleball model,
-`artifacts/pickleball-v1-1280/VantageDetector.mlpackage`. On a fresh clone, export it
-from the committed weights before building:
+`artifacts/` (at the repository root) is not committed. The app bundles the fine-tuned
+pickleball model, `artifacts/pickleball-v1-1280/VantageDetector.mlpackage`. On a fresh
+clone, export it from the committed weights before building:
 
 ```sh
-mobile/.venv/bin/python mobile/model/export_model.py --weights ml/models/pickleball-v1.pt \
-  --ball-confidence 0.20 --output mobile/artifacts/pickleball-v1-1280
+uv run python tools/coreml/export_model.py --weights ml/models/pickleball-v1.pt \
+  --ball-confidence 0.20 --output artifacts/pickleball-v1-1280
 ```
 
 On the held-out topcorner clip it tracks the ball in 61.6% of visible-ball frames at
@@ -61,7 +57,8 @@ analyzed frame by source timestamp, so boxes stay aligned when scrubbing or step
 
 ### Ball tracking
 
-`VantageKit/BallTracker.swift` is a port of the desktop `ball_tracker.py`: motion
+`VantageKit/Sources/VantageKit/BallTracker.swift` is a port of the desktop
+`pipeline/vantage/ball_tracker.py`: motion
 prediction, speed gating, short-loss retention, turn fallback, stationary-clutter
 release, static-clutter suppression (spots that keep producing detections, such
 as leaves), and two-observation acquisition, all in capture-time seconds.
@@ -74,7 +71,7 @@ before tracking existed are tracked too, and tuning `BallTrackerConfig` needs no
 re-analysis. The analyzer also tracks inline to store the tracked-frame count
 (`trackedBallFrames` in `run.json`; absent on older runs, which show "ball seen").
 
-**Parity with the desktop:** `make_tracker_fixtures.py` feeds the raw ball
+**Parity with the desktop:** `tools/coreml/make_tracker_fixtures.py` feeds the raw ball
 candidates of real on-device runs through the Python tracker and records each
 frame's selection. The Swift tests replay the same candidates and require
 identical boxes, confidences, track IDs, and interpolated frames. Current fixtures:
@@ -90,7 +87,7 @@ that never move fell from 350 to 4 (topcorner) and 51 to 17 (backcorner), and
 track fragments from 56 to 23 and 22 to 16, with sideview unchanged.
 
 All 2,306 frames match exactly; a test also fails if Swift defaults drift from
-`config.py`. Tracker parity is not detector parity: Core ML's square-letterboxed
+`pipeline/vantage/config.py`. Tracker parity is not detector parity: Core ML's square-letterboxed
 input yields more ball candidates than the desktop's rectangular input, and the
 remaining fragmentation (missed frames) reflects the generic COCO detector, not
 the port. Track IDs are internal; the player shows a single "ball".
@@ -100,22 +97,33 @@ heatmaps. Paddle class 38 remains a tennis-racket proxy, as in the desktop pipel
 
 ### Run on your iPhone (free Apple ID, no paid developer program)
 
-From the repository root:
-
-```sh
-mobile/scripts/run_on_iphone.sh            # auto-detects the paired iPhone
-mobile/scripts/run_on_iphone.sh <UDID>     # or pick one: xcrun devicectl list devices
-```
-
 First time only:
 
 1. In Xcode → Settings → Accounts, add your Apple ID (a free Personal Team is fine).
-   The project's `DEVELOPMENT_TEAM` must be your team ID; change it in
-   Signing & Capabilities if you are not the original author.
-2. Connect the iPhone by USB, unlock it, and tap **Trust This Computer**.
+2. Set up signing. Copy `ios/Config/Local.xcconfig.example` to `ios/Config/Local.xcconfig`
+   (git-ignored) and fill in your team ID and a bundle ID suffix such as `.yourname`.
+   Bundle IDs are unique across Apple, so each person's team needs its own. To find your
+   team ID: in Xcode → Settings → Accounts → your team → **Manage Certificates…**, add an
+   **Apple Development** certificate if there isn't one, then run
+   `security find-certificate -c "Apple Development" -p | openssl x509 -noout -subject`.
+   Your team ID is the `OU=` value. Don't set the team in the target's Signing &
+   Capabilities tab: that writes it into the shared project file (`scripts/test.sh` fails
+   if a team or bundle ID appears there).
+   If you already installed the app as `com.vantage.detectorprototype`, leave the suffix
+   empty to keep that install and its saved runs.
+3. Connect the iPhone by USB, unlock it, and tap **Trust This Computer**.
    Enable **Developer Mode** (Settings → Privacy & Security) if prompted.
-3. After the first install, on the iPhone open Settings → General →
-   **VPN & Device Management** → *Apple Development: your email* → **Trust**.
+
+Then, from the repository root:
+
+```sh
+ios/scripts/run_on_iphone.sh            # auto-detects the paired iPhone
+ios/scripts/run_on_iphone.sh <UDID>     # or pick one: xcrun devicectl list devices
+```
+
+After the first install, on the iPhone open Settings → General →
+**VPN & Device Management** → *Apple Development: your email* → **Trust**, then run
+the script again.
 
 Free-team limitations: the install expires after **7 days** (rerun the script),
 at most 3 sideloaded apps per device, and no TestFlight/push/iCloud capabilities.
@@ -133,14 +141,14 @@ To copy outputs to the Mac:
 
 ```sh
 xcrun devicectl device copy from --device <UDID> --domain-type appDataContainer \
-  --domain-identifier com.vantage.detectorprototype --source Documents --destination ./phone-out
+  --domain-identifier <your bundle ID> --source Documents --destination ./phone-out
 ```
 
 ### Simulator / unsigned build
 
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
-  -project mobile/ios/VantageMobile.xcodeproj -scheme VantageMobile \
+  -project ios/VantageMobile.xcodeproj -scheme VantageMobile \
   -configuration Debug -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath ~/Library/Developer/Xcode/DerivedData/VantageMobile-sim \
   CODE_SIGNING_ALLOWED=NO build
@@ -149,12 +157,12 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
 Core ML runs on CPU in the simulator, so timings there are not representative.
 Debug builds accept `-openLatestRun` (open the newest run) and `-seek <seconds>`
 launch arguments for screenshot checks without UI interaction:
-`xcrun simctl launch <sim> com.vantage.detectorprototype -openLatestRun -seek 3.06`.
+`xcrun simctl launch <sim> <your bundle ID> -openLatestRun -seek 3.06`.
 
 ### Tests and Mac tools
 
 ```sh
-mobile/scripts/test.sh    # VantageKit swift tests + mobile/model python tests
+scripts/test.sh    # every suite: VantageKit swift tests + all Python tests
 ```
 
 `swift test` needs a scratch path outside `~/Documents` (the script sets it): the
@@ -163,16 +171,16 @@ test bundle is codesigned, which fails on iCloud-synced files.
 Run the exact on-device analysis on the Mac (same model, preprocessing, tracker):
 
 ```sh
-cd mobile/ios/VantageKit
+cd ios/VantageKit
 swift run -c release --scratch-path ~/Library/Caches/VantageKit-build vantage-analyze \
-  ../../artifacts/yolo26n-1280/VantageDetector.mlpackage ../../../assets/pickleball/sideview.MOV /tmp/sideview.jsonl
+  ../../artifacts/yolo26n-1280/VantageDetector.mlpackage ../../assets/pickleball/sideview.MOV /tmp/sideview.jsonl
 ```
 
 Regenerate tracker parity fixtures after changing either tracker (from the repository root):
 
 ```sh
-.venv/bin/python mobile/model/make_tracker_fixtures.py /tmp/sideview.jsonl \
-  mobile/ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
+uv run python tools/coreml/make_tracker_fixtures.py /tmp/sideview.jsonl \
+  ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
 ```
 
 ### Detector details
@@ -180,7 +188,7 @@ Regenerate tracker parity fixtures after changing either tracker (from the repos
 Any Ultralytics YOLO export works: the detector reads the model's `names` metadata and
 maps classes to canonical IDs by name (`person`/`player` -> 0, `sports ball`/`ball`/
 `pickleball` -> 32, `tennis racket`/`paddle` -> 38; see `DetectionClass`). The generic
-COCO model and a fine-tuned player/ball/paddle model (see `ml/README.md`) both produce
+COCO model and a fine-tuned player/ball/paddle model (see [`ml/README.md`](../ml/README.md)) both produce
 the same detections.jsonl IDs. A model without a ball class is rejected.
 
 The detector explicitly letterboxes with 114-valued padding, then calls Vision
@@ -195,74 +203,6 @@ top-left-origin source pixels. Source timestamps handle variable frame timing;
 edited slow-motion playback timing still requires capture metadata before it can
 represent physical speed.
 
-## Model tooling (`model/`)
-
-Run from the repository root. Do not activate or install into the desktop `.venv`.
-
-```sh
-uv venv --python .venv/bin/python mobile/.venv
-uv pip install --python mobile/.venv/bin/python -r mobile/model/requirements.txt
-mobile/.venv/bin/python mobile/model/export_model.py
-mobile/.venv/bin/python mobile/model/compare.py \
-  --video assets/pickleball/sideview.MOV \
-  --samples 24 --output mobile/reports/my-sideview-run
-```
-
-Tests: `mobile/scripts/test.sh` (includes `.venv/bin/python -m unittest discover -s mobile/model`).
-
-Export and comparison commands refuse to overwrite an existing output directory.
-Use a new `--output` path for subsequent runs. For another export size, provide
-both `--size` and `--output`; provide the matching `--size` and `--package` to
-the comparison.
-
-The exporter copies the checkpoint before conversion, records its SHA-256 and
-tool versions in `manifest.json`, and disables automatic dependency installation.
-The original checkpoint stays untouched. `nms=False` preserves YOLO26's NMS-free
-end-to-end output, `[1, 100, 6]`, with rows `[x1, y1, x2, y2, confidence, class]`.
-FP16 is the default; `--precision 32` provides an investigation baseline.
-
-The separate [ball crop experiment](model/CROP_EXPERIMENT.md) compares the
-desktop detector with a second crop pass. It has not replaced either the desktop
-pipeline or the Swift detector.
-
-### Validation results
-
-On 24 evenly spaced frames of `assets/pickleball/sideview.MOV`, with confidence
-0.10 and matching IoU ≥ 0.50:
-
-| Comparison | Player candidates matched | Ball candidates matched | Paddle candidates matched |
-| --- | --- | --- | --- |
-| Desktop PyTorch → FP16 Core ML | 96 / 97 | 53 / 55 | 94 / 130 |
-| Square PyTorch → FP16 Core ML | 96 / 96 | 59 / 83 | 101 / 130 |
-| Square PyTorch → FP32 Core ML | 96 / 96 | 60 / 83 | 98 / 130 |
-
-These fractions describe retained reference candidates, **not ground-truth
-accuracy**. FP16 Core ML produced 73 ball candidates versus the desktop's 55;
-extra detections may be false positives. Square-input candidate differences remain
-unresolved, and FP32 did not eliminate them. Do not declare conversion parity or
-replace the working desktop model based on these samples.
-
-Local detailed reports (git-ignored): `reports/sideview-validated/report.json`
-(FP16), `reports/sideview-fp32/report.json` (FP32), and
-`reports/vision-smoke.json` (Swift Vision vs Python, one frame).
-
-The Swift smoke test matched all 13 Python Core ML detections on that frame;
-box IoUs were at least 0.997. Core Image resizing is not guaranteed to be
-pixel-identical to OpenCV preprocessing. Mac FP16 median prediction time was
-about 29 ms versus 46 ms for desktop PyTorch (short Mac experiment, not an
-iPhone or sustained-thermal benchmark).
-
-### Swift Vision smoke test on Mac
-
-```sh
-swiftc -module-cache-path /private/tmp/vantage-swift-module-cache \
-  mobile/ios/VantageKit/Sources/VantageKit/{Detection,Detector}.swift mobile/model/vision_smoke.swift \
-  -o /private/tmp/vantage-vision-smoke
-/private/tmp/vantage-vision-smoke \
-  mobile/artifacts/yolo26n-1280/VantageDetector.mlpackage \
-  mobile/reports/sideview-validated/source.png
-```
-
 ## Next steps
 
 1. Player tracking (ByteTrack port or per-court-quadrant identity), with fixture
@@ -272,6 +212,5 @@ swiftc -module-cache-path /private/tmp/vantage-swift-module-cache \
 4. Benchmark sustained processing, memory, and thermals on iPhone 17 Pro;
    evaluate smaller inputs, crop-assisted detection, and live capture.
 
-References: [Ultralytics Core ML export](https://docs.ultralytics.com/integrations/coreml/),
-[Apple Vision requests](https://developer.apple.com/documentation/vision/vncoremlrequest),
+References: [Apple Vision requests](https://developer.apple.com/documentation/vision/vncoremlrequest),
 [raw model observations](https://developer.apple.com/documentation/vision/vncoremlfeaturevalueobservation).

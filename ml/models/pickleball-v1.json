@@ -70,5 +70,5 @@
     "neon-yellow clothing",
     "paddle quality bounded by COCO tennis-racket pseudo-labels"
   ],
-  "export": "mobile/.venv/bin/python mobile/model/export_model.py --weights ml/models/pickleball-v1.pt --ball-confidence 0.20 --output mobile/artifacts/pickleball-v1-1280"
+  "export": "uv run python tools/coreml/export_model.py --weights ml/models/pickleball-v1.pt --ball-confidence 0.20 --output artifacts/pickleball-v1-1280"
 }

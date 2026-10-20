@@ -2,7 +2,7 @@
 
 Tools for building a labeled pickleball dataset, measuring real ball-tracking accuracy,
 and (next) fine-tuning the detector. Serves both the desktop pipeline and the iPhone
-app; Core ML export and conversion checks stay in `mobile/model/`.
+app; Core ML export and conversion checks stay in `tools/coreml/`.
 
 | File | Purpose |
 | --- | --- |
@@ -17,7 +17,7 @@ app; Core ML export and conversion checks stay in `mobile/model/`.
 | `labels/` | Committed labels, one JSON file per video |
 | `DATA_SOURCES.md` | Attribution for downloaded datasets (written by fetch_roboflow.py) |
 
-Tests: `.venv/bin/python -m unittest discover -s ml`. Generated data lives in the
+Tests: `uv run python -m unittest discover -s ml`. Generated data lives in the
 git-ignored `ml/external/`, `ml/datasets/`, and `ml/runs/`.
 
 ## Current baseline (topcorner60fps evaluation set, 164 visible balls)
@@ -52,17 +52,17 @@ Either export from the iPhone app (open a run → share → AirDrop `detections.
 run the identical analysis on the Mac:
 
 ```sh
-cd mobile/ios/VantageKit
+cd ios/VantageKit
 swift run -c release --scratch-path ~/Library/Caches/VantageKit-build vantage-analyze \
   ../../artifacts/yolo26n-1280/VantageDetector.mlpackage \
-  ../../../assets/pickleball/topcorner60fps.mov ../../reports/swift-detections/topcorner60fps.jsonl
+  ../../assets/pickleball/topcorner60fps.mov ../../reports/swift-detections/topcorner60fps.jsonl
 ```
 
 ## 2. Label
 
 ```sh
-.venv/bin/python ml/label_ball.py --video assets/pickleball/topcorner60fps.mov \
-  --detections mobile/reports/swift-detections/topcorner60fps.jsonl --stride 5
+uv run python ml/label_ball.py --video assets/pickleball/topcorner60fps.mov \
+  --detections reports/swift-detections/topcorner60fps.jsonl --stride 5
 ```
 
 Every 5th frame is shown. Orange is the tracker's suggestion, white rings are raw
@@ -91,16 +91,16 @@ to resume. Rules that keep the labels trustworthy:
 ## 3. Evaluate
 
 ```sh
-.venv/bin/python ml/evaluate_ball.py \
-  --labels ml/labels/topcorner60fps.json --detections mobile/reports/swift-detections/topcorner60fps.jsonl \
-  --labels ml/labels/backcorner60fps.json --detections mobile/reports/swift-detections/backcorner60fps.jsonl
+uv run python ml/evaluate_ball.py \
+  --labels ml/labels/topcorner60fps.json --detections reports/swift-detections/topcorner60fps.jsonl \
+  --labels ml/labels/backcorner60fps.json --detections reports/swift-detections/backcorner60fps.jsonl
 ```
 
 Reports recall (visible balls found) and precision (predictions that were the ball)
 for the detector alone (`raw best`), the tracker, and the tracker without
 static-clutter suppression. A prediction counts as correct within 1% of the frame
 diagonal (`--radius-diagonals`). `--export-centers` writes the
-`{frame: [x, y] | null}` format accepted by `mobile/model/crop_experiment.py --labels`.
+`{frame: [x, y] | null}` format accepted by `tools/coreml/crop_experiment.py --labels`.
 
 ## 4. Fine-tune
 
@@ -109,20 +109,20 @@ diagonal (`--radius-diagonals`). `--export-centers` writes the
 #    outside the repo (or export ROBOFLOW_API_KEY for the session):
 mkdir -p ~/.config/vantage && read -rs "?Roboflow API key: " KEY && printf %s "$KEY" > ~/.config/vantage/roboflow_api_key \
   && chmod 600 ~/.config/vantage/roboflow_api_key && unset KEY
-.venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION --info   # check license/classes
-.venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION          # download + attribution
+uv run python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION --info   # check license/classes
+uv run python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION          # download + attribution
 #    then add it to ml/dataset.yaml under external: with its class mapping
 
 # b. Build, train, evaluate on the held-out clip
-.venv/bin/python ml/build_dataset.py
-.venv/bin/python ml/train.py --data ml/datasets/pickleball-v1/data.yaml --name pickleball-v1
-.venv/bin/python ml/predict_video.py --weights ml/runs/pickleball-v1/weights/best.pt \
+uv run python ml/build_dataset.py
+uv run python ml/train.py --data ml/datasets/pickleball-v1/data.yaml --name pickleball-v1
+uv run python ml/predict_video.py --weights ml/runs/pickleball-v1/weights/best.pt \
   --video assets/pickleball/topcorner60fps.mov --output /tmp/topcorner-v1.jsonl
-.venv/bin/python ml/evaluate_ball.py --labels ml/labels/topcorner60fps.json --detections /tmp/topcorner-v1.jsonl
+uv run python ml/evaluate_ball.py --labels ml/labels/topcorner60fps.json --detections /tmp/topcorner-v1.jsonl
 
 # c. If it beats the baseline: export for the app and confirm on the Core ML path
-mobile/.venv/bin/python mobile/model/export_model.py \
-  --weights ml/runs/pickleball-v1/weights/best.pt --output mobile/artifacts/pickleball-v1-1280
+uv run python tools/coreml/export_model.py \
+  --weights ml/runs/pickleball-v1/weights/best.pt --output artifacts/pickleball-v1-1280
 ```
 
 The fine-tuned model has classes player, ball, paddle. Player and paddle labels are
@@ -146,4 +146,4 @@ model must be checked on the held-out clips before it replaces the current one.
    ideally 4K60 originals from a raised position, plus plenty of frames with leaves and no
    ball (negatives teach the model that leaves are not balls). Label at `--stride 3–10`.
 3. **Fine-tune YOLO26n** on ball (and later paddle/player), export with
-   `mobile/model/export_model.py`, re-run analysis, and compare with step 1's numbers.
+   `tools/coreml/export_model.py`, re-run analysis, and compare with step 1's numbers.

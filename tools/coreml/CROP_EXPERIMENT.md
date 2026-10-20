@@ -1,6 +1,6 @@
 # Ball crop experiment
 
-This is an isolated Python experiment, not a replacement for `main.py` or a live
+This is an isolated Python experiment, not a replacement for the desktop pipeline (`pipeline/vantage/main.py`) or a live
 iPhone capture implementation. It reads the existing weights, config, and custom
 ball tracker without changing them. No second physical camera is used.
 
@@ -24,14 +24,14 @@ the recording, and smaller crops may trade context/coverage for apparent size.
 
 ## Run
 
-From the repository root, using the existing environment without installing or
-changing any dependencies:
+From the repository root, in the repository's environment (`uv sync`); the experiment
+needs no extra dependencies:
 
 ```sh
-.venv/bin/python mobile/model/crop_experiment.py \
+uv run python tools/coreml/crop_experiment.py \
   --video assets/pickleball/topcorner60fps.mov \
   --max-frames 300 \
-  --output mobile/reports/my-crop-test
+  --output reports/my-crop-test
 ```
 
 Use a new output folder each run. Omit `--max-frames` for the entire clip. Use
@@ -66,8 +66,8 @@ accuracy evaluation.
 
 Local videos:
 
-- [Side-view comparison](../reports/crop-sideview/comparison.mp4)
-- [Top-corner comparison](../reports/crop-topcorner/comparison.mp4)
+- [Side-view comparison](../../reports/crop-sideview/comparison.mp4)
+- [Top-corner comparison](../../reports/crop-topcorner/comparison.mp4)
 
 The additional crop pass took roughly 81 ms median for sideview and 110 ms for
 topcorner on this Mac's CPU. The runs overlapped and may have competed for CPU;
