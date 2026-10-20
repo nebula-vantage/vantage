@@ -1,0 +1,13 @@
+// Signing for the VantageMobile target.
+//
+// Each developer signs with their own Apple team, so the team ID and bundle ID suffix come
+// from Local.xcconfig next to this file. It is git-ignored: copy Local.xcconfig.example to
+// Local.xcconfig and fill it in (see ios/README.md). Set signing there, not in Xcode's
+// Signing & Capabilities tab, which writes your team into the shared project file.
+
+DEVELOPMENT_TEAM =
+VANTAGE_BUNDLE_ID_SUFFIX =
+
+#include? "Local.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.vantage.detectorprototype$(VANTAGE_BUNDLE_ID_SUFFIX)

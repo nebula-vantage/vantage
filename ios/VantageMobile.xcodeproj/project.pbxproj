@@ -15,6 +15,7 @@
 		00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = "../artifacts/pickleball-v1-1280/VantageDetector.mlpackage"; sourceTree = "<group>"; };
 		00000000000000000000000E /* VantageMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VantageMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000033 /* VantageKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = VantageKit; sourceTree = "<group>"; };
+		000000000000000000000040 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -41,6 +42,7 @@
 			isa = PBXGroup;
 			children = (
 				00000000000000000000000F /* VantageMobile */,
+				000000000000000000000041 /* Config */,
 				000000000000000000000033 /* VantageKit */,
 				00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */,
 				000000000000000000000003 /* Products */,
@@ -53,6 +55,14 @@
 				00000000000000000000000E /* VantageMobile.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000041 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000040 /* Signing.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -155,10 +165,10 @@
 		};
 		000000000000000000000018 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8A6WLS3YR9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Vantage;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
@@ -166,7 +176,6 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				MARKETING_VERSION = 0.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vantage.detectorprototype;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -177,10 +186,10 @@
 		};
 		000000000000000000000019 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8A6WLS3YR9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Vantage;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
@@ -188,7 +197,6 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				MARKETING_VERSION = 0.2.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vantage.detectorprototype;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;

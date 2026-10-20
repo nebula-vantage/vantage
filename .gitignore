@@ -44,3 +44,6 @@ build/
 build-simulator/
 .build/
 .swiftpm/
+
+# Per-developer signing (copy ios/Config/Local.xcconfig.example).
+ios/Config/Local.xcconfig

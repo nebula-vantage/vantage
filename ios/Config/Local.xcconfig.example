@@ -1,0 +1,9 @@
+// Copy to Local.xcconfig (git-ignored) in this folder and fill in. See ios/README.md.
+
+// Your Apple team ID (10 characters). A free Personal Team works.
+DEVELOPMENT_TEAM = ABCDE12345
+
+// Bundle IDs are unique across all of Apple and each team must register its own, so add a
+// suffix such as .yourname. Leave it empty only on the team that already registered
+// com.vantage.detectorprototype; that keeps your installed app and its saved runs.
+VANTAGE_BUNDLE_ID_SUFFIX = .yourname
