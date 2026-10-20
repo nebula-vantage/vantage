@@ -1,4 +1,4 @@
-// Build with ios/VantageKit/Sources/VantageKit/{Detection,Detector}.swift on macOS (see mobile/README.md).
+// Build with ios/VantageKit/Sources/VantageKit/{Detection,Detector}.swift on macOS (see tools/coreml/README.md).
 import CoreML
 import CoreImage
 import Foundation

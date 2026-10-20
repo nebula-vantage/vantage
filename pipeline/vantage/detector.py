@@ -5,8 +5,8 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 
-from ball_tracker import BallTracker
-from records import Detection, FrameRecord
+from vantage.ball_tracker import BallTracker
+from vantage.records import Detection, FrameRecord
 
 
 class Detector:
@@ -30,7 +30,7 @@ class Detector:
                 self.player_tracker = BYTETracker(SimpleNamespace(**tracker))
         except Exception as exc:
             raise RuntimeError(
-                f"Could not load model {config['model']['path']!r} or player tracker. Install requirements.txt; "
+                f"Could not load model {config['model']['path']!r} or player tracker. Run uv sync; "
                 "the first run needs internet to download weights. "
                 "For offline use, pre-download weights and set CONFIG['model']['path']. "
                 f"Details: {exc}") from exc

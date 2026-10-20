@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from ball_physics import build_trajectory, detect_bounces, in_out
-from records import Detection, FrameRecord
-from tests.helpers import record, settings
+from vantage.ball_physics import build_trajectory, detect_bounces, in_out
+from vantage.records import Detection, FrameRecord
+from helpers import record, settings
 
 
 class PhysicsTests(unittest.TestCase):

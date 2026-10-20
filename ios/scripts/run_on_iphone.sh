@@ -10,7 +10,7 @@ DERIVED="$HOME/Library/Developer/Xcode/DerivedData/VantageMobile-device"
 DEVICE="${1:-$(xcrun devicectl list devices 2>/dev/null | awk '/physical/ && (/available/ || /connected/) && /iPhone/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{16}$/) print $i}' | head -1)}"
 [ -n "$DEVICE" ] || { echo "No available iPhone. Connect/unlock it, trust this Mac, enable Developer Mode." >&2; exit 1; }
 echo "Device: $DEVICE"
-xcodebuild -project mobile/ios/VantageMobile.xcodeproj -scheme VantageMobile -configuration Debug \
+xcodebuild -project ios/VantageMobile.xcodeproj -scheme VantageMobile -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath "$DERIVED" -allowProvisioningUpdates -quiet build
 xcrun devicectl device install app --device "$DEVICE" "$DERIVED/Build/Products/Debug-iphoneos/VantageMobile.app"
 xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID" || cat >&2 <<'EOF'

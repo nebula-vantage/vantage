@@ -4,7 +4,7 @@ Two ID spaces:
 - Training IDs (TRAIN_CLASSES): the fine-tuned model's own classes, 0 player, 1 ball, 2 paddle.
 - Canonical IDs (CANONICAL): what detections.jsonl always uses, regardless of model. They
   follow COCO numbering so runs made with the generic COCO model remain valid. Mirrors
-  DetectionClass in mobile/ios/VantageKit/Sources/VantageKit/Detection.swift.
+  DetectionClass in ios/VantageKit/Sources/VantageKit/Detection.swift.
 """
 
 TRAIN_CLASSES = ["player", "ball", "paddle"]

@@ -2,7 +2,7 @@
 from collections import deque
 import math
 
-from court import project
+from vantage.court import project
 
 
 class MotionStream:

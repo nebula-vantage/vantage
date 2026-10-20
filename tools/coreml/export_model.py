@@ -8,7 +8,7 @@ import shutil
 
 ROOT = Path(__file__).resolve().parents[2]
 os.environ.setdefault("YOLO_AUTOINSTALL", "false")
-os.environ.setdefault("YOLO_CONFIG_DIR", str(ROOT / "mobile/.cache/ultralytics"))
+os.environ.setdefault("YOLO_CONFIG_DIR", str(ROOT / ".cache/ultralytics"))
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     parser.add_argument("--precision", type=int, choices=[16, 32], default=16)
     parser.add_argument("--ball-confidence", type=float, default=0.10,
                         help="minimum ball confidence the app keeps for this model (stored in model metadata)")
-    parser.add_argument("--output", type=Path, default=ROOT / "mobile/artifacts/yolo26n-1280")
+    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/yolo26n-1280")
     args = parser.parse_args()
     if not args.weights.is_file():
         parser.error("Weights must already exist locally; downloads are not implicit.")

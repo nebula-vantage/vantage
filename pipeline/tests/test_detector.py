@@ -6,8 +6,8 @@ from unittest.mock import patch
 import numpy as np
 from ultralytics.engine.results import Results
 
-from detector import Detector
-from tests.helpers import settings
+from vantage.detector import Detector
+from helpers import settings
 
 
 class DetectorTests(unittest.TestCase):

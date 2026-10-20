@@ -4,14 +4,12 @@ from collections import Counter
 from copy import deepcopy
 import json
 from pathlib import Path
-import sys
 import time
 
 import cv2
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from config import CONFIG
-from detector import Detector
+from vantage.config import CONFIG
+from vantage.detector import Detector
 
 
 def main():

@@ -1,6 +1,6 @@
 """Download a public Roboflow Universe dataset version in YOLO format, with a license check.
 
-    .venv/bin/python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION
+    uv run python ml/fetch_roboflow.py WORKSPACE/PROJECT/VERSION
 
 The API key (free account: roboflow.com -> Settings -> API Keys) is read from the
 ROBOFLOW_API_KEY environment variable, else from ~/.config/vantage/roboflow_api_key

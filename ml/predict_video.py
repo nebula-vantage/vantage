@@ -1,6 +1,6 @@
 """Run a YOLO checkpoint over a video and write detections.jsonl in the app's format.
 
-    .venv/bin/python ml/predict_video.py --weights ml/runs/pickleball-v1/weights/best.pt \
+    uv run python ml/predict_video.py --weights ml/runs/pickleball-v1/weights/best.pt \
         --video assets/pickleball/topcorner60fps.mov --output /tmp/topcorner-v1.jsonl
 
 Class IDs are mapped to Vantage canonical IDs by class name, so evaluate_ball.py, the

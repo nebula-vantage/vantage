@@ -5,23 +5,20 @@ app or `vantage-analyze`) through the desktop BallTracker and build_trajectory, 
 records the expected per-frame selection. The Swift tests replay the same candidates and
 must reproduce every selection exactly.
 
-    .venv/bin/python mobile/model/make_tracker_fixtures.py \
-        mobile/reports/swift-detections/sideview.jsonl \
-        mobile/ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
+    uv run python tools/coreml/make_tracker_fixtures.py \
+        reports/swift-detections/sideview.jsonl \
+        ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
 """
 import argparse
 import json
 from pathlib import Path
-import sys
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-from ball_physics import build_trajectory  # noqa: E402
-from ball_tracker import BallTracker  # noqa: E402
-from config import CONFIG  # noqa: E402
-from records import Detection, FrameRecord  # noqa: E402
+from vantage.ball_physics import build_trajectory
+from vantage.ball_tracker import BallTracker
+from vantage.config import CONFIG
+from vantage.records import Detection, FrameRecord
 
 BALL = CONFIG["model"]["classes"]["ball"]
 

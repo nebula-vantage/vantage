@@ -2,10 +2,10 @@ import unittest
 
 import numpy as np
 
-from ball_physics import build_trajectory
-from ball_tracker import BallTracker
-from records import Detection, FrameRecord
-from tests.helpers import settings
+from vantage.ball_physics import build_trajectory
+from vantage.ball_tracker import BallTracker
+from vantage.records import Detection, FrameRecord
+from helpers import settings
 
 
 def ball(x, y=100, confidence=0.2):

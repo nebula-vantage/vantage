@@ -144,7 +144,7 @@ def render_video(input_path: Path, output_path: Path, records, samples, bounces,
 
 def verify_video(path, expected_frames, size, fps, fps_tolerance=None):
     if fps_tolerance is None:
-        from config import CONFIG
+        from vantage.config import CONFIG
         fps_tolerance = CONFIG["runtime"]["fps_relative_tolerance"]
     capture = cv2.VideoCapture(str(path))
     try:

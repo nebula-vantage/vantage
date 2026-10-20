@@ -8,8 +8,8 @@ import sys
 import tempfile
 import time
 
-from config import CONFIG
-from tracking_cache import file_digest, load_cached_tracks, source_signature, tracking_settings
+from vantage.config import CONFIG
+from vantage.tracking_cache import file_digest, load_cached_tracks, source_signature, tracking_settings
 
 
 def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, detector_factory=None,
@@ -25,15 +25,15 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
         raise ValueError("Input cannot be a generated output path. Choose a different --output-dir.")
     try:
         import cv2
-        from ball_physics import build_trajectory, detect_bounces
-        from court import calibrate
-        from detector import Detector
-        from motion_stream import MotionStream
-        from heatmap import render_landing_heatmap
-        from stats import aggregate, event_records
-        from visualize import encoded_size, render_video
+        from vantage.ball_physics import build_trajectory, detect_bounces
+        from vantage.court import calibrate
+        from vantage.detector import Detector
+        from vantage.motion_stream import MotionStream
+        from vantage.heatmap import render_landing_heatmap
+        from vantage.stats import aggregate, event_records
+        from vantage.visualize import encoded_size, render_video
     except ImportError as exc:
-        raise RuntimeError("Missing dependency. Run: python -m pip install -r requirements.txt") from exc
+        raise RuntimeError("Missing dependency. Run: uv sync (from the repository root)") from exc
     detector_factory = Detector if detector_factory is None else detector_factory
     source = source_signature(input_path)
     capture = cv2.VideoCapture(str(input_path))

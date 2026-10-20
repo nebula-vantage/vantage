@@ -1,8 +1,8 @@
 import unittest
 
-from stats import aggregate, crossing_events, event_records, speed_series, tracking_summary
-from records import BounceEvent, Detection, FrameRecord
-from tests.helpers import record, sample, settings
+from vantage.stats import aggregate, crossing_events, event_records, speed_series, tracking_summary
+from vantage.records import BounceEvent, Detection, FrameRecord
+from helpers import record, sample, settings
 
 
 class StatsTests(unittest.TestCase):

@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from records import Rally
+from vantage.records import Rally
 
 
 def _valid_pair(a, b, config):

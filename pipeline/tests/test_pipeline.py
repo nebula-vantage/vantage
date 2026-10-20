@@ -9,11 +9,11 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 
-from court import compute_homography, save_calibration
-from main import main, run_pipeline
-from records import Detection, FrameRecord
-from tests.helpers import settings
-from visualize import encoded_size, render_video, verify_video
+from vantage.court import compute_homography, save_calibration
+from vantage.main import main, run_pipeline
+from vantage.records import Detection, FrameRecord
+from helpers import settings
+from vantage.visualize import encoded_size, render_video, verify_video
 
 
 class FakeDetector:
@@ -72,7 +72,7 @@ class PipelineTests(unittest.TestCase):
         before = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         original_tracks = (self.output/'tracks.jsonl').read_bytes()
         self.cfg['bounce']['min_side_observations'] = 100
-        with patch('detector.Detector', side_effect=AssertionError('Inference must be skipped')) as factory:
+        with patch('vantage.detector.Detector', side_effect=AssertionError('Inference must be skipped')) as factory:
             after = run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
         factory.assert_not_called()
         self.assertEqual(before['bounce_candidate_count'], 1)
@@ -107,7 +107,7 @@ class PipelineTests(unittest.TestCase):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         previous = {name: (self.output/name).read_bytes() for name in
                     ('stats.json', 'tracks.jsonl', 'annotated.mp4', 'events.jsonl', 'landing_heatmap.png')}
-        with patch('visualize.render_video', side_effect=RuntimeError('encoder failure')):
+        with patch('vantage.visualize.render_video', side_effect=RuntimeError('encoder failure')):
             with self.assertRaisesRegex(RuntimeError, 'encoder failure'):
                 run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
         self.assertEqual(previous, {name: (self.output/name).read_bytes() for name in previous})
@@ -116,7 +116,7 @@ class PipelineTests(unittest.TestCase):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         previous = {name: (self.output/name).read_bytes() for name in
                     ('stats.json', 'tracks.jsonl', 'annotated.mp4', 'events.jsonl', 'landing_heatmap.png')}
-        with patch('heatmap.render_landing_heatmap', side_effect=RuntimeError('PNG failure')):
+        with patch('vantage.heatmap.render_landing_heatmap', side_effect=RuntimeError('PNG failure')):
             with self.assertRaisesRegex(RuntimeError, 'PNG failure'):
                 run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
         self.assertEqual(previous, {name: (self.output/name).read_bytes() for name in previous})
@@ -128,7 +128,7 @@ class PipelineTests(unittest.TestCase):
 
     def test_failed_run_keeps_previous_outputs(self):
         (self.output/'stats.json').write_text('previous')
-        with patch('visualize.render_video', side_effect=RuntimeError('encoder failure')):
+        with patch('vantage.visualize.render_video', side_effect=RuntimeError('encoder failure')):
             with self.assertRaisesRegex(RuntimeError, 'encoder failure'):
                 run_pipeline(self.input, self.output, config=self.cfg, detector_factory=EmptyDetector)
         self.assertEqual((self.output/'stats.json').read_text(), 'previous')
@@ -144,7 +144,7 @@ class PipelineTests(unittest.TestCase):
 
     def test_cli_stdout_is_only_matching_json(self):
         out = io.StringIO()
-        with patch('detector.Detector', EmptyDetector), contextlib.redirect_stdout(out):
+        with patch('vantage.detector.Detector', EmptyDetector), contextlib.redirect_stdout(out):
             code = main(['--input', str(self.input), '--output-dir', str(self.output)])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out.getvalue()), json.loads((self.output/'stats.json').read_text()))
@@ -171,7 +171,7 @@ class PipelineTests(unittest.TestCase):
     def test_cli_stream_replays_validated_cache_as_json_lines(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         out, err = io.StringIO(), io.StringIO()
-        with patch('detector.Detector', side_effect=AssertionError('No inference')), \
+        with patch('vantage.detector.Detector', side_effect=AssertionError('No inference')), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main(['--input', str(self.input), '--output-dir', str(self.output), '--reanalyze', '--stream'])
         self.assertEqual(code, 0)

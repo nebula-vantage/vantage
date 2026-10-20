@@ -4,7 +4,7 @@ import XCTest
 
 /// Replays raw ball candidates from real on-device runs and requires the exact per-frame
 /// selections, track IDs, and interpolated frames produced by the desktop Python tracker.
-/// Regenerate fixtures with mobile/model/make_tracker_fixtures.py.
+/// Regenerate fixtures with tools/coreml/make_tracker_fixtures.py.
 final class BallTrackerParityTests: XCTestCase {
     struct Fixture: Decodable {
         struct Frame: Decodable {

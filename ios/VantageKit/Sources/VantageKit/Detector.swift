@@ -25,7 +25,7 @@ public final class Detector {
         size = constraint.pixelsWide
         let metadata = model.modelDescription.metadata[.creatorDefinedKey] as? [String: String] ?? [:]
         guard let names = metadata["names"] else {
-            throw AnalysisError.message("Model has no class-name metadata. Export it with mobile/model/export_model.py.")
+            throw AnalysisError.message("Model has no class-name metadata. Export it with tools/coreml/export_model.py.")
         }
         classMap = DetectionClass.canonicalMap(namesMetadata: names)
         ballConfidence = metadata["vantage_ball_confidence"].flatMap(Double.init) ?? 0.10
@@ -55,7 +55,7 @@ public final class Detector {
         try VNImageRequestHandler(cgImage: input, orientation: .up).perform([request])
         let arrays = (request.results as? [VNCoreMLFeatureValueObservation])?.compactMap { $0.featureValue.multiArrayValue } ?? []
         guard let output = arrays.first(where: { $0.shape.count == 3 && $0.shape[0].intValue == 1 && $0.shape[2].intValue == 6 }) else {
-            throw AnalysisError.message("Expected YOLO26 NMS-free output [1, N, 6]. Re-export with mobile/model/export_model.py.")
+            throw AnalysisError.message("Expected YOLO26 NMS-free output [1, N, 6]. Re-export with tools/coreml/export_model.py.")
         }
         var detections: [Detection] = []
         for row in 0..<output.shape[1].intValue {

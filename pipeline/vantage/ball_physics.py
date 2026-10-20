@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-from court import project
-from records import BounceEvent, FrameRecord, TrajectorySample
+from vantage.court import project
+from vantage.records import BounceEvent, FrameRecord, TrajectorySample
 
 
 def _continuous(a: FrameRecord, b: FrameRecord, diagonal: float, config: dict) -> bool:

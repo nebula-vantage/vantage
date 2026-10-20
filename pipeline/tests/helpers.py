@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-from config import CONFIG
-from records import Detection, FrameRecord, TrajectorySample
+from vantage.config import CONFIG
+from vantage.records import Detection, FrameRecord, TrajectorySample
 
 
 def settings():

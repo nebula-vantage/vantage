@@ -4,8 +4,8 @@ import unittest
 
 import numpy as np
 
-from court import compute_homography, load_calibration, project, save_calibration
-from tests.helpers import settings
+from vantage.court import compute_homography, load_calibration, project, save_calibration
+from helpers import settings
 
 
 class CourtTests(unittest.TestCase):

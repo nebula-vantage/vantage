@@ -1,6 +1,7 @@
 #!/bin/bash
 set -u
-cd '/Users/muneebfarrukh/Documents/4A.nosync/vantage.nosync' || exit 1
+# Double-clickable in Finder. Runs from the repository root, wherever it is cloned.
+cd "$(dirname "$0")/../.." || exit 1
 failures=0
 printf 'Processing three videos locally, one at a time.\n'
 printf 'For each new camera view, click the OUTER court corners:\nnear-left, near-right, far-right, far-left. Press Enter to start.\n\n'
@@ -11,7 +12,8 @@ for input in assets/backcorner60fps.mov assets/topcorner60fps.mov assets/sidevie
     mkdir -p "$output" || exit 1
     printf '\nProcessing %s\nOutputs: %s\n' "$input" "$output"
     printf 'RUNNING\n' > "$output/status.txt"
-    if .venv/bin/python main.py --input "$input" --output-dir "$output" > "$output/run-stats.json" 2> >(tee "$output/run.log" >&2); then
+    # The uv-created environment directly: works when double-clicked even if uv isn't on PATH.
+    if .venv/bin/python -m vantage --input "$input" --output-dir "$output" > "$output/run-stats.json" 2> >(tee "$output/run.log" >&2); then
         printf 'COMPLETED\n' > "$output/status.txt"
         printf 'Completed: %s\n' "$input"
     else

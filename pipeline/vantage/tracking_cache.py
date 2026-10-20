@@ -3,7 +3,7 @@ import hashlib
 import json
 import math
 
-from records import Detection, FrameRecord
+from vantage.records import Detection, FrameRecord
 
 
 def source_signature(path):

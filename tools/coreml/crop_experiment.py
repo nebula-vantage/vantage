@@ -11,14 +11,12 @@ import math
 import os
 from pathlib import Path
 import statistics
-import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-from ball_tracker import BallTracker
-from config import CONFIG
-from records import Detection
+from vantage.ball_tracker import BallTracker
+from vantage.config import CONFIG
+from vantage.records import Detection
 
 
 def crop_box(center, width, height, side):
@@ -118,7 +116,7 @@ def main():
             parser.error('Labels must map frame-index strings to finite [x,y] centers or null')
     args.output.mkdir(parents=True, exist_ok=False)
     os.environ.setdefault('YOLO_AUTOINSTALL', 'false')
-    cache = ROOT / 'mobile/.cache/ultralytics'
+    cache = ROOT / '.cache/ultralytics'
     cache.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault('YOLO_CONFIG_DIR', str(cache))
     import cv2

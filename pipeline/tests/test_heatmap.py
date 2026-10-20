@@ -5,9 +5,9 @@ import unittest
 import cv2
 import numpy as np
 
-from heatmap import landing_density, render_landing_heatmap
-from records import BounceEvent
-from tests.helpers import settings
+from vantage.heatmap import landing_density, render_landing_heatmap
+from vantage.records import BounceEvent
+from helpers import settings
 
 
 def bounce(index, x, y):

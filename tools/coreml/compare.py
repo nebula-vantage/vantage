@@ -11,7 +11,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 os.environ.setdefault("YOLO_AUTOINSTALL", "false")
-os.environ.setdefault("YOLO_CONFIG_DIR", str(ROOT / "mobile/.cache/ultralytics"))
+os.environ.setdefault("YOLO_CONFIG_DIR", str(ROOT / ".cache/ultralytics"))
 
 
 def iou(a, b):
@@ -41,7 +41,7 @@ def main():
     from ultralytics import YOLO
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--video", required=True, type=Path)
-    parser.add_argument("--package", type=Path, default=ROOT / "mobile/artifacts/yolo26n-1280/VantageDetector.mlpackage")
+    parser.add_argument("--package", type=Path, default=ROOT / "artifacts/yolo26n-1280/VantageDetector.mlpackage")
     parser.add_argument("--weights", type=Path, default=ROOT / "yolo26n.pt")
     parser.add_argument("--size", type=int, default=1280)
     parser.add_argument("--samples", type=int, default=24)

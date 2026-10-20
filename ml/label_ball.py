@@ -1,7 +1,7 @@
 """Label the ball in sampled video frames, pre-filled from the on-device pipeline.
 
-    .venv/bin/python ml/label_ball.py --video assets/pickleball/topcorner60fps.mov \
-        --detections mobile/reports/swift-detections/topcorner60fps.jsonl --stride 5
+    uv run python ml/label_ball.py --video assets/pickleball/topcorner60fps.mov \
+        --detections reports/swift-detections/topcorner60fps.jsonl --stride 5
 
 Detections come from the iPhone app (share/export detections.jsonl) or the Mac CLI
 vantage-analyze. Labels autosave to ml/labels/<video stem>.json after every change;

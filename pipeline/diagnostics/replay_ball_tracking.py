@@ -3,12 +3,10 @@ import argparse
 from dataclasses import asdict
 import json
 from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from ball_tracker import BallTracker
-from config import CONFIG
-from records import Detection
+from vantage.ball_tracker import BallTracker
+from vantage.config import CONFIG
+from vantage.records import Detection
 
 
 def main():

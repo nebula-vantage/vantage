@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from records import FrameRecord, Rally
-from tests.helpers import settings
-from visualize import Overlay
+from vantage.records import FrameRecord, Rally
+from helpers import settings
+from vantage.visualize import Overlay
 
 
 class OverlayTests(unittest.TestCase):

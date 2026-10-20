@@ -1,6 +1,6 @@
 import unittest
 from crop_experiment import crop_box, scan_boxes, restore_crop, merge_candidates, evaluate_labels
-from records import Detection
+from vantage.records import Detection
 
 
 class CropTests(unittest.TestCase):

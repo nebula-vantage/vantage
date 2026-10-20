@@ -9,7 +9,7 @@ import numpy as np
 
 def project(point, homography, epsilon=None):
     if epsilon is None:
-        from config import CONFIG
+        from vantage.config import CONFIG
         epsilon = CONFIG["court"]["projection_epsilon"]
     p = homography @ np.array([*point, 1.0], dtype=float)
     if not np.isfinite(p).all() or abs(p[2]) <= epsilon:

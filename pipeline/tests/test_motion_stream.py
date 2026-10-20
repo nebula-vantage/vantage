@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from motion_stream import MotionStream
-from records import Detection, FrameRecord
-from tests.helpers import settings
+from vantage.motion_stream import MotionStream
+from vantage.records import Detection, FrameRecord
+from helpers import settings
 
 
 def player(x, y=200, identity=7):

@@ -5,7 +5,7 @@ Predictions choose among observations; they are never returned as detections.
 from dataclasses import replace
 import math
 
-from records import Detection
+from vantage.records import Detection
 
 
 class BallTracker:
