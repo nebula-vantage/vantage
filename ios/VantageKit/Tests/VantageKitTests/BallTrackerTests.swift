@@ -98,7 +98,11 @@ final class BallTrackerTests: XCTestCase {
     }
 
     func testBallCrossingSameSpotTwiceIsNotSuppressed() {
-        let xs = (0..<60).map { i in 100 + 8 * Double(i < 30 ? i : 59 - i) }
+        // Explicit types: the inferred one-liner took seconds to type-check and timed out on some Xcode versions.
+        let xs: [Double] = (0..<60).map { (i: Int) -> Double in
+            let step = i < 30 ? i : 59 - i  // out to x = 332, then back over the same spots
+            return 100 + 8 * Double(step)
+        }
         let selected = xs.enumerated().map { select([ball($1)], Double($0) / 30) }
         XCTAssertEqual(selected.compactMap { $0 }.count, 59)
         XCTAssertEqual(Set(selected.compactMap { $0?.trackID }).count, 1)
