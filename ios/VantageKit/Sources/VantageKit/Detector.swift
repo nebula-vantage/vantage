@@ -37,7 +37,9 @@ public final class Detector {
     }
 
     public func detect(_ image: CIImage) throws -> [Detection] {
-        let width = image.extent.width, height = image.extent.height
+        // Double, not CGFloat: mixing the two lets each compiler pick a conversion direction, and
+        // some picked CGFloat for `box`, which can't be passed as [Double].
+        let width = Double(image.extent.width), height = Double(image.extent.height)
         let gain = min(Double(size)/width, Double(size)/height)
         let resizedWidth = (width*gain).rounded(.toNearestOrEven)
         let resizedHeight = (height*gain).rounded(.toNearestOrEven)
@@ -64,7 +66,7 @@ public final class Detector {
             guard values.allSatisfy({ $0.isFinite }), values[4] >= 0.10 else { continue }
             guard let cls = classMap[Int(values[5])] else { continue }
             if cls == DetectionClass.ball && values[4] < ballConfidence { continue }
-            let box = [max(0, min(width, (values[0]-left)/gain)),
+            let box: [Double] = [max(0, min(width, (values[0]-left)/gain)),
                        max(0, min(height, (values[1]-top)/gain)),
                        max(0, min(width, (values[2]-left)/gain)),
                        max(0, min(height, (values[3]-top)/gain))]
