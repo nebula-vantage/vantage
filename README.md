@@ -52,7 +52,8 @@ with `uv run`, for example `uv run vantage --input assets/sideview.MOV`. To add 
 dependency, use `uv add <package>` (or `uv add --group ml <package>`) and commit the
 updated `uv.lock`.
 
-**iOS.** Xcode on a Mac. Follow [ios/README.md](ios/README.md): copy
+**iOS.** Xcode 27.1 on a Mac (pinned in `.xcode-version`; the scripts warn if yours differs).
+Follow [ios/README.md](ios/README.md): copy
 `ios/Config/Local.xcconfig.example` to `ios/Config/Local.xcconfig` and set your team ID,
 export the model, then run `ios/scripts/run_on_iphone.sh`.
 
@@ -63,4 +64,5 @@ scripts/test.sh
 ```
 
 Runs the pipeline, `ml/`, and `tools/coreml/` Python suites, plus VantageKit's Swift tests
-on macOS with Xcode.
+on macOS with Xcode. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same on
+every pull request and also builds the iOS app.

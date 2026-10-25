@@ -99,7 +99,8 @@ heatmaps. Paddle class 38 remains a tennis-racket proxy, as in the desktop pipel
 
 First time only:
 
-1. In Xcode → Settings → Accounts, add your Apple ID (a free Personal Team is fine).
+1. Use Xcode 27.1, the version in `.xcode-version` (CI builds with it too). In Xcode →
+   Settings → Accounts, add your Apple ID (a free Personal Team is fine).
 2. Set up signing. Copy `ios/Config/Local.xcconfig.example` to `ios/Config/Local.xcconfig`
    (git-ignored) and fill in your team ID and a bundle ID suffix such as `.yourname`.
    Bundle IDs are unique across Apple, so each person's team needs its own. To find your
