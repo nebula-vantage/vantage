@@ -3,6 +3,24 @@
 Racket-sport measurements (players, ball, paddles, court position, speed) from a single
 phone camera. Capstone project by team Nebula, University of Waterloo.
 
+## Demo
+
+[![Watch the annotated side-view demo](docs/sideview-preview.jpg)](docs/sideview-annotated.mp4)
+
+[Watch or download the annotated side-view video](docs/sideview-annotated.mp4) (MP4, about
+20 seconds): player and ball tracking with the stats overlay, from the
+[desktop pipeline](pipeline/README.md).
+
+## Current status
+
+- **Desktop pipeline:** player and ball tracking, court calibration, estimated shot/rally
+  stats, bounce calls, and a landing heatmap from one fixed-camera video.
+- **iPhone app:** runs the detector and ball tracker on-device on imported videos, with
+  playback overlays. The Swift tracker matches the Python one frame for frame.
+- **Detector:** the fine-tuned `pickleball-v1` model tracks the ball in 61.6% of
+  visible-ball frames at 96.2% precision on a held-out clip, up from 39.6% with the generic
+  model ([details](ml/README.md)).
+
 ## What's where
 
 | Folder | What it is | Docs |
