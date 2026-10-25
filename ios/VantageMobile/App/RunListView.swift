@@ -6,20 +6,16 @@ import VantageKit
 /// Home screen: import a video to analyze, and reopen previous runs for playback.
 struct RunListView: View {
     let store: RunStore
+    let importer: RunImporter
 
     @State private var path: [AnalysisRun] = []
     @State private var importing = false
-    @State private var job: Task<Void, Never>?
-    @State private var progress = 0.0
-    @State private var status: String?
-
-    private var running: Bool { job != nil }
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
-                if running || status != nil { analysisSection }
-                if store.runs.isEmpty && !running {
+                if importer.isRunning || importer.notice != nil { analysisSection }
+                if store.runs.isEmpty && !importer.isRunning {
                     ContentUnavailableView {
                         Label("No analyses yet", systemImage: "video.badge.waveform")
                     } description: {
@@ -38,7 +34,7 @@ struct RunListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { importing = true } label: { Label("Import video", systemImage: "plus") }
-                        .disabled(running)
+                        .disabled(importer.isRunning)
                 }
             }
             .navigationDestination(for: AnalysisRun.self) { run in
@@ -54,8 +50,8 @@ struct RunListView: View {
             #endif
             .fileImporter(isPresented: $importing, allowedContentTypes: [.movie]) { selection in
                 switch selection {
-                case .failure(let error): status = error.localizedDescription
-                case .success(let url): analyze(url)
+                case .failure(let error): importer.notice = error.localizedDescription
+                case .success(let url): importer.start(url)
                 }
             }
         }
@@ -63,59 +59,17 @@ struct RunListView: View {
 
     private var analysisSection: some View {
         Section {
-            if running {
+            if let pending = importer.pending {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(status ?? "Analyzing…").font(.subheadline)
-                    ProgressView(value: progress)
+                    Text(pending.progress == nil ? "Copying video…" : "Analyzing \(pending.sourceName)…")
+                        .font(.subheadline)
+                    ProgressView(value: pending.progress ?? 0)
                     Text("Keep Vantage open; analysis pauses in the background.")
                         .font(.caption).foregroundStyle(.secondary)
-                    Button("Cancel", role: .destructive) { job?.cancel() }.font(.callout)
+                    Button("Cancel", role: .destructive) { importer.cancel() }.font(.callout)
                 }
-            } else if let status {
-                Text(status).font(.callout)
-            }
-        }
-    }
-
-    @MainActor private func analyze(_ source: URL) {
-        guard let model = Bundle.main.url(forResource: "VantageDetector", withExtension: "mlmodelc") else {
-            status = "Missing model. Add the exported VantageDetector.mlpackage to the app target."
-            return
-        }
-        let id = UUID()
-        let folder = store.folder(for: id)
-        let detections = folder.appending(path: AnalysisRun.detectionsFileName)
-        progress = 0
-        status = "Copying video…"
-        UIApplication.shared.isIdleTimerDisabled = true
-        job = Task {
-            defer {
-                job = nil
-                UIApplication.shared.isIdleTimerDisabled = false
-            }
-            do {
-                let video = try await Task.detached { try RunStore.copyVideo(from: source, into: folder) }.value
-                try Task.checkCancellation()
-                await RunStore.writeThumbnail(for: video, to: folder.appending(path: AnalysisRun.thumbnailFileName))
-                status = "Analyzing \(source.lastPathComponent)…"
-                let result = try await VideoAnalyzer().analyze(video: video, model: model, destination: detections) { value in
-                    await MainActor.run { progress = value }
-                }
-                let run = AnalysisRun(
-                    id: id, createdAt: .now, sourceName: source.lastPathComponent,
-                    videoFileName: video.lastPathComponent, frames: result.frames, ballFrames: result.ballFrames,
-                    trackedBallFrames: result.trackedBallFrames,
-                    averageMilliseconds: result.averageMilliseconds, width: result.width, height: result.height,
-                    durationSeconds: result.durationSeconds)
-                try store.add(run)
-                status = nil
-                path = [run]
-            } catch is CancellationError {
-                store.discard(id)
-                status = "Analysis cancelled."
-            } catch {
-                store.discard(id)
-                status = error.localizedDescription
+            } else if let notice = importer.notice {
+                Text(notice).font(.callout)
             }
         }
     }
