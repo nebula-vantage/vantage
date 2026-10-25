@@ -1,0 +1,66 @@
+# Runs every test suite and builds the iOS app on each pull request and on main.
+# Xcode comes from .xcode-version, so CI builds with the same version as the team.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests and iOS build
+    # GitHub's Xcode 27 image (public preview); the macos-26 image only has Xcode 26.x.
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select Xcode from .xcode-version
+        run: |
+          XCODE="/Applications/Xcode_$(cat .xcode-version).app"
+          if [ ! -d "$XCODE" ]; then
+            echo "::error::Xcode $(cat .xcode-version) is not installed on this runner. Installed:"
+            ls -d /Applications/Xcode*.app
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$XCODE/Contents/Developer" >> "$GITHUB_ENV"
+          DEVELOPER_DIR="$XCODE/Contents/Developer" xcodebuild -version
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install Python dependencies
+        run: uv sync --locked
+
+      - name: Run all tests (Python, signing check, VantageKit Swift)
+        run: scripts/test.sh
+
+      - name: Restore exported Core ML model
+        id: model-cache
+        uses: actions/cache@v6
+        with:
+          path: artifacts/pickleball-v1-1280
+          key: coreml-${{ hashFiles('ml/models/pickleball-v1.pt', 'tools/coreml/export_model.py', 'uv.lock') }}
+
+      - name: Export Core ML model
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: >-
+          uv run --locked python tools/coreml/export_model.py
+          --weights ml/models/pickleball-v1.pt --ball-confidence 0.20
+          --output artifacts/pickleball-v1-1280
+
+      - name: Build iOS app (unsigned)
+        run: >-
+          xcodebuild -project ios/VantageMobile.xcodeproj -scheme VantageMobile
+          -configuration Debug -destination 'generic/platform=iOS'
+          -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet build

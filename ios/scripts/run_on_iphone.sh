@@ -6,6 +6,13 @@
 set -euo pipefail
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$(dirname "$0")/../.."  # repository root
+# Everyone builds with the Xcode in .xcode-version (CI does too); different compilers
+# have disagreed on this code before.
+want="$(cat .xcode-version)"
+have="$(xcodebuild -version 2>/dev/null | awk 'NR==1 {print $2}' || true)"
+if [ "$have" != "$want" ]; then
+    echo "warning: this repo uses Xcode $want (.xcode-version) but you have Xcode ${have:-none}." >&2
+fi
 [ -f ios/Config/Local.xcconfig ] || {
     echo "Missing ios/Config/Local.xcconfig. Copy ios/Config/Local.xcconfig.example and set your" >&2
     echo "team ID and bundle ID suffix (see ios/README.md)." >&2

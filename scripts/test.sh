@@ -34,6 +34,13 @@ if [ "$(uname)" = "Darwin" ]; then
     if [ -z "${DEVELOPER_DIR:-}" ] && [ -d /Applications/Xcode.app ]; then
         export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
     fi
+    # Everyone builds with the Xcode in .xcode-version (CI does too); different compilers
+    # have disagreed on this code before.
+    want="$(cat .xcode-version)"
+    have="$(xcodebuild -version 2>/dev/null | awk 'NR==1 {print $2}' || true)"
+    if [ "$have" != "$want" ]; then
+        echo "warning: this repo uses Xcode $want (.xcode-version) but you have Xcode ${have:-none}." >&2
+    fi
     run "ios/VantageKit (swift test)" bash -c \
         'cd ios/VantageKit && swift test --scratch-path "$HOME/Library/Caches/VantageKit-build"'
 else
