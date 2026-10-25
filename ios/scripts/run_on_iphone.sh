@@ -13,7 +13,7 @@ cd "$(dirname "$0")/../.."  # repository root
 }
 DERIVED="$HOME/Library/Developer/Xcode/DerivedData/VantageMobile-device"
 APP="$DERIVED/Build/Products/Debug-iphoneos/VantageMobile.app"
-DEVICE="${1:-$(xcrun devicectl list devices 2>/dev/null | awk '/physical/ && (/available/ || /connected/) && /iPhone/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{16}$/) print $i}' | head -1)}"
+DEVICE="${1:-$(xcrun devicectl list devices 2>/dev/null | awk '/physical/ && (/available/ || /connected/) && !/unavailable/ && /iPhone/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-[0-9A-F]{16}$/) print $i}' | head -1)}"
 [ -n "$DEVICE" ] || { echo "No available iPhone. Connect/unlock it, trust this Mac, enable Developer Mode." >&2; exit 1; }
 echo "Device: $DEVICE"
 xcodebuild -project ios/VantageMobile.xcodeproj -scheme VantageMobile -configuration Debug \
