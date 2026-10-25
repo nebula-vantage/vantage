@@ -1,7 +1,7 @@
 """Score ball detection/tracking against hand labels.
 
-    .venv/bin/python ml/evaluate_ball.py --labels ml/labels/topcorner60fps.json \
-        --detections mobile/reports/swift-detections/topcorner60fps.jsonl
+    uv run python ml/evaluate_ball.py --labels ml/labels/topcorner60fps.json \
+        --detections reports/swift-detections/topcorner60fps.jsonl
 
 Compares, on the labeled frames only:
   raw best       highest-confidence raw candidate (the detector alone)

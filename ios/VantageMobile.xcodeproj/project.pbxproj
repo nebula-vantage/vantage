@@ -1,0 +1,246 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000021 /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */; };
+		000000000000000000000032 /* VantageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000031 /* VantageKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = "../artifacts/pickleball-v1-1280/VantageDetector.mlpackage"; sourceTree = "<group>"; };
+		00000000000000000000000E /* VantageMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VantageMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000033 /* VantageKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = VantageKit; sourceTree = "<group>"; };
+		000000000000000000000040 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		00000000000000000000000F /* VantageMobile */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VantageMobile;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		000000000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000032 /* VantageKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000000F /* VantageMobile */,
+				000000000000000000000041 /* Config */,
+				000000000000000000000033 /* VantageKit */,
+				00000000000000000000000D /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage */,
+				000000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000000E /* VantageMobile.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000041 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000040 /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000004 /* VantageMobile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000015 /* Build configuration list for PBXNativeTarget "VantageMobile" */;
+			buildPhases = (
+				000000000000000000000005 /* Sources */,
+				000000000000000000000006 /* Frameworks */,
+				000000000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				00000000000000000000000F /* VantageMobile */,
+			);
+			name = VantageMobile;
+			packageProductDependencies = (
+				000000000000000000000031 /* VantageKit */,
+			);
+			productName = VantageMobile;
+			productReference = 00000000000000000000000E /* VantageMobile.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 000000000000000000000014 /* Build configuration list for PBXProject "VantageMobile" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000002;
+			packageReferences = (
+				000000000000000000000030 /* XCLocalSwiftPackageReference "VantageKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 000000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000004 /* VantageMobile */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		000000000000000000000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		000000000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000021 /* ../artifacts/pickleball-v1-1280/VantageDetector.mlpackage in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		000000000000000000000017 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		000000000000000000000018 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Vantage;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		000000000000000000000019 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Vantage;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000014 /* Build configuration list for PBXProject "VantageMobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000016 /* Debug */,
+				000000000000000000000017 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000015 /* Build configuration list for PBXNativeTarget "VantageMobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000018 /* Debug */,
+				000000000000000000000019 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		000000000000000000000030 /* XCLocalSwiftPackageReference "VantageKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = VantageKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		000000000000000000000031 /* VantageKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VantageKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}

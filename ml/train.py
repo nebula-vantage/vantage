@@ -1,6 +1,6 @@
 """Fine-tune YOLO26n on a dataset from build_dataset.py (Apple GPU via MPS by default).
 
-    .venv/bin/python ml/train.py --data ml/datasets/pickleball-v1/data.yaml --name pickleball-v1
+    uv run python ml/train.py --data ml/datasets/pickleball-v1/data.yaml --name pickleball-v1
 
 Starts from the generic COCO checkpoint, so player/paddle features carry over. Trains at
 1280 px because pickleballs are only a few pixels wide. Results go to ml/runs/<name>/

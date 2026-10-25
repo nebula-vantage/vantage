@@ -17,15 +17,12 @@ import json
 import math
 import os
 from pathlib import Path
-import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-from ball_tracker import BallTracker  # noqa: E402
-from config import CONFIG  # noqa: E402
-from records import Detection  # noqa: E402
+from vantage.ball_tracker import BallTracker
+from vantage.config import CONFIG
+from vantage.records import Detection
 from vantage_classes import CANONICAL  # noqa: E402
 
 # detections.jsonl always uses canonical IDs, whatever model produced it.
@@ -91,7 +88,7 @@ def save_labels(path, labels, *, video, video_size, detections):
 
 
 def label_centers(labels):
-    """{"frame": [x, y] | null} format used by mobile/model/crop_experiment.py --labels."""
+    """{"frame": [x, y] | null} format used by tools/coreml/crop_experiment.py --labels."""
     return {str(k): (None if v["ball"] is None else list(center(v["ball"]))) for k, v in sorted(labels.items())}
 
 

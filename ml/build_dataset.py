@@ -1,6 +1,6 @@
 """Assemble a YOLO training set (player, ball, paddle) from hand labels and public datasets.
 
-    .venv/bin/python ml/build_dataset.py [--spec ml/dataset.yaml] [--overwrite]
+    uv run python ml/build_dataset.py [--spec ml/dataset.yaml] [--overwrite]
 
 Sources (see ml/dataset.yaml):
 - Hand labels (ml/labels/*.json): every labeled frame is extracted from its video. Frames

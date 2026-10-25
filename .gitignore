@@ -1,25 +1,49 @@
 .DS_Store
+
+# Python (one environment for the repo: `uv sync`)
 .venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+# Ultralytics settings/cache written by tools/coreml (YOLO_CONFIG_DIR).
+.cache/
+
+# Model weights: downloaded base models (yolo26n.pt) stay local; trained Vantage models
+# are small (~5 MB) and versioned with their model cards.
 *.pt
-# Trained Vantage models are small (~5 MB) and versioned with their model cards.
 !ml/models/*.pt
 *.onnx
+
+# Videos stay out of git, except the README demo and the committed sample.
 *.mp4
 *.mov
 *.avi
-input/*
-!input/.gitkeep
-output/*
-!output/.gitkeep
-
-# Include the annotated video linked from the README demo.
 !docs/sideview-annotated.mp4
+
+# Desktop pipeline working folders (paths are relative to where you run it).
+input/
+output/
+
+# Generated: Core ML exports (tools/coreml/export_model.py) and comparison reports.
+# Unanchored so leftovers in an old mobile/ folder stay ignored too.
+artifacts/
+reports/
 
 # Training data and runs (large, regenerable); labels and dataset specs are committed.
 ml/datasets/
 ml/external/
 ml/runs/
+
+# Xcode: per-user state and build output. Prefer DerivedData outside ~/Documents
+# (see ios/scripts/run_on_iphone.sh).
+xcuserdata/
+*.xcuserstate
+ios/VantageMobile.xcodeproj/project.xcworkspace/
+build/
+build-simulator/
+.build/
+.swiftpm/
+
+# Per-developer signing (copy ios/Config/Local.xcconfig.example).
+ios/Config/Local.xcconfig
