@@ -4,7 +4,7 @@
 # DerivedData lives OUTSIDE ~/Documents: iCloud-synced folders add extended attributes that make
 # codesign fail with "resource fork, Finder information, or similar detritus not allowed".
 set -euo pipefail
-export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$(dirname "$0")/../.."  # repository root
 [ -f ios/Config/Local.xcconfig ] || {
     echo "Missing ios/Config/Local.xcconfig. Copy ios/Config/Local.xcconfig.example and set your" >&2

@@ -65,7 +65,7 @@ frame. Keep capture-time timing for speed estimates. Apple's
 [AVFoundation capture formats](https://developer.apple.com/documentation/avfoundation/capture-device-formats)
 provide the native capture configuration. This Python pipeline still assumes constant
 FPS; slow-motion retiming and variable-frame-rate input require care as documented
-in the main README. No iPhone performance benchmark has been run.
+in the pipeline README. No iPhone performance benchmark has been run.
 
 ## Reproduce
 

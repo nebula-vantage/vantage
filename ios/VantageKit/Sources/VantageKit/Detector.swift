@@ -67,9 +67,9 @@ public final class Detector {
             guard let cls = classMap[Int(values[5])] else { continue }
             if cls == DetectionClass.ball && values[4] < ballConfidence { continue }
             let box: [Double] = [max(0, min(width, (values[0]-left)/gain)),
-                       max(0, min(height, (values[1]-top)/gain)),
-                       max(0, min(width, (values[2]-left)/gain)),
-                       max(0, min(height, (values[3]-top)/gain))]
+                                 max(0, min(height, (values[1]-top)/gain)),
+                                 max(0, min(width, (values[2]-left)/gain)),
+                                 max(0, min(height, (values[3]-top)/gain))]
             guard box[2] > box[0], box[3] > box[1] else { continue }
             detections.append(Detection(classID: cls, confidence: values[4], box: box))
         }

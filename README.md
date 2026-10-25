@@ -18,8 +18,8 @@ phone camera. Capstone project by team Nebula, University of Waterloo.
 - **iPhone app:** runs the detector and ball tracker on-device on imported videos, with
   playback overlays. The Swift tracker matches the Python one frame for frame.
 - **Detector:** the fine-tuned `pickleball-v1` model tracks the ball in 61.6% of
-  visible-ball frames at 96.2% precision on a held-out clip, up from 39.6% with the generic
-  model ([details](ml/README.md)).
+  visible-ball frames at 96.2% precision on a held-out clip (confidence threshold tuned on
+  that clip), up from 39.6% with the generic model ([details](ml/README.md)).
 
 ## What's where
 

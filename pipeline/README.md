@@ -224,7 +224,7 @@ match scoring, player identities, or verified line calls.
 After a completed run, change the statistics/trajectory/bounce configuration and run:
 
 ```sh
-uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze
+uv run vantage --input assets/sideview.MOV --output-dir output/combined --reanalyze
 ```
 
 This reuses the completed tracking observations and recalculates statistics, events,
@@ -242,13 +242,13 @@ remain available as the baseline.
 To process a video and print each frame as soon as it is tracked:
 
 ```sh
-uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --stream
+uv run vantage --input assets/sideview.MOV --output-dir output/combined --stream
 ```
 
 To stream the existing validated tracking results without rerunning YOLO:
 
 ```sh
-uv run vantage --input assets/videoplayback.mp4 --output-dir output/combined --reanalyze --stream
+uv run vantage --input assets/sideview.MOV --output-dir output/combined --reanalyze --stream
 ```
 
 Add `| tee coordinates.jsonl` to watch the stream and save it simultaneously. The

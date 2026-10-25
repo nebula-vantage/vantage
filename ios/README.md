@@ -106,7 +106,8 @@ First time only:
    team ID: in Xcode → Settings → Accounts → your team → **Manage Certificates…**, add an
    **Apple Development** certificate if there isn't one, then run
    `security find-certificate -c "Apple Development" -p | openssl x509 -noout -subject`.
-   Your team ID is the `OU=` value. Don't set the team in the target's Signing &
+   Your team ID is the `OU=` value (with more than one certificate, match yours:
+   `-c "Apple Development: you@example.com"`). Don't set the team in the target's Signing &
    Capabilities tab: that writes it into the shared project file (`scripts/test.sh` fails
    if a team or bundle ID appears there).
    If you already installed the app as `com.vantage.detectorprototype`, leave the suffix
@@ -173,7 +174,7 @@ Run the exact on-device analysis on the Mac (same model, preprocessing, tracker)
 ```sh
 cd ios/VantageKit
 swift run -c release --scratch-path ~/Library/Caches/VantageKit-build vantage-analyze \
-  ../../artifacts/yolo26n-1280/VantageDetector.mlpackage ../../assets/pickleball/sideview.MOV /tmp/sideview.jsonl
+  ../../artifacts/yolo26n-1280/VantageDetector.mlpackage ../../assets/sideview.MOV /tmp/sideview.jsonl
 ```
 
 Regenerate tracker parity fixtures after changing either tracker (from the repository root):

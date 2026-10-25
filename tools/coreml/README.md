@@ -27,7 +27,7 @@ Run from the repository root after `uv sync`.
 ```sh
 uv run python tools/coreml/export_model.py
 uv run python tools/coreml/compare.py \
-  --video assets/pickleball/sideview.MOV \
+  --video assets/sideview.MOV \
   --samples 24 --output reports/my-sideview-run
 ```
 
@@ -50,7 +50,7 @@ pipeline or the Swift detector.
 
 ## Validation results
 
-On 24 evenly spaced frames of `assets/pickleball/sideview.MOV`, with confidence
+On 24 evenly spaced frames of `assets/sideview.MOV`, with confidence
 0.10 and matching IoU ≥ 0.50:
 
 | Comparison | Player candidates matched | Ball candidates matched | Paddle candidates matched |
