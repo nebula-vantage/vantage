@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import Observation
 import UIKit
+import VantageKit
 
 /// Persists analysis runs under `Documents/Runs/<id>/`. A folder only counts as a run
 /// once `run.json` is written, so interrupted analyses are cleaned up on launch.
@@ -42,6 +43,14 @@ final class RunStore {
     }
     func thumbnailURL(for run: AnalysisRun) -> URL {
         folder(for: run.id).appending(path: AnalysisRun.thumbnailFileName)
+    }
+
+    /// Stats the engine wrote after analysis; nil until it has (or if the file is unreadable).
+    func stats(for run: AnalysisRun) -> GameStats? {
+        guard let data = try? Data(contentsOf: folder(for: run.id).appending(path: GameStats.fileName)) else {
+            return nil
+        }
+        return try? GameStats.decoder.decode(GameStats.self, from: data)
     }
 
     func add(_ run: AnalysisRun) throws {

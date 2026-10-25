@@ -12,6 +12,11 @@ struct VantageMobileApp: App {
     }
 
     var body: some Scene {
-        WindowGroup { RunListView(store: store, importer: importer) }
+        WindowGroup {
+            GamesListView(store: store, importer: importer)
+                .tint(Theme.Colors.ink)
+                // The palette is light-only for the MVP.
+                .preferredColorScheme(.light)
+        }
     }
 }
