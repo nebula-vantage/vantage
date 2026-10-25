@@ -18,9 +18,9 @@ struct GameRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            HStack {
+            SpreadRow {
                 Text("Pickleball · Uploaded").monoLabel()
-                Spacer()
+            } trailing: {
                 Text(Format.duration(run.durationSeconds)).monoLabel().monospacedDigit()
             }
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {

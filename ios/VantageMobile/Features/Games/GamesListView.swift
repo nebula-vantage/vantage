@@ -59,12 +59,12 @@ struct GamesListView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text("Vantage").monoLabel()
-            HStack(alignment: .firstTextBaseline) {
+            SpreadRow(alignment: .firstTextBaseline) {
                 Text("Games")
                     .font(Theme.Fonts.display)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
-                Spacer()
+            } trailing: {
                 Text(Format.count(store.runs.count, "game", "games")).monoLabel()
             }
         }
