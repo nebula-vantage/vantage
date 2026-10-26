@@ -92,7 +92,7 @@ struct CourtGeometry {
                 ForEach(Array(GameStats.sample.bounces.enumerated()), id: \.offset) { _, bounce in
                     Circle()
                         .fill(bounce.call == .inBounds ? Theme.Colors.accent : Theme.Colors.surface)
-                        .stroke(Theme.Colors.accent, lineWidth: Theme.Size.hairline)
+                        .stroke(Theme.Colors.accent, lineWidth: Theme.Size.markStroke)
                         .frame(width: Theme.Size.landingDot, height: Theme.Size.landingDot)
                         .position(geometry.point(bounce.court))
                 }

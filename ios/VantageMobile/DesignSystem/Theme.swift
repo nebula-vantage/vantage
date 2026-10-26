@@ -17,6 +17,8 @@ enum Theme {
         static let track = Color(hex: 0xE9ECF0)
         /// The one accent colour.
         static let accent = Color(hex: 0xE8590C)
+        /// Accent at partial strength, for uncertain marks (close calls).
+        static let accentMuted = Color(hex: 0xE8590C).opacity(0.4)
         /// Completed steps and positive calls.
         static let positive = Color(hex: 0x0F766E)
         /// The opponent's marker; the user's is `accent`.
@@ -85,6 +87,8 @@ enum Theme {
         /// Player colour dots (toggle, legends).
         static let dot: CGFloat = 8
         static let landingDot: CGFloat = 10
+        /// Outline of marks on the court diagram.
+        static let markStroke: CGFloat = 2
         static let courtLine: CGFloat = 2
         /// A full court is tall; this keeps it to about half a phone screen.
         static let courtMaxWidth: CGFloat = 240

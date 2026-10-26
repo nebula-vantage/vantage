@@ -71,7 +71,9 @@ struct GameDetailView: View {
             grid([
                 StatTile(label: "Rallies", value: Format.count(stats?.rallyCount)),
                 StatTile(label: "Avg rally", value: Format.decimal(stats?.averageShotsPerRally), unit: "shots"),
-                StatTile(label: "Longest", value: Format.count(stats?.longestRally), unit: "shots"),
+                // The contract's longestRally is 0 with no rallies; that's "not measured", not zero.
+                StatTile(label: "Longest", value: Format.count(stats.flatMap { $0.rallies.isEmpty ? nil : $0.longestRally }),
+                         unit: "shots"),
                 StatTile(label: "Shots", value: Format.count(stats?.shotCount)),
                 StatTile(label: "Avg speed", value: Format.speed(stats?.averageBallSpeedKmh), unit: Format.kmh),
                 StatTile(label: "Tracked", value: Format.percent(run.ballTrackedFraction(with: stats)),
@@ -154,14 +156,25 @@ private struct LandingDot: View {
     let uncertain: Bool
 
     private var fill: Color {
-        if uncertain { return Theme.Colors.accent.opacity(0.4) }
+        if uncertain { return Theme.Colors.accentMuted }
         return call == .inBounds ? Theme.Colors.accent : Theme.Colors.surface
     }
 
     var body: some View {
         Circle()
             .fill(fill)
-            .stroke(Theme.Colors.accent, lineWidth: Theme.Size.hairline * 2)
+            .stroke(Theme.Colors.accent, lineWidth: Theme.Size.markStroke)
             .frame(width: Theme.Size.landingDot, height: Theme.Size.landingDot)
     }
+}
+
+#Preview {
+    HStack(spacing: Theme.Spacing.l) {
+        LandingDot(call: .inBounds, uncertain: false)
+        LandingDot(call: .out, uncertain: false)
+        LandingDot(call: .inBounds, uncertain: true)
+        LandingDot(call: .out, uncertain: true)
+    }
+    .padding(Theme.Spacing.l)
+    .background(Theme.Colors.courtSurface)
 }
