@@ -1,5 +1,5 @@
+import PhotosUI
 import SwiftUI
-import UniformTypeIdentifiers
 import VantageKit
 
 /// Home screen: upload a video to analyze, follow its progress, and open analyzed games.
@@ -8,7 +8,8 @@ struct GamesListView: View {
     let importer: RunImporter
 
     @State private var path: [AnalysisRun] = []
-    @State private var importing = false
+    @State private var picking = false
+    @State private var picked: PhotosPickerItem?
     @State private var deleting: AnalysisRun?
 
     var body: some View {
@@ -37,11 +38,13 @@ struct GamesListView: View {
                 }
             }
             #endif
-            .fileImporter(isPresented: $importing, allowedContentTypes: [.movie]) { selection in
-                switch selection {
-                case .failure(let error): importer.notice = error.localizedDescription
-                case .success(let url): importer.start(url)
-                }
+            // `.current` hands over the video as stored, skipping a slow transcode.
+            .photosPicker(isPresented: $picking, selection: $picked, matching: .videos,
+                          preferredItemEncoding: .current)
+            .onChange(of: picked) { _, item in
+                guard let item else { return }
+                importer.start(item)
+                picked = nil
             }
             .confirmationDialog("Delete this game?", isPresented: isDeleting, titleVisibility: .visible,
                                 presenting: deleting) { run in
@@ -71,7 +74,7 @@ struct GamesListView: View {
     }
 
     private var uploadTile: some View {
-        Button { importing = true } label: {
+        Button { picking = true } label: {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 Image(systemName: "square.and.arrow.up")
                     .font(Theme.Fonts.title)
@@ -122,7 +125,7 @@ private struct PendingGameRow: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Text("Pickleball · Analyzing").monoLabel()
-                Text(pending.sourceName).font(Theme.Fonts.title).lineLimit(2)
+                Text(pending.sourceName ?? "Video from Photos").font(Theme.Fonts.title).lineLimit(2)
             }
             AnalysisProgressView(fraction: pending.progress)
             HStack(alignment: .center, spacing: Theme.Spacing.m) {

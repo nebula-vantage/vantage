@@ -69,15 +69,13 @@ final class RunStore {
         try? FileManager.default.removeItem(at: folder(for: id))
     }
 
-    /// Copies a picked video into the run folder so it stays playable after the
-    /// Files security scope ends. Synchronous; call off the main actor.
-    nonisolated static func copyVideo(from source: URL, into folder: URL) throws -> URL {
-        let access = source.startAccessingSecurityScopedResource()
-        defer { if access { source.stopAccessingSecurityScopedResource() } }
+    /// Moves a picked video (the app's own temporary copy) into the run folder.
+    /// Synchronous; call off the main actor.
+    nonisolated static func moveVideo(from source: URL, into folder: URL) throws -> URL {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let ext = source.pathExtension.isEmpty ? "mov" : source.pathExtension.lowercased()
         let destination = folder.appending(path: "video.\(ext)")
-        try FileManager.default.copyItem(at: source, to: destination)
+        try FileManager.default.moveItem(at: source, to: destination)
         return destination
     }
 
