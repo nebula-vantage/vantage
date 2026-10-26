@@ -5,24 +5,38 @@ import VantageKit
 /// with the length and the ball-tracked trust signal as badges.
 struct GameVideoCard: View {
     let run: AnalysisRun
+    let videoURL: URL
     let detectionsURL: URL
     let trackedFraction: Double?
 
-    @State private var controller: PlaybackController
+    /// Created once in `.task`, not in `init`: the parent rebuilds this view often (toggle taps,
+    /// import progress), and each init would otherwise build and drop a whole AVPlayer.
+    @State private var controller: PlaybackController?
     @State private var timeline: DetectionTimeline?
-
-    init(run: AnalysisRun, videoURL: URL, detectionsURL: URL, trackedFraction: Double?) {
-        self.run = run
-        self.detectionsURL = detectionsURL
-        self.trackedFraction = trackedFraction
-        _controller = State(initialValue: PlaybackController(url: videoURL))
-    }
 
     private var trackedText: String { "\(Format.percent(trackedFraction)) of frames tracked" }
 
     var body: some View {
+        Group {
+            if let controller {
+                video(controller)
+            } else {
+                Theme.Colors.videoBackground.aspectRatio(run.videoAspectRatio, contentMode: .fit)
+            }
+        }
+        .background(Theme.Colors.videoBackground)
+        .clipShape(.rect(cornerRadius: Theme.Radius.card, style: .continuous))
+        .task {
+            if controller == nil { controller = PlaybackController(url: videoURL) }
+            await loadTimeline()
+        }
+        // Pause only: the screen comes back after debug playback, so the controller must stay live.
+        .onDisappear { controller?.player.pause() }
+    }
+
+    private func video(_ controller: PlaybackController) -> some View {
         OverlayVideo(player: controller.player, timeline: timeline, options: OverlayOptions(),
-                     aspectRatio: run.videoAspectRatio)
+                     aspectRatio: run.videoAspectRatio, paused: !controller.isPlaying)
             .overlay {
                 if !controller.isPlaying {
                     Image(systemName: "play.fill")
@@ -43,8 +57,6 @@ struct GameVideoCard: View {
             // Chrome drawn over the video stops growing before it covers the picture; VoiceOver
             // still reads the full text.
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            .background(Theme.Colors.videoBackground)
-            .clipShape(.rect(cornerRadius: Theme.Radius.card, style: .continuous))
             .contentShape(.rect)
             .onTapGesture { controller.togglePlay() }
             .accessibilityElement(children: .ignore)
@@ -52,9 +64,6 @@ struct GameVideoCard: View {
             .accessibilityValue("\(Format.duration(run.durationSeconds)), \(trackedText)")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { controller.togglePlay() }
-            .task { await loadTimeline() }
-            // Pause only: the screen comes back after debug playback, so the controller must stay live.
-            .onDisappear { controller.player.pause() }
     }
 
     private func badge(_ text: String, color: Color) -> some View {
