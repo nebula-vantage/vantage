@@ -41,16 +41,6 @@ struct GamesListView: View {
                                detectionsURL: store.detectionsURL(for: run))
                 }
             }
-            #if DEBUG
-            // UI check hooks: `simctl launch <device> <bundle> -openLatestGame` (game screen)
-            // or `-openLatestRun` (debug playback).
-            .task {
-                let arguments = ProcessInfo.processInfo.arguments
-                guard let run = store.runs.first else { return }
-                if arguments.contains("-openLatestGame") { path = [.detail(run)] }
-                if arguments.contains("-openLatestRun") { path = [.debugPlayback(run)] }
-            }
-            #endif
             // `.current` hands over the video as stored, skipping a slow transcode.
             .photosPicker(isPresented: $picking, selection: $picked, matching: .videos,
                           preferredItemEncoding: .current)
@@ -66,6 +56,17 @@ struct GamesListView: View {
                 Text("The video and its analysis are removed from this iPhone.")
             }
         }
+        #if DEBUG
+        // UI check hooks: `simctl launch <device> <bundle> -openLatestGame` (game screen)
+        // or `-openLatestRun` (debug playback). On the stack, not the list, so they run once at
+        // launch instead of again every time the user comes back to the list.
+        .task {
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let run = store.runs.first else { return }
+            if arguments.contains("-openLatestGame") { path = [.detail(run)] }
+            if arguments.contains("-openLatestRun") { path = [.debugPlayback(run)] }
+        }
+        #endif
     }
 
     private var isDeleting: Binding<Bool> {
