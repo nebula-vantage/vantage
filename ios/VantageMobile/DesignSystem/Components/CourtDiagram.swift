@@ -89,7 +89,7 @@ struct CourtGeometry {
         HStack(alignment: .top, spacing: Theme.Spacing.m) {
             CourtDiagram(court: .pickleball)
             CourtDiagram(court: .pickleball) { geometry in
-                ForEach(Array(GameStats.sample.bounces.enumerated()), id: \.offset) { _, bounce in
+                ForEach(Array(GameStats.sample.inOutCalls.enumerated()), id: \.offset) { _, bounce in
                     Circle()
                         .fill(bounce.call == .inBounds ? Theme.Colors.accent : Theme.Colors.surface)
                         .stroke(Theme.Colors.accent, lineWidth: Theme.Size.markStroke)

@@ -9,8 +9,8 @@ struct GameRow: View {
 
     private var summary: String {
         [
-            Format.count(stats?.rallyCount, "rally", "rallies"),
-            Format.count(stats?.shotCount, "shot", "shots"),
+            Format.count(stats?.measured?.rallyCount, "rally", "rallies"),
+            Format.count(stats?.measured?.shotCount, "shot", "shots"),
             "\(Format.percent(run.ballTrackedFraction(with: stats))) ball tracked",
         ].joined(separator: " · ")
     }

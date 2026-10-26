@@ -66,16 +66,15 @@ struct GameDetailView: View {
     }
 
     private func matchSection(_ stats: GameStats?) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+        let measured = stats?.measured
+        return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             Text("Match · both players").monoLabel()
             grid([
-                StatTile(label: "Rallies", value: Format.count(stats?.rallyCount)),
-                StatTile(label: "Avg rally", value: Format.decimal(stats?.averageShotsPerRally), unit: "shots"),
-                // The contract's longestRally is 0 with no rallies; that's "not measured", not zero.
-                StatTile(label: "Longest", value: Format.count(stats.flatMap { $0.rallies.isEmpty ? nil : $0.longestRally }),
-                         unit: "shots"),
-                StatTile(label: "Shots", value: Format.count(stats?.shotCount)),
-                StatTile(label: "Avg speed", value: Format.speed(stats?.averageBallSpeedKmh), unit: Format.kmh),
+                StatTile(label: "Rallies", value: Format.count(measured?.rallyCount)),
+                StatTile(label: "Avg rally", value: Format.decimal(measured?.averageShotsPerRally), unit: "shots"),
+                StatTile(label: "Longest", value: Format.count(measured?.longestRally), unit: "shots"),
+                StatTile(label: "Shots", value: Format.count(measured?.shotCount)),
+                StatTile(label: "Avg speed", value: Format.speed(stats?.avgBallSpeedKmh), unit: Format.kmh),
                 StatTile(label: "Tracked", value: Format.percent(run.ballTrackedFraction(with: stats)),
                          unit: "of frames"),
             ], columns: 3)
@@ -83,15 +82,16 @@ struct GameDetailView: View {
     }
 
     private func bouncesSection(_ stats: GameStats?) -> some View {
-        let bounces: [Bounce] = stats?.bounces ?? []
+        let measured = stats?.measured
+        let bounces: [Bounce] = stats?.inOutCalls ?? []
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             Text("Bounces").monoLabel()
             grid([
-                StatTile(label: "In", value: Format.count(stats?.inCount)),
-                StatTile(label: "Out", value: Format.count(stats?.outCount)),
+                StatTile(label: "In", value: Format.count(measured?.inCount)),
+                StatTile(label: "Out", value: Format.count(measured?.outCount)),
             ], columns: 2)
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                CourtDiagram(court: stats?.court ?? .pickleball) { geometry in
+                CourtDiagram(court: .pickleball) { geometry in
                     ForEach(Array(bounces.enumerated()), id: \.offset) { _, bounce in
                         LandingDot(call: bounce.call, uncertain: bounce.nearBoundary)
                             .position(geometry.point(bounce.court))
@@ -101,7 +101,7 @@ struct GameDetailView: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Landing spots")
-                .accessibilityValue(stats == nil ? "Not measured" : "\(stats!.inCount) in, \(stats!.outCount) out")
+                .accessibilityValue(measured.map { "\($0.inCount) in, \($0.outCount) out" } ?? "Not measured")
                 HStack(spacing: Theme.Spacing.l) {
                     legendItem("In") { LandingDot(call: .inBounds, uncertain: false) }
                     legendItem("Out") { LandingDot(call: .out, uncertain: false) }

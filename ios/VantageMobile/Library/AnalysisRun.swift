@@ -32,6 +32,6 @@ struct AnalysisRun: Codable, Identifiable, Hashable, Sendable {
     /// The "% of frames ball tracked" trust signal: the engine's figure once stats exist,
     /// the analyzer's until then.
     func ballTrackedFraction(with stats: GameStats?) -> Double? {
-        stats?.quality.ballTrackedFraction ?? trackedBallFraction
+        stats?.quality.ballDetectionCoverage ?? trackedBallFraction
     }
 }
