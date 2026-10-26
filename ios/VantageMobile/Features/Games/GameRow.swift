@@ -8,11 +8,10 @@ struct GameRow: View {
     let stats: GameStats?
 
     private var summary: String {
-        let tracked = stats?.quality.ballTrackedFraction ?? run.trackedBallFraction
-        return [
+        [
             Format.count(stats?.rallyCount, "rally", "rallies"),
             Format.count(stats?.shotCount, "shot", "shots"),
-            "\(Format.percent(tracked)) ball tracked",
+            "\(Format.percent(run.ballTrackedFraction(with: stats))) ball tracked",
         ].joined(separator: " · ")
     }
 

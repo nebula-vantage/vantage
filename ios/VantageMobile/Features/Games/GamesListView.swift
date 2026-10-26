@@ -2,12 +2,18 @@ import PhotosUI
 import SwiftUI
 import VantageKit
 
+/// Screens pushed from the games list.
+enum GameRoute: Hashable {
+    case detail(AnalysisRun)
+    case debugPlayback(AnalysisRun)
+}
+
 /// Home screen: upload a video to analyze, follow its progress, and open analyzed games.
 struct GamesListView: View {
     let store: RunStore
     let importer: RunImporter
 
-    @State private var path: [AnalysisRun] = []
+    @State private var path: [GameRoute] = []
     @State private var picking = false
     @State private var picked: PhotosPickerItem?
     @State private var deleting: AnalysisRun?
@@ -26,16 +32,23 @@ struct GamesListView: View {
             .background(Theme.Colors.background)
             .navigationTitle("Games")
             .toolbar(.hidden, for: .navigationBar)
-            // Debug playback until the game detail screen exists; then that becomes the row's destination.
-            .navigationDestination(for: AnalysisRun.self) { run in
-                PlayerView(run: run, videoURL: store.videoURL(for: run), detectionsURL: store.detectionsURL(for: run))
+            .navigationDestination(for: GameRoute.self) { route in
+                switch route {
+                case .detail(let run):
+                    GameDetailView(run: run, store: store)
+                case .debugPlayback(let run):
+                    PlayerView(run: run, videoURL: store.videoURL(for: run),
+                               detectionsURL: store.detectionsURL(for: run))
+                }
             }
             #if DEBUG
-            // UI check hook: `simctl launch <device> <bundle> -openLatestRun`.
+            // UI check hooks: `simctl launch <device> <bundle> -openLatestGame` (game screen)
+            // or `-openLatestRun` (debug playback).
             .task {
-                if ProcessInfo.processInfo.arguments.contains("-openLatestRun"), let run = store.runs.first {
-                    path = [run]
-                }
+                let arguments = ProcessInfo.processInfo.arguments
+                guard let run = store.runs.first else { return }
+                if arguments.contains("-openLatestGame") { path = [.detail(run)] }
+                if arguments.contains("-openLatestRun") { path = [.debugPlayback(run)] }
             }
             #endif
             // `.current` hands over the video as stored, skipping a slow transcode.
@@ -105,10 +118,10 @@ struct GamesListView: View {
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }
             ForEach(store.runs) { run in
-                NavigationLink(value: run) { GameRow(run: run, stats: store.stats(for: run)) }
+                NavigationLink(value: GameRoute.detail(run)) { GameRow(run: run, stats: store.stats(for: run)) }
                     .buttonStyle(.card)
                     .contextMenu {
-                        Button("Debug playback", systemImage: "play.rectangle") { path.append(run) }
+                        Button("Debug playback", systemImage: "ladybug") { path.append(.debugPlayback(run)) }
                         Button("Delete", systemImage: "trash", role: .destructive) { deleting = run }
                     }
             }
