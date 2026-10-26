@@ -14,6 +14,20 @@ enum Format {
         "\(count(value)) \(value == 1 ? singular : plural)"
     }
 
+    static let kmh = "km/h"
+    static let metres = "m"
+
+    /// 7.08 → "7.1".
+    static func decimal(_ value: Double?, digits: Int = 1) -> String {
+        value.map { $0.formatted(.number.precision(.fractionLength(digits))) } ?? missing
+    }
+
+    /// Ball speed in whole km/h (unit shown separately).
+    static func speed(_ kmh: Double?) -> String { decimal(kmh, digits: 0) }
+
+    /// Distance in whole metres (unit shown separately).
+    static func distance(_ metres: Double?) -> String { decimal(metres, digits: 0) }
+
     /// 0.62 → "62%".
     static func percent(_ fraction: Double?) -> String {
         fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? missing
