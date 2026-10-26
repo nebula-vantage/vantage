@@ -64,6 +64,11 @@ final class PlaybackController {
         if isPlaying { player.rate = newRate }
     }
 
+    deinit {
+        // Pairs addPeriodicTimeObserver when the owner is released without calling tearDown().
+        if let timeObserver { player.removeTimeObserver(timeObserver) }
+    }
+
     func tearDown() {
         player.pause()
         if let timeObserver { player.removeTimeObserver(timeObserver) }
