@@ -1,4 +1,5 @@
 import Foundation
+import VantageKit
 
 /// One completed on-device analysis. Stored as `run.json` inside the run's folder,
 /// next to the copied source video, its detections, and a thumbnail.
@@ -26,5 +27,11 @@ struct AnalysisRun: Codable, Identifiable, Hashable, Sendable {
     var ballFrameFraction: Double { frames > 0 ? Double(ballFrames) / Double(frames) : 0 }
     var trackedBallFraction: Double? {
         trackedBallFrames.map { frames > 0 ? Double($0) / Double(frames) : 0 }
+    }
+
+    /// The "% of frames ball tracked" trust signal: the engine's figure once stats exist,
+    /// the analyzer's until then.
+    func ballTrackedFraction(with stats: GameStats?) -> Double? {
+        stats?.quality.ballDetectionCoverage ?? trackedBallFraction
     }
 }

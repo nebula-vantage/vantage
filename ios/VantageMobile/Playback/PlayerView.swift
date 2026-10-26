@@ -50,22 +50,10 @@ struct PlayerView: View {
     // MARK: Video + overlay
 
     private var video: some View {
-        ZStack(alignment: .topLeading) {
-            PlayerLayerView(player: controller.player)
-            // Redraw every display frame from the player's actual time.
-            TimelineView(.animation) { _ in
-                let index = timeline?.frameIndex(at: controller.player.currentTime().seconds)
-                let frame = index.flatMap { timeline?.frames[$0] }
-                ZStack(alignment: .topLeading) {
-                    DetectionOverlay(frame: frame,
-                                     ball: index.flatMap { timeline?.ballSamples[$0] },
-                                     trail: index.map { timeline?.ballTrail(endingAt: $0, window: 0.5) ?? [] } ?? [],
-                                     options: options)
-                    hud(frame: frame, index: index)
-                }
-            }
+        OverlayVideo(player: controller.player, timeline: timeline, options: options,
+                     aspectRatio: run.videoAspectRatio) { frame, index in
+            hud(frame: frame, index: index)
         }
-        .aspectRatio(run.width > 0 && run.height > 0 ? run.width / run.height : 16 / 9, contentMode: .fit)
         .background(.black)
         .onTapGesture { controller.togglePlay() }
     }
