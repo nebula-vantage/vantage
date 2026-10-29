@@ -15,11 +15,12 @@ __pycache__/
 !ml/models/*.pt
 *.onnx
 
-# Videos stay out of git, except the README demo and the committed sample.
+# Videos live in the team Drive, never in git.
 *.mp4
+*.MP4
 *.mov
+*.MOV
 *.avi
-!docs/sideview-annotated.mp4
 
 # Desktop pipeline working folders (paths are relative to where you run it).
 input/
