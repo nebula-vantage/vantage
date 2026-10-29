@@ -58,6 +58,7 @@ class Rally:
     start_s: float
     end_s: float
     crossing_times_s: list[float]
+    hit_times_s: list[float] = field(default_factory=list)
 
     @property
     def shots(self) -> int:

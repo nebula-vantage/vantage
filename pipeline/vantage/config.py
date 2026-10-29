@@ -79,11 +79,23 @@ CONFIG = {
         "speed_smooth_window_s": 0.25,  # Local median speed filter.
         "low_coverage_fraction": 0.30,  # Warn when ball evidence is sparse.
     },
+    "audio": {
+        "sample_rate": 16000,  # Decoded mono rate; covers the pop's 1-6 kHz band.
+        "hop_s": 0.005,  # A paddle pop rises within a few milliseconds.
+        "band_low_hz": 1000,  # Below this is wind, footsteps, and voices.
+        "band_high_hz": 6000,
+        "rise_db": 11.0,  # Band-energy jump within one hop that counts as a hit.
+        "min_interval_s": 0.2,  # Echoes and double peaks of one hit count once.
+    },
     "rallies": {
-        "min_ball_speed_kmh": 8.0,  # Slower projected motion (held, carried, rolling) is not play evidence.
-        "max_gap_s": 2.5,  # Longer without crossings, bounces, or a moving ball ends a rally.
-        "min_crossings": 1,  # A point crosses the net at least once.
+        "max_gap_s": 4.0,  # Longer without a hit (or, without audio, other evidence) ends a rally.
+        "min_hits": 3,  # Serve, return, and a third shot; fewer is feeding balls back.
+        "min_ball_fraction": 0.15,  # Tracked-ball share of frames; rejects pops from other courts.
         "min_duration_s": 1.0,  # Shorter evidence is a toss or retrieval, not a point.
+        # Fallback when the video has no audio; unreliable for behind-baseline cameras,
+        # where an airborne ball's court projection is meaningless.
+        "min_ball_speed_kmh": 8.0,  # Slower projected motion (held, carried, rolling) is not evidence.
+        "min_crossings": 1,  # A point crosses the net at least once.
         "lead_in_s": 1.0,  # Kept before a rally so cuts include the serve motion.
         "lead_out_s": 1.0,  # Kept after the last evidence so cuts don't end abruptly.
     },

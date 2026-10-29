@@ -33,8 +33,8 @@ class StatsTests(unittest.TestCase):
     def test_group_exchanges_then_split_after_loss(self):
         ys = [5 + i / 10 for i in range(40)] + [9 - i / 10 for i in range(40)]
         samples = [sample(i, y=y) for i, y in enumerate(ys)]
-        samples += [None] * 90
-        samples += [sample(i + 170, y=5 + i / 10) for i in range(40)]
+        samples += [None] * 150
+        samples += [sample(i + 230, y=5 + i / 10) for i in range(40)]
         records = [record(i) for i in range(len(samples))]
         result, rallies, _ = aggregate(records, samples, [], 30, 640, 360, self.cfg)
         self.assertEqual(result['rally_count'], 2)
@@ -42,7 +42,7 @@ class StatsTests(unittest.TestCase):
         self.assertEqual(result['longest_rally'], 2)
 
     def test_inactivity_splits_rallies(self):
-        ys = [5 + i / 10 for i in range(40)] + [8.9] * 90 + [8.9 - i / 10 for i in range(40)]
+        ys = [5 + i / 10 for i in range(40)] + [8.9] * 150 + [8.9 - i / 10 for i in range(40)]
         samples = [sample(i, y=y) for i, y in enumerate(ys)]
         records = [record(i) for i in range(len(samples))]
         result, _, _ = aggregate(records, samples, [], 30, 640, 360, self.cfg)
@@ -65,7 +65,7 @@ class StatsTests(unittest.TestCase):
         result, _, _ = aggregate(records, samples, [bounce], 30, 640, 360, self.cfg)
         self.assertEqual(result['shot_count'], sum(result['shots_per_rally']))
         self.assertEqual(result['rallies'][0]['ball_observation_coverage'], 1)
-        # Rallies start at the first moving-ball frame; frame 0 has no speed yet.
+        # Without audio, rallies start at the first moving-ball frame; frame 0 has no speed yet.
         self.assertAlmostEqual(result['rallies'][0]['duration_s'], 38/30)
         events = event_records(result)
         self.assertEqual([e['type'] for e in events], ['bounce_candidate', 'net_crossing'])

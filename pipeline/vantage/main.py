@@ -26,6 +26,7 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
         raise ValueError("Input cannot be a generated output path. Choose a different --output-dir.")
     try:
         import cv2
+        from vantage.audio import hit_onsets, read_audio
         from vantage.ball_physics import build_trajectory, detect_bounces
         from vantage.court import calibrate
         from vantage.detector import Detector
@@ -112,7 +113,9 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             print(f"Analyzing {len(records)} frames...", file=sys.stderr)
             samples = build_trajectory(records, homography, width, height, config)
             bounces = detect_bounces(records, samples, homography, width, height, config)
-            stats, rallies, speeds = aggregate(records, samples, bounces, fps, width, height, config)
+            audio = read_audio(input_path, config["audio"]["sample_rate"])
+            onsets = None if audio is None else hit_onsets(audio, config["audio"]["sample_rate"], config)
+            stats, rallies, speeds = aggregate(records, samples, bounces, fps, width, height, config, onsets)
             stats["motion"] = motion.summary()
             stats["input"] = str(input_path)
             stats["original_input"] = str(original_input)
@@ -120,7 +123,7 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             stats["source"] = source
             stats["tracking"] = tracking_settings(config)
             stats["tracks_sha256"] = file_digest(staging / "tracks.jsonl")
-            stats["analysis_config"] = {key: config[key] for key in ("court", "trajectory", "bounce", "stats", "rallies", "motion", "heatmap")}
+            stats["analysis_config"] = {key: config[key] for key in ("court", "trajectory", "bounce", "stats", "audio", "rallies", "motion", "heatmap")}
             stats["landing_heatmap"] = render_landing_heatmap(
                 staging / "landing_heatmap.png", bounces, stats["quality"]["ball_detection_coverage"], config)
             stats["video"]["encoded_width"], stats["video"]["encoded_height"] = encoded_size(width, height)

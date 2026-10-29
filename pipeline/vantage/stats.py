@@ -130,10 +130,10 @@ def event_records(stats):
     return [{"event_id": i + 1, **event} for i, event in enumerate(events)]
 
 
-def aggregate(records, samples, bounces, fps, width, height, config):
+def aggregate(records, samples, bounces, fps, width, height, config, onsets=None):
     speeds, durations = speed_series(samples, config)
     crossings = crossing_events(samples, config)
-    rallies = segment_rallies(samples, speeds, crossings, bounces, config)
+    rallies = segment_rallies(records, samples, speeds, crossings, bounces, onsets, config)
     observed = sum(s is not None and s.source == "observed" for s in samples)
     interpolated = sum(s is not None and s.source == "interpolated" for s in samples)
     coasted = sum(s is not None and s.source == "coasted" for s in samples)
@@ -154,11 +154,14 @@ def aggregate(records, samples, bounces, fps, width, height, config):
     warnings = [
         "Speed is a court-plane projection, not true airborne ball speed.",
         "Bounce calls and net-crossing shot counts are heuristic estimates.",
-        "Rallies group crossings, bounces, and ball motion separated by short gaps, not official scoring rules.",
+        "Rallies group paddle-hit sounds separated by short gaps, not official scoring rules.",
         "Ball track IDs change after prolonged loss; COCO may miss pickleballs and paddles.",
     ]
     if coverage < config["stats"]["low_coverage_fraction"]:
         warnings.append("Low ball detection coverage: zero counts do not establish that no play occurred.")
+    if onsets is None:
+        warnings.append("No audio track; rallies fall back to ball motion and net crossings, "
+                        "which miss most rallies when the camera is behind a baseline.")
     if not bounces:
         warnings.append("No supported bounce candidates; IN/OUT calls are unavailable.")
     if average is None:
@@ -176,6 +179,7 @@ def aggregate(records, samples, bounces, fps, width, height, config):
         "in_out_calls": [asdict(b) for b in bounces],
         "bounce_candidate_count": len(bounces),
         "rallies": rally_details,
+        "audio_hit_onsets_s": onsets,
         "play_segments": play_segments(rallies, len(records) / fps, config),
         "tracking_summary": tracking_summary(records, fps),
         "quality": {"status": status, "ball_detection_coverage": coverage,

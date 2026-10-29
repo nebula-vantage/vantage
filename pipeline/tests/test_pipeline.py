@@ -2,17 +2,20 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import wave
 
 import cv2
+from imageio_ffmpeg import get_ffmpeg_exe
 import numpy as np
 
 from vantage.court import compute_homography, save_calibration
 from vantage.main import main, run_pipeline
 from vantage.records import Detection, FrameRecord
-from helpers import settings
+from helpers import AUDIO_RATE, add_pop, noise, settings
 from vantage.visualize import encoded_size, render_video, verify_video
 
 
@@ -79,6 +82,24 @@ class PipelineTests(unittest.TestCase):
         converted_at = prepared.stat().st_mtime_ns
         run_pipeline(mov, self.output, config=self.cfg, reanalyze=True)
         self.assertEqual(prepared.stat().st_mtime_ns, converted_at)
+
+    def test_hit_sounds_make_a_rally(self):
+        signal = noise(2)
+        for time_s in (0.2, 0.9, 1.6):
+            add_pop(signal, time_s)
+        with wave.open(str(self.root / 'hits.wav'), 'wb') as audio:
+            audio.setnchannels(1)
+            audio.setsampwidth(2)
+            audio.setframerate(AUDIO_RATE)
+            audio.writeframes((np.clip(signal, -1, 1) * 32767).astype(np.int16).tobytes())
+        clip = self.root / 'with_audio.mp4'
+        subprocess.run([get_ffmpeg_exe(), '-v', 'error', '-i', str(self.input), '-i', str(self.root / 'hits.wav'),
+                        '-c:v', 'copy', '-c:a', 'aac', '-shortest', str(clip)], check=True)
+        result = run_pipeline(clip, self.output, config=self.cfg, detector_factory=FakeDetector)
+        self.assertEqual(len(result['audio_hit_onsets_s']), 3)
+        self.assertEqual(result['rally_count'], 1)
+        self.assertEqual(len(result['rallies'][0]['hit_times_s']), 3)
+        self.assertEqual(len(result['play_segments']), 1)
 
     def test_reanalyze_reuses_tracks_but_recomputes_stats(self):
         before = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)

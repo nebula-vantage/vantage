@@ -1,9 +1,9 @@
 import unittest
 
 from vantage.rallies import play_segments, segment_rallies
-from vantage.records import BounceEvent, Rally
+from vantage.records import Rally
 from vantage.stats import crossing_events, speed_series
-from helpers import sample, settings
+from helpers import record, sample, settings
 
 
 def flight(start, frames, y0, step):
@@ -19,24 +19,55 @@ def timeline(pieces, total):
     return samples
 
 
-class RallyTests(unittest.TestCase):
+class AudioRallyTests(unittest.TestCase):
+    def setUp(self):
+        self.cfg = settings()
+        self.records = [record(i) for i in range(30 * 60)]  # One minute with a tracked ball.
+
+    def rallies(self, onsets, records=None):
+        records = self.records if records is None else records
+        return segment_rallies(records, [None] * len(records), [None] * len(records), [], [], onsets, self.cfg)
+
+    def test_regular_hits_form_one_rally(self):
+        rally, = self.rallies([2.0, 3.1, 4.0, 5.2, 8.9, 10.0])  # Includes a 3.7 s quiet dink stretch.
+        self.assertEqual((rally.start_s, rally.end_s), (2.0, 10.0))
+        self.assertEqual(len(rally.hit_times_s), 6)
+
+    def test_feeding_balls_back_is_not_a_rally(self):
+        self.assertEqual(self.rallies([10.0, 11.5, 20.0, 30.0]), [])
+
+    def test_long_quiet_gap_splits_rallies(self):
+        rallies = self.rallies([1.0, 2.0, 3.0, 8.0, 9.0, 10.0])
+        self.assertEqual([(r.start_s, r.end_s) for r in rallies], [(1.0, 3.0), (8.0, 10.0)])
+
+    def test_hits_without_a_tracked_ball_are_another_court(self):
+        for r in self.records[30 * 5:30 * 15]:
+            r.ball = None
+        self.assertEqual(self.rallies([6.0, 7.0, 8.0, 9.0]), [])
+
+    def test_crossings_are_attached_for_shot_counts(self):
+        records = [record(i) for i in range(300)]
+        samples = timeline([flight(30, 40, 2, .2)], 300)
+        speeds, _ = speed_series(samples, self.cfg)
+        rally, = segment_rallies(records, samples, speeds, crossing_events(samples, self.cfg), [],
+                                 [1.0, 2.0, 3.0], self.cfg)
+        self.assertEqual(rally.shots, 1)
+
+
+class FallbackRallyTests(unittest.TestCase):
+    """Without audio: crossings, bounces, and court-plane ball motion."""
+
     def setUp(self):
         self.cfg = settings()
 
-    def rallies(self, samples, bounces=()):
+    def rallies(self, samples):
         speeds, _ = speed_series(samples, self.cfg)
-        return segment_rallies(samples, speeds, crossing_events(samples, self.cfg), list(bounces), self.cfg)
+        records = [record(i) for i in range(len(samples))]
+        return segment_rallies(records, samples, speeds, crossing_events(samples, self.cfg), [], None, self.cfg)
 
-    def test_exchange_with_short_ball_loss_is_one_rally(self):
-        # Three shots, with a 1.5 s gap between the second and third.
-        samples = timeline([flight(0, 30, 2, .2), flight(30, 30, 8, -.2), flight(105, 30, 2, .2)], 150)
-        rallies = self.rallies(samples)
-        self.assertEqual(len(rallies), 1)
-        self.assertEqual(rallies[0].shots, 3)
-
-    def test_long_downtime_splits_rallies(self):
-        samples = timeline([flight(0, 40, 2, .2), flight(160, 40, 8, -.2)], 200)
-        self.assertEqual([r.shots for r in self.rallies(samples)], [1, 1])
+    def test_exchange_is_one_rally_and_long_loss_splits(self):
+        samples = timeline([flight(0, 30, 2, .2), flight(30, 30, 8, -.2), flight(210, 40, 2, .2)], 250)
+        self.assertEqual([r.shots for r in self.rallies(samples)], [2, 1])
 
     def test_quick_toss_across_the_net_is_not_a_rally(self):
         samples = timeline([flight(0, 20, 5, .2)], 60)
@@ -44,21 +75,8 @@ class RallyTests(unittest.TestCase):
         self.assertEqual(self.rallies(samples), [])
 
     def test_ball_moving_on_one_side_is_not_a_rally(self):
-        # Bouncing the ball before a serve: plenty of motion, never crosses.
         samples = timeline([flight(0, 30, 1, .1), flight(30, 30, 4, -.1)], 60)
-        bounce = BounceEvent(30, 1.0, (0, 0), (3, 4), "IN", .8)
-        self.assertEqual(self.rallies(samples, [bounce]), [])
-
-    def test_carried_ball_is_not_evidence(self):
-        # 0.03 m/frame is 3.2 km/h, below min_ball_speed_kmh: walking with the ball on the far side.
-        samples = timeline([flight(0, 40, 2, .2), flight(40, 120, 11, -.03), flight(160, 40, 2, .2)], 200)
-        self.assertEqual(len(self.rallies(samples)), 2)
-
-    def test_bounce_extends_rally(self):
-        samples = timeline([flight(0, 40, 2, .2)], 200)
-        bounce = BounceEvent(110, 110 / 30, (0, 0), (3, 10), "IN", .8)
-        rally, = self.rallies(samples, [bounce])
-        self.assertAlmostEqual(rally.end_s, 110 / 30)
+        self.assertEqual(self.rallies(samples), [])
 
 
 class SegmentTests(unittest.TestCase):

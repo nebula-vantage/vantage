@@ -120,11 +120,14 @@ this is not a transactional multi-file filesystem commit.
 
 - A **shot** is a supported crossing of the projected net line, not a detected
   paddle impact. Serves or shots that do not cross are not counted.
-- A **rally** groups ball-in-play evidence (net crossings, bounce candidates, and
-  a ball moving at 8 km/h or faster on the court plane) separated by at most 2.5
-  seconds. A group needs at least one crossing and must last at least one second,
-  so lone tosses and bouncing the ball before a serve are dropped. It is not
-  official scoring: a long ball loss splits a rally, and a short pause can merge two.
+- A **rally** is a run of paddle-hit sounds from the video's audio, with at most
+  4 seconds between hits, at least 3 hits, and a tracked ball in at least 15% of its
+  frames (to ignore hits from other courts). Hits are sharp rises in 1–6 kHz energy.
+  Feeding balls back or bouncing before a serve can also pop, so some downtime just
+  before a rally is usually kept. It is not official scoring. Without an audio
+  track, rallies fall back to net crossings and court-plane ball motion, which miss
+  most rallies when the camera is behind a baseline: an airborne ball's floor
+  projection is meaningless.
 - A **play segment** is a rally padded by one second on each side, with
   overlapping segments merged. Everything outside play segments is downtime that
   can be cut. Tune both in `CONFIG["rallies"]`, and measure changes with
@@ -195,6 +198,7 @@ name the requested weights and explain how to prepare an offline run.
 | `vantage/court.py` | Calibration UI, validated cache, projective mapping |
 | `vantage/ball_physics.py` | Segments, smoothing, interpolation/coasting, bounce estimates |
 | `vantage/stats.py` | Crossings, speed, quality metadata |
+| `vantage/audio.py` | Paddle-hit onsets from the audio track |
 | `vantage/rallies.py` | Rally grouping and padded play segments for cutting downtime |
 | `vantage/visualize.py` | Overlays, fading trails, video writing and decode verification |
 | `vantage/heatmap.py` | Court diagram, event density, landing dots, and verified PNG export |

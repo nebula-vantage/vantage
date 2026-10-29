@@ -7,6 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
+from vantage.audio import hit_onsets, read_audio
 from vantage.ball_physics import build_trajectory, detect_bounces
 from vantage.config import CONFIG
 from vantage.court import load_calibration
@@ -24,7 +25,10 @@ def replay(run_dir, config):
         raise ValueError(f'No valid calibration in {run_dir}; run the pipeline on this clip first.')
     samples = build_trajectory(records, homography, width, height, config)
     bounces = detect_bounces(records, samples, homography, width, height, config)
-    result, _, _ = aggregate(records, samples, bounces, fps, width, height, config)
+    rate = config['audio']['sample_rate']
+    audio = read_audio(stats['input'], rate)
+    onsets = None if audio is None else hit_onsets(audio, rate, config)
+    result, _, _ = aggregate(records, samples, bounces, fps, width, height, config, onsets)
     return result
 
 

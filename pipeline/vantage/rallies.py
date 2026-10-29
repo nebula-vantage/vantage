@@ -1,38 +1,57 @@
-"""Rallies from ball-in-play evidence, and padded play segments for cutting downtime.
+"""Rallies from paddle-hit sounds, and padded play segments for cutting downtime.
 
-Pure functions over trajectory-derived events, with no frames or OpenCV, so the
-logic can be ported to VantageKit the same way the ball tracker was.
+A rally is a run of hits close together in time, on a court where the ball is
+being tracked. Feeding balls back or bouncing before a serve can also pop, so
+expect some downtime just before rallies. Pure functions with no frames or
+OpenCV, so the logic can be ported to VantageKit the same way the ball tracker was.
 """
+from bisect import bisect_left, bisect_right
+
 from vantage.records import Rally
 
 
 def play_evidence_times(samples, speeds, crossings, bounces, config):
-    """Times with evidence the ball is in play: crossings, bounces, or a moving ball."""
+    """Fallback without audio: crossings, bounces, or a moving ball on the court plane."""
     floor = config["rallies"]["min_ball_speed_kmh"]
     moving = [sample.time_s for sample, speed in zip(samples, speeds)
               if sample is not None and speed is not None and speed >= floor]
     return sorted(moving + [c["time_s"] for c in crossings] + [b.time_s for b in bounces])
 
 
-def segment_rallies(samples, speeds, crossings, bounces, config):
-    """Group evidence separated by short gaps; keep groups that look like a point.
+def _groups(times, max_gap_s):
+    groups = []
+    for time_s in times:
+        if groups and time_s - groups[-1][-1] <= max_gap_s:
+            groups[-1].append(time_s)
+        else:
+            groups.append([time_s])
+    return groups
 
-    A lone toss or a ball retrieved across the net is short or never crosses, so
-    it is dropped. A rally can still be split when the ball is lost for longer
-    than max_gap_s, or merged with the next one when the gap between them is short.
+
+def segment_rallies(records, samples, speeds, crossings, bounces, onsets, config):
+    """Group hit onsets separated by at most max_gap_s; keep groups that look like a point.
+
+    onsets is None when the video has no audio; ball and crossing evidence is used instead.
     """
     cfg = config["rallies"]
-    groups = []
-    for time_s in play_evidence_times(samples, speeds, crossings, bounces, config):
-        if groups and time_s - groups[-1][1] <= cfg["max_gap_s"]:
-            groups[-1][1] = time_s
-        else:
-            groups.append([time_s, time_s])
+    evidence = onsets if onsets is not None else play_evidence_times(samples, speeds, crossings, bounces, config)
+    record_times = [record.time_s for record in records]
     rallies = []
-    for start, end in groups:
+    for times in _groups(evidence, cfg["max_gap_s"]):
+        start, end = times[0], times[-1]
         crossing_times = [c["time_s"] for c in crossings if start <= c["time_s"] <= end]
-        if len(crossing_times) >= cfg["min_crossings"] and end - start >= cfg["min_duration_s"]:
-            rallies.append(Rally(len(rallies) + 1, start, end, crossing_times))
+        if end - start < cfg["min_duration_s"]:
+            continue
+        if onsets is None:
+            if len(crossing_times) < cfg["min_crossings"]:
+                continue
+            times = []
+        else:
+            span = records[bisect_left(record_times, start):bisect_right(record_times, end)]
+            ball_fraction = sum(r.ball is not None for r in span) / len(span) if span else 0.0
+            if len(times) < cfg["min_hits"] or ball_fraction < cfg["min_ball_fraction"]:
+                continue
+        rallies.append(Rally(len(rallies) + 1, start, end, crossing_times, list(times)))
     return rallies
 
 
