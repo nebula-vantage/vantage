@@ -13,9 +13,9 @@ The package code is in [`vantage/`](vantage/), tests in [`tests/`](tests/).
 
 ## Side-view demo
 
-[![Watch the annotated side-view demo](../docs/sideview-preview.jpg)](../docs/sideview-annotated.mp4)
+https://github.com/user-attachments/assets/172193ca-42d6-488d-ad7e-fb9f65463d10
 
-[Watch or download the annotated side-view video](../docs/sideview-annotated.mp4) (MP4, approximately 20 seconds), showing player and ball tracking with the stats overlay.
+Player and ball tracking with the stats overlay (about 20 seconds).
 
 ## Setup and run
 
@@ -29,7 +29,8 @@ mkdir -p input
 uv run vantage --input input/sample.mp4
 ```
 
-For the video already supplied with this project:
+For the project's sample video, first download `sideview.MOV` from the
+[team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu) into `assets/`:
 
 ```bash
 uv run vantage --input assets/sideview.MOV

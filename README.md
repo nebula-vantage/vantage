@@ -5,10 +5,9 @@ phone camera. Capstone project by team Nebula, University of Waterloo.
 
 ## Demo
 
-[![Watch the annotated side-view demo](docs/sideview-preview.jpg)](docs/sideview-annotated.mp4)
+https://github.com/user-attachments/assets/172193ca-42d6-488d-ad7e-fb9f65463d10
 
-[Watch or download the annotated side-view video](docs/sideview-annotated.mp4) (MP4, about
-20 seconds): player and ball tracking with the stats overlay, from the
+Player and ball tracking with the stats overlay (about 20 seconds), from the
 [desktop pipeline](pipeline/README.md).
 
 ## Current status
@@ -30,7 +29,7 @@ phone camera. Capstone project by team Nebula, University of Waterloo.
 | `ios/` | iPhone app (SwiftUI) and `VantageKit`, the on-device analysis package | [ios/README.md](ios/README.md) |
 | `tools/coreml/` | Core ML export of trained models and PyTorch vs Core ML parity checks | [tools/coreml/README.md](tools/coreml/README.md) |
 | `scripts/` | `test.sh` runs every test suite | |
-| `assets/`, `docs/` | Sample video and demo media | |
+| `assets/` | Local sample videos (git-ignored; download from the [team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu)) | |
 
 Generated or local-only (git-ignored): `artifacts/` (Core ML exports), `reports/`,
 `input/`, `output/`, `.venv/`.
@@ -51,6 +50,12 @@ This creates `.venv/` with Python 3.13 and the exact versions in `uv.lock`. Run 
 with `uv run`, for example `uv run vantage --input assets/sideview.MOV`. To add a
 dependency, use `uv add <package>` (or `uv add --group ml <package>`) and commit the
 updated `uv.lock`.
+
+**Videos.** Videos never go in git; they live in the
+[team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu) (Capstone - Nebula > Videos). To run the examples,
+download `sideview.MOV` into `assets/`. Put your own recordings in `input/`, which is
+git-ignored. Small text files that describe videos, such as rally labels in
+`ml/labels/rallies/`, stay in git.
 
 **iOS.** Xcode 27.1 on a Mac (pinned in `.xcode-version`; the scripts warn if yours differs).
 Follow [ios/README.md](ios/README.md): copy
