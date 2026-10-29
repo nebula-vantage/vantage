@@ -9,7 +9,7 @@ import numpy as np
 
 
 class Overlay:
-    def __init__(self, width, height, bounces, rallies, config, ball_coverage=None):
+    def __init__(self, width, height, bounces, rallies, config, ball_coverage=None, segments=()):
         self.config = config
         self.visual = config["visual"]
         self.width, self.height = width, height
@@ -25,6 +25,7 @@ class Overlay:
         self.rally_index = -1
         self.crossing_times = sorted(t for rally in rallies for t in rally.crossing_times_s)
         self.ball_coverage = ball_coverage
+        self.segments = segments
 
     def point(self, point):
         # Clip extreme homography/detector values before passing C integer APIs.
@@ -76,7 +77,7 @@ class Overlay:
             self.text(frame, event.call + " (est.)" + (" ?" if "near_boundary" in event.quality_flags else ""),
                       (event.pixel[0], event.pixel[1] - v["margin"] * self.scale), color)
         while (self.rally_index + 1 < len(self.rallies) and
-               self.rallies[self.rally_index + 1].crossing_times_s[0] <= record.time_s):
+               self.rallies[self.rally_index + 1].start_s <= record.time_s):
             self.rally_index += 1
         lines = self.stats_lines(record, sample, speed)
         margin = max(1, round(v["margin"] * self.scale))
@@ -96,6 +97,8 @@ class Overlay:
         shots = bisect_right(rally.crossing_times_s, record.time_s) if active else 0
         lines = [f"Rallies (est.): {self.rally_index + 1} | Shots (est.): {bisect_right(self.crossing_times, record.time_s)}",
                  f"Current rally: {rally.id} | Shots: {shots}" if active else "Current rally: no supported rally",
+                 "Play: RALLY" if any(s["start_s"] <= record.time_s <= s["end_s"] for s in self.segments)
+                 else "Play: dead ball (cut)",
                  f"Projected speed: {speed:.1f} km/h" if speed is not None else "Projected speed: unavailable",
                  f"Ball: {sample.source if sample else 'not detected'} | Players: {len(record.players)}"]
         if self.ball_coverage is not None:
@@ -110,7 +113,7 @@ def encoded_size(width, height):
 
 
 def render_video(input_path: Path, output_path: Path, records, samples, bounces,
-                 rallies, speeds, width, height, fps, config, progress=None):
+                 rallies, speeds, width, height, fps, config, progress=None, segments=()):
     capture = cv2.VideoCapture(str(input_path))
     size = encoded_size(width, height)
     writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*config["visual"]["codec"]), fps, size)
@@ -120,7 +123,7 @@ def render_video(input_path: Path, output_path: Path, records, samples, bounces,
         if not writer.isOpened():
             raise RuntimeError("Could not initialize MP4 writer. Check output permissions and OpenCV codec support.")
         coverage = sum(r.ball is not None for r in records) / len(records) if records else 0.0
-        overlay = Overlay(width, height, bounces, rallies, config, coverage)
+        overlay = Overlay(width, height, bounces, rallies, config, coverage, segments)
         for i, record in enumerate(records):
             ok, frame = capture.read()
             if not ok:

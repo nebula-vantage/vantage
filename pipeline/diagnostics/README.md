@@ -26,3 +26,28 @@ The earlier combined-ByteTrack results are preserved under `output/ball-diagnost
 and documented in [the original findings](ball-detection-findings.md). Those results
 were captured before the motion-tracker change; the current diagnostic measures the
 new pipeline and will not reproduce the legacy post-ByteTrack stage.
+
+## Rally evaluation
+
+`eval_rallies.py` scores the pipeline's play segments against hand-labeled rallies.
+Run the pipeline once per clip, then tune `CONFIG["rallies"]` and rerun the evaluation.
+It replays the cached `tracks.jsonl` and saved calibration without inference or
+rendering, so each run takes seconds:
+
+```sh
+uv run vantage --input input/clip.mp4 --output-dir output/clip
+uv run python pipeline/diagnostics/eval_rallies.py output/clip ml/labels/rallies/clip.json
+```
+
+Label each clip in `ml/labels/rallies/<clip>.json`. Times are seconds in the
+source video; a rally starts at serve contact and ends when the ball is dead:
+
+```json
+{"video": "clip.mp4", "rallies": [[4.2, 15.8], [31.0, 38.5]]}
+```
+
+The report shows how many labeled rallies were kept (at least 90% inside a play
+segment), how much play was lost to cuts, how much downtime was kept, and
+segments that match no labeled rally. Lost play is the worse error when cutting.
+Tune on some clips and report results on others, so the numbers aren't measured on
+the same footage the thresholds were fitted to.

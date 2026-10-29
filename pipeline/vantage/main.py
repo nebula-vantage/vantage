@@ -120,7 +120,7 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             stats["source"] = source
             stats["tracking"] = tracking_settings(config)
             stats["tracks_sha256"] = file_digest(staging / "tracks.jsonl")
-            stats["analysis_config"] = {key: config[key] for key in ("court", "trajectory", "bounce", "stats", "motion", "heatmap")}
+            stats["analysis_config"] = {key: config[key] for key in ("court", "trajectory", "bounce", "stats", "rallies", "motion", "heatmap")}
             stats["landing_heatmap"] = render_landing_heatmap(
                 staging / "landing_heatmap.png", bounces, stats["quality"]["ball_detection_coverage"], config)
             stats["video"]["encoded_width"], stats["video"]["encoded_height"] = encoded_size(width, height)
@@ -128,7 +128,7 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             if encoded_size(width, height) != (width, height):
                 stats["quality"]["warnings"].append("One black edge pixel was added to odd dimensions for MPEG-4 encoding.")
             render_video(input_path, staging / "annotated.mp4", records, samples, bounces,
-                         rallies, speeds, width, height, fps, config, progress)
+                         rallies, speeds, width, height, fps, config, progress, stats["play_segments"])
             if source_signature(input_path) != source:
                 raise RuntimeError("Input changed during processing; run again.")
             (staging / "stats.json").write_text(json.dumps(stats, indent=2, allow_nan=False) + "\n")

@@ -76,10 +76,16 @@ CONFIG = {
         "net_deadband_m": 0.25,  # Crossing must clear both sides of the net.
         "crossing_support_s": 0.04,  # Stable observed support on each side.
         "crossing_cooldown_s": 0.20,  # Debounce repeated net crossings.
-        "rally_gap_s": 2.0,  # Missing ball or sustained inactivity ends a rally.
-        "inactive_speed_kmh": 1.0,  # Court-projected inactivity threshold.
         "speed_smooth_window_s": 0.25,  # Local median speed filter.
         "low_coverage_fraction": 0.30,  # Warn when ball evidence is sparse.
+    },
+    "rallies": {
+        "min_ball_speed_kmh": 8.0,  # Slower projected motion (held, carried, rolling) is not play evidence.
+        "max_gap_s": 2.5,  # Longer without crossings, bounces, or a moving ball ends a rally.
+        "min_crossings": 1,  # A point crosses the net at least once.
+        "min_duration_s": 1.0,  # Shorter evidence is a toss or retrieval, not a point.
+        "lead_in_s": 1.0,  # Kept before a rally so cuts include the serve motion.
+        "lead_out_s": 1.0,  # Kept after the last evidence so cuts don't end abruptly.
     },
     "motion": {
         "projection_margin_m": 2.0,  # Limit unstable court projections beyond the playing area.

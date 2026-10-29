@@ -65,7 +65,8 @@ class StatsTests(unittest.TestCase):
         result, _, _ = aggregate(records, samples, [bounce], 30, 640, 360, self.cfg)
         self.assertEqual(result['shot_count'], sum(result['shots_per_rally']))
         self.assertEqual(result['rallies'][0]['ball_observation_coverage'], 1)
-        self.assertAlmostEqual(result['rallies'][0]['duration_s'], 39/30)
+        # Rallies start at the first moving-ball frame; frame 0 has no speed yet.
+        self.assertAlmostEqual(result['rallies'][0]['duration_s'], 38/30)
         events = event_records(result)
         self.assertEqual([e['type'] for e in events], ['bounce_candidate', 'net_crossing'])
         self.assertEqual(events[1]['rally_id'], 1)

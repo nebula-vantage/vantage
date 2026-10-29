@@ -81,13 +81,15 @@ automatically. For separate camera setups, use separate output directories.
 
 - `annotated.mp4`: source FPS and dimensions, player boxes/IDs, detected ball box,
   a fading 15-position trail, estimated IN/OUT bounce markers, and estimated
-  rally/shot counts. Yellow is observed ball evidence; orange hollow points are
+  rally/shot counts, and whether each frame is in a play segment (`Play: RALLY`)
+  or downtime (`Play: dead ball (cut)`). Yellow is observed ball evidence; orange hollow points are
   interpolated/coasted positions. Missing-ball status is explicit. Near-line
   bounce calls show a question mark. Audio is not copied. Odd input dimensions
   receive one black padding pixel for MPEG-4 compatibility.
 - `stats.json`: video metadata, rally count, shots per rally, longest rally in
   estimated shots, average projected speed in km/h, timestamped bounce calls,
-  rally details and per-rally ball coverage, player-track visibility, and
+  rally details and per-rally ball coverage, `play_segments` (padded rally
+  intervals to keep when cutting downtime), player-track visibility, and
   data-quality warnings. Track counts are not unique-player counts. The
   `quality.status` field distinguishes insufficient, limited, and heuristic evidence.
   Schema version 2 also records input/tracking provenance for validated reanalysis.
@@ -118,9 +120,15 @@ this is not a transactional multi-file filesystem commit.
 
 - A **shot** is a supported crossing of the projected net line, not a detected
   paddle impact. Serves or shots that do not cross are not counted.
-- A **rally** is a group containing at least one crossing, separated from the next
-  group by at least two seconds of ball loss or inactivity. It is not official
-  scoring and can split a real rally when detection is poor.
+- A **rally** groups ball-in-play evidence (net crossings, bounce candidates, and
+  a ball moving at 8 km/h or faster on the court plane) separated by at most 2.5
+  seconds. A group needs at least one crossing and must last at least one second,
+  so lone tosses and bouncing the ball before a serve are dropped. It is not
+  official scoring: a long ball loss splits a rally, and a short pause can merge two.
+- A **play segment** is a rally padded by one second on each side, with
+  overlapping segments merged. Everything outside play segments is downtime that
+  can be cut. Tune both in `CONFIG["rallies"]`, and measure changes with
+  [`diagnostics/eval_rallies.py`](diagnostics/README.md#rally-evaluation).
 - **Speed** is smoothed 2-D displacement on the court plane, using consecutive
   observed frames and excluding projection spikes. A homography cannot recover
   an airborne ball's 3-D position or true speed.
@@ -186,7 +194,8 @@ name the requested weights and explain how to prepare an offline run.
 | `vantage/ball_tracker.py` | Ball acquisition, velocity prediction, motion matching, loss/reacquisition |
 | `vantage/court.py` | Calibration UI, validated cache, projective mapping |
 | `vantage/ball_physics.py` | Segments, smoothing, interpolation/coasting, bounce estimates |
-| `vantage/stats.py` | Crossings, rally grouping, speed, quality metadata |
+| `vantage/stats.py` | Crossings, speed, quality metadata |
+| `vantage/rallies.py` | Rally grouping and padded play segments for cutting downtime |
 | `vantage/visualize.py` | Overlays, fading trails, video writing and decode verification |
 | `vantage/heatmap.py` | Court diagram, event density, landing dots, and verified PNG export |
 

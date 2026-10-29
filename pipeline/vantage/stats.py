@@ -1,10 +1,10 @@
-"""Estimated net-crossing shots, inactivity-based rallies, and projected speeds."""
+"""Estimated net-crossing shots, rallies, and projected speeds."""
 from dataclasses import asdict
 import math
 
 import numpy as np
 
-from vantage.records import Rally
+from vantage.rallies import play_segments, segment_rallies
 
 
 def _valid_pair(a, b, config):
@@ -76,49 +76,6 @@ def crossing_events(samples, config):
     return events
 
 
-def segment_rallies(records, samples, crossings, speeds, config):
-    cfg = config["stats"]
-    # Missing evidence and stationary evidence are separate termination reasons.
-    # Brief loss should not split every rally, but cannot itself count a shot.
-    groups: dict[int, dict] = {}
-    group_id = 0
-    last_observed = None
-    inactive_since = None
-    frame_groups = []
-    gap_active = False
-    for i, record in enumerate(records):
-        sample = samples[i]
-        observed = sample is not None and sample.source == "observed"
-        missing_break = last_observed is not None and record.time_s - last_observed >= cfg["rally_gap_s"]
-        if observed:
-            last_observed = record.time_s
-        if observed and speeds[i] is not None and speeds[i] <= cfg["inactive_speed_kmh"]:
-            if inactive_since is None:
-                inactive_since = record.time_s
-        else:
-            inactive_since = None
-        inactive_break = inactive_since is not None and record.time_s - inactive_since >= cfg["rally_gap_s"]
-        if missing_break or inactive_break:
-            if not gap_active:
-                group_id += 1
-                gap_active = True
-        elif observed:
-            gap_active = False
-        frame_groups.append(group_id)
-        if observed:
-            group = groups.setdefault(group_id, {"start": record.time_s, "end": record.time_s, "crossings": []})
-            group["end"] = record.time_s
-    for event in crossings:
-        group = groups.get(frame_groups[event["frame_index"]])
-        if group is not None:
-            group["crossings"].append(event["time_s"])
-    rallies = []
-    for group in groups.values():
-        if group["crossings"]:
-            rallies.append(Rally(len(rallies) + 1, group["start"], group["end"], group["crossings"]))
-    return rallies
-
-
 def tracking_summary(records, fps):
     """Observation coverage and per-track visibility, not player identities."""
     players = {}
@@ -176,7 +133,7 @@ def event_records(stats):
 def aggregate(records, samples, bounces, fps, width, height, config):
     speeds, durations = speed_series(samples, config)
     crossings = crossing_events(samples, config)
-    rallies = segment_rallies(records, samples, crossings, speeds, config)
+    rallies = segment_rallies(samples, speeds, crossings, bounces, config)
     observed = sum(s is not None and s.source == "observed" for s in samples)
     interpolated = sum(s is not None and s.source == "interpolated" for s in samples)
     coasted = sum(s is not None and s.source == "coasted" for s in samples)
@@ -197,7 +154,7 @@ def aggregate(records, samples, bounces, fps, width, height, config):
     warnings = [
         "Speed is a court-plane projection, not true airborne ball speed.",
         "Bounce calls and net-crossing shot counts are heuristic estimates.",
-        "Rallies are grouped by ball inactivity/loss, not official scoring rules.",
+        "Rallies group crossings, bounces, and ball motion separated by short gaps, not official scoring rules.",
         "Ball track IDs change after prolonged loss; COCO may miss pickleballs and paddles.",
     ]
     if coverage < config["stats"]["low_coverage_fraction"]:
@@ -219,6 +176,7 @@ def aggregate(records, samples, bounces, fps, width, height, config):
         "in_out_calls": [asdict(b) for b in bounces],
         "bounce_candidate_count": len(bounces),
         "rallies": rally_details,
+        "play_segments": play_segments(rallies, len(records) / fps, config),
         "tracking_summary": tracking_summary(records, fps),
         "quality": {"status": status, "ball_detection_coverage": coverage,
                     "observed_frames": observed, "interpolated_frames": interpolated,
