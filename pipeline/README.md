@@ -37,6 +37,13 @@ uv run vantage --input assets/sideview.MOV
 
 `python -m vantage` is equivalent inside the environment.
 
+Non-MP4 input (such as iPhone `.mov`) is first converted to a constant-frame-rate
+H.264 `prepared.mp4` in the output directory, and reused while the source is
+unchanged. Phone recordings often have edit lists or variable frame timing, which
+make the advertised frame count wrong and timestamps drift. Pass `--prepare` to
+convert an MP4 that fails with "stopped decoding". Label rallies against
+`prepared.mp4` so your times match the pipeline's.
+
 `--input` defaults to `input/sample.mp4`; `--output-dir` defaults to `output`.
 Missing input produces an actionable error before importing the ML libraries.
 Paths are relative to the current working directory. For offline processing,
