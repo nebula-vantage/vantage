@@ -68,6 +68,18 @@ class PipelineTests(unittest.TestCase):
         self.assertIsNotNone(cv2.imread(str(self.output/'landing_heatmap.png')))
         self.assertEqual(result['landing_heatmap']['included_candidates'], 1)
 
+    def test_mov_input_is_converted_once_and_reused(self):
+        mov = self.root / 'phone.mov'
+        mov.write_bytes(self.input.read_bytes())
+        result = run_pipeline(mov, self.output, config=self.cfg, detector_factory=FakeDetector)
+        prepared = self.output / 'prepared.mp4'
+        self.assertEqual(result['input'], str(prepared))
+        self.assertEqual(result['original_input'], str(mov))
+        self.assertEqual(result['video']['frame_count'], 60)
+        converted_at = prepared.stat().st_mtime_ns
+        run_pipeline(mov, self.output, config=self.cfg, reanalyze=True)
+        self.assertEqual(prepared.stat().st_mtime_ns, converted_at)
+
     def test_reanalyze_reuses_tracks_but_recomputes_stats(self):
         before = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         original_tracks = (self.output/'tracks.jsonl').read_bytes()

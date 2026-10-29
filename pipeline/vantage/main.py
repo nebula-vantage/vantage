@@ -13,7 +13,7 @@ from vantage.tracking_cache import file_digest, load_cached_tracks, source_signa
 
 
 def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, detector_factory=None,
-                 reanalyze=False, stream_output=None):
+                 reanalyze=False, stream_output=None, prepare=False):
     """Process a video; detector_factory is an injection point for offline tests."""
     config = CONFIG if config is None else config
     input_path, output_dir = Path(input_path), Path(output_dir)
@@ -21,7 +21,8 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
         raise FileNotFoundError(f"Input video not found: {input_path}.\n"
                                 "Place your video there or pass --input /path/to/video.mp4.")
     if input_path.resolve() in {(output_dir / name).resolve()
-                               for name in ("annotated.mp4", "tracks.jsonl", "stats.json", "events.jsonl", "landing_heatmap.png")}:
+                               for name in ("annotated.mp4", "tracks.jsonl", "stats.json", "events.jsonl", "landing_heatmap.png",
+                                            "prepared.mp4")}:
         raise ValueError("Input cannot be a generated output path. Choose a different --output-dir.")
     try:
         import cv2
@@ -31,9 +32,14 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
         from vantage.motion_stream import MotionStream
         from vantage.heatmap import render_landing_heatmap
         from vantage.stats import aggregate, event_records
+        from vantage.video_input import needs_preparation, prepare_video
         from vantage.visualize import encoded_size, render_video
     except ImportError as exc:
         raise RuntimeError("Missing dependency. Run: uv sync (from the repository root)") from exc
+    original_input = input_path
+    if prepare or needs_preparation(input_path):
+        print(f"Converting {input_path.name} to a constant-frame-rate MP4...", file=sys.stderr)
+        input_path = prepare_video(input_path, output_dir)
     detector_factory = Detector if detector_factory is None else detector_factory
     source = source_signature(input_path)
     capture = cv2.VideoCapture(str(input_path))
@@ -102,13 +108,14 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             capture.release()
             if total and len(records) + config["runtime"]["frame_count_tolerance"] < total:
                 raise RuntimeError(f"Video stopped decoding at {len(records)} of {total} advertised frames. "
-                                   "The input may be truncated; re-export it and retry.")
+                                   "Phone recordings often report extra frames; retry with --prepare.")
             print(f"Analyzing {len(records)} frames...", file=sys.stderr)
             samples = build_trajectory(records, homography, width, height, config)
             bounces = detect_bounces(records, samples, homography, width, height, config)
             stats, rallies, speeds = aggregate(records, samples, bounces, fps, width, height, config)
             stats["motion"] = motion.summary()
             stats["input"] = str(input_path)
+            stats["original_input"] = str(original_input)
             stats["model"] = config["model"]
             stats["source"] = source
             stats["tracking"] = tracking_settings(config)
@@ -146,13 +153,15 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, default=Path("output"))
     parser.add_argument("--recalibrate", action="store_true", help="Select court corners again.")
     parser.add_argument("--reanalyze", action="store_true", help="Reuse validated tracks to update statistics and overlays without inference.")
+    parser.add_argument("--prepare", action="store_true",
+                        help="Convert to a constant-frame-rate MP4 first (automatic for non-MP4 input).")
     parser.add_argument("--stream", action="store_true", help="Flush one JSON line per frame with coordinates and motion estimates to stdout.")
     args = parser.parse_args(argv)
     destination = sys.stdout if args.stream else None
     try:
         with contextlib.redirect_stdout(sys.stderr):
             stats = run_pipeline(args.input, args.output_dir, args.recalibrate,
-                                 reanalyze=args.reanalyze, stream_output=destination)
+                                 reanalyze=args.reanalyze, stream_output=destination, prepare=args.prepare)
     except KeyboardInterrupt:
         print("Processing cancelled; completed outputs from earlier runs are preserved.", file=sys.stderr)
         return 130
