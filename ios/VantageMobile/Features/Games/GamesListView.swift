@@ -38,7 +38,7 @@ struct GamesListView: View {
                     GameDetailView(run: run, store: store)
                 case .debugPlayback(let run):
                     PlayerView(run: run, videoURL: store.videoURL(for: run),
-                               detectionsURL: store.detectionsURL(for: run))
+                               detectionsURL: store.detectionsURL(for: run), hitsURL: store.hitsURL(for: run))
                 }
             }
             // `.current` hands over the video as stored, skipping a slow transcode.

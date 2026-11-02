@@ -8,17 +8,20 @@ struct PlayerView: View {
     let run: AnalysisRun
     let videoURL: URL
     let detectionsURL: URL
+    let hitsURL: URL
 
     @State private var controller: PlaybackController
     @State private var timeline: DetectionTimeline?
+    @State private var hits: AudioHits?
     @State private var loadError: String?
     @State private var options = OverlayOptions()
     @State private var scrubTime: Double?
 
-    init(run: AnalysisRun, videoURL: URL, detectionsURL: URL) {
+    init(run: AnalysisRun, videoURL: URL, detectionsURL: URL, hitsURL: URL) {
         self.run = run
         self.videoURL = videoURL
         self.detectionsURL = detectionsURL
+        self.hitsURL = hitsURL
         _controller = State(initialValue: PlaybackController(url: videoURL))
     }
 
@@ -34,6 +37,7 @@ struct PlayerView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .task {
+            await loadHits()
             await loadTimeline()
             #if DEBUG
             // UI check hook: `simctl launch ... -openLatestRun -seek 7.5`.
@@ -67,7 +71,7 @@ struct PlayerView: View {
         } else if let frame, let index {
             let players = frame.detections.filter { $0.classID == DetectionClass.player }.count
             Text("frame \(index + 1)  ·  \(Int(frame.inferenceMilliseconds)) ms  ·  \(players) players  ·  "
-                 + ballStatus(frame: frame, sample: timeline?.ballSamples[index]))
+                 + ballStatus(frame: frame, sample: timeline?.ballSamples[index]) + hitStatus(at: frame.timeSeconds))
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6).padding(.vertical, 3)
@@ -129,6 +133,9 @@ struct PlayerView: View {
                 Text("Ball tracked in \(timeline.trackedFrameCount) of \(timeline.frames.count) frames")
                     .monospacedDigit()
             }
+            Text(hits.map { "\($0.onsets.count) paddle hits heard; HIT shows for \(Self.hitDisplaySeconds.formatted()) s after each" }
+                 ?? "No paddle hits: the video has no audio, or was analyzed before hit detection")
+                .monospacedDigit()
             Text("The ball is tracked from raw detections with the desktop motion tracker; spots that keep "
                  + "producing detections (leaves, debris) are ignored. Orange dashed positions are interpolated "
                  + "across short gaps, not detections. Gaps longer than 0.2 s are shown as no ball.")
@@ -172,6 +179,21 @@ struct PlayerView: View {
         } catch {
             loadError = "Could not load detections: \(error.localizedDescription)"
         }
+    }
+
+    private func loadHits() async {
+        guard hits == nil else { return }
+        let url = hitsURL
+        hits = await Task.detached(priority: .userInitiated) {
+            try? JSONDecoder().decode(AudioHits.self, from: Data(contentsOf: url))
+        }.value
+    }
+
+    /// How long a paddle-hit sound stays marked, so it can be checked against the video by eye.
+    private static let hitDisplaySeconds = 0.2
+
+    private func hitStatus(at time: Double) -> String {
+        hits?.onset(before: time, within: Self.hitDisplaySeconds) == nil ? "" : "  ·  HIT"
     }
 
     private func ballStatus(frame: FrameDetections, sample: BallSample?) -> String {

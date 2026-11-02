@@ -10,6 +10,7 @@ the conversion against PyTorch. The versions that matter for a reproducible expo
 | `export_model.py` | Export a YOLO checkpoint to `artifacts/<name>/VantageDetector.mlpackage` with a manifest |
 | `compare.py` | Compare PyTorch and Core ML detections on sampled frames |
 | `make_tracker_fixtures.py` | Run the desktop tracker on app detections to produce Swift parity fixtures |
+| `make_hit_fixtures.py` | Run the desktop paddle-hit detector on 16-bit audio to produce Swift parity fixtures |
 | `crop_experiment.py` | Ball crop-pass experiment ([CROP_EXPERIMENT.md](CROP_EXPERIMENT.md)) |
 | `vision_smoke.swift` | Swift Vision vs Python check on one frame (macOS) |
 

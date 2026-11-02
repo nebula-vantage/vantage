@@ -2,13 +2,56 @@
 // on a Mac. Useful for fixtures, desktop/mobile comparisons, and debugging without a phone.
 //
 //   swift run -c release vantage-analyze <model.mlpackage> <video> <detections.jsonl>
+//   swift run -c release vantage-analyze hits <video> [hits.json]
+//
+// `hits` runs only the app's paddle-hit detection on the video's audio; compare its onsets
+// with `audio_hit_onsets_s` in the desktop pipeline's stats.json, which count from the first
+// audio sample (add `start_s`).
 import CoreML
 import Foundation
 import VantageKit
 
+let usage = """
+    usage: vantage-analyze <model.mlpackage> <video> <detections.jsonl>
+           vantage-analyze hits <video> [hits.json]
+
+    """
 let arguments = CommandLine.arguments
+
+if arguments.count >= 3, arguments[1] == "hits" {
+    guard arguments.count <= 4 else {
+        FileHandle.standardError.write(Data(usage.utf8))
+        exit(2)
+    }
+    let video = URL(fileURLWithPath: arguments[2])
+    let output = arguments.count == 4 ? URL(fileURLWithPath: arguments[3]) : nil
+    do {
+        var summary: [String: Any] = ["video": video.path]
+        if let hits = try await AudioHits.detect(in: video) {
+            if let output {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                try encoder.encode(hits).write(to: output, options: .atomic)
+                summary["output"] = output.path
+            }
+            summary["hits"] = hits.onsets.count
+            summary["start_s"] = hits.startSeconds
+            summary["duration_s"] = hits.durationSeconds
+            summary["onsets_s"] = hits.onsets
+        } else {
+            summary["hits"] = NSNull()  // no audio track, like the desktop's null onsets
+        }
+        let json = try JSONSerialization.data(withJSONObject: summary, options: [.prettyPrinted, .sortedKeys])
+        print(String(decoding: json, as: UTF8.self))
+        exit(0)
+    } catch {
+        FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8))
+        exit(1)
+    }
+}
+
 guard arguments.count == 4 else {
-    FileHandle.standardError.write(Data("usage: vantage-analyze <model.mlpackage> <video> <detections.jsonl>\n".utf8))
+    FileHandle.standardError.write(Data(usage.utf8))
     exit(2)
 }
 let package = URL(fileURLWithPath: arguments[1])

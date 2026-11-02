@@ -47,6 +47,7 @@ final class RunStore {
     func detectionsURL(for run: AnalysisRun) -> URL {
         folder(for: run.id).appending(path: AnalysisRun.detectionsFileName)
     }
+    func hitsURL(for run: AnalysisRun) -> URL { folder(for: run.id).appending(path: AudioHits.fileName) }
     func thumbnailURL(for run: AnalysisRun) -> URL {
         folder(for: run.id).appending(path: AnalysisRun.thumbnailFileName)
     }
