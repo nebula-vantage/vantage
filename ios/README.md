@@ -16,9 +16,9 @@ ios/
 │   └── Playback/             Video player with detection/track overlay
 ├── VantageKit/               Swift package: UI-free logic, testable on the Mac
 │   ├── Sources/VantageKit/       Detection records, Core ML detector, video analyzer,
-│   │                             ball tracker + trajectory, playback timeline
+│   │                             ball tracker + trajectory, playback timeline, paddle hits
 │   ├── Sources/vantage-analyze/  Mac CLI running the same analysis on a video
-│   └── Tests/                    Tracker parity (vs Python), behavior, timeline
+│   └── Tests/                    Tracker and hit parity (vs Python), behavior, timeline
 └── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
 ```
 
@@ -43,14 +43,15 @@ Current features:
 - Import a video from Files and run the detector on every frame on-device, with
   progress and cancel. The screen stays awake during analysis; keep the app open.
 - Each analysis is saved as a run (`Documents/Runs/<id>/`: the copied video,
-  `detections.jsonl`, `thumbnail.jpg`, `run.json`). Runs are listed on the home
+  `detections.jsonl`, `hits.json` when the video has audio, `thumbnail.jpg`, `run.json`). Runs are listed on the home
   screen; swipe to delete. Interrupted analyses are discarded on next launch.
 - Playback: tap a run to watch the video with players (green), the tracked ball
   (yellow ring with track ID and confidence; orange dashed when interpolated), a
   0.5 s trail of that one track, and paddles (cyan) drawn on top. Raw ball
   candidates can be shown from the overlay menu to judge the detector. Play/pause (or tap the video), scrub, step frame by frame, and
   slow down to 0.5× / 0.25×. The overlay toggles live in the toolbar menu; the
-  share button exports `detections.jsonl`.
+  share button exports `detections.jsonl`. The frame line shows `HIT` for 0.2 s after
+  each paddle-hit sound.
 
 The overlay reads the player's current time every display frame and looks up the
 analyzed frame by source timestamp, so boxes stay aligned when scrubbing or stepping.
@@ -91,6 +92,32 @@ All 2,306 frames match exactly; a test also fails if Swift defaults drift from
 input yields more ball candidates than the desktop's rectangular input, and the
 remaining fragmentation (missed frames) reflects the generic COCO detector, not
 the port. Track IDs are internal; the player shows a single "ball".
+
+### Paddle hits (audio)
+
+`VantageKit/Sources/VantageKit/HitOnsets.swift` is a port of the desktop
+`pipeline/vantage/audio.py`. The first decodable audio track is read as 16-bit mono PCM
+at 16 kHz (what the pipeline's FFmpeg call produces). A hit is a hop (5 ms) whose 1–6 kHz
+band energy rises more than 11 dB over the previous hop, taken at the peak of the rise and
+at least 0.2 s after the previous hit. Detection streams as the audio decodes: an hour of
+audio took about 4 s and 50 MB on an M-series Mac.
+
+On import, hits are detected alongside the frame analysis and saved as `hits.json`.
+Onset times include the first audio sample's timestamp, so they share the frames' and
+AVPlayer's timeline (desktop onsets count from the first audio sample instead; the two
+differ by `startSeconds` when the audio starts after the video). A video without audio gets no `hits.json`; an audio track that can't
+be decoded is logged and the run is kept, because rallies fall back to ball evidence
+without audio (as on the desktop). The hits aren't used for rallies or shots yet.
+
+**Parity with the desktop:** `tools/coreml/make_hit_fixtures.py` runs the Python
+detector on 16-bit samples (synthetic pops in court noise at 16 and 22.05 kHz, or a window
+of a real clip) and records the band levels and onsets. The Swift tests require levels
+within 0.001 dB (Python computes in float32) and identical onsets. End to end on
+`sideview.MOV`, the Swift detector (run on a Mac with `vantage-analyze hits`, not yet on
+an iPhone) found all 18 of the desktop's hits, 17 at the same 5 ms hop and one a hop
+earlier. Apple's resampler isn't FFmpeg's, so on other audio a few hits whose rise is
+within about 1 dB of the threshold can differ. Both detectors also count the end of a
+recording's leading digital silence as a hit (0.23 s into `sideview.MOV`).
 
 Not yet included: player track IDs, court calibration, speed, match stats, or
 heatmaps. Paddle class 38 remains a tennis-racket proxy, as in the desktop pipeline.
@@ -185,6 +212,24 @@ uv run python tools/coreml/make_tracker_fixtures.py /tmp/sideview.jsonl \
   ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
 ```
 
+Detect paddle hits the way the app does, and compare with `audio_hit_onsets_s` in the
+desktop pipeline's `stats.json`:
+
+```sh
+cd ios/VantageKit
+swift run -c release --scratch-path ~/Library/Caches/VantageKit-build vantage-analyze \
+  hits ../../assets/sideview.MOV /tmp/sideview-hits.json
+```
+
+Regenerate hit parity fixtures after changing either detector (from the repository root):
+
+```sh
+uv run python tools/coreml/make_hit_fixtures.py --synthetic 16000 \
+  ios/VantageKit/Tests/VantageKitTests/Fixtures/hits-synthetic-16k.json
+uv run python tools/coreml/make_hit_fixtures.py --synthetic 22050 \
+  ios/VantageKit/Tests/VantageKitTests/Fixtures/hits-synthetic-22k.json
+```
+
 ### Detector details
 
 Any Ultralytics YOLO export works: the detector reads the model's `names` metadata and
@@ -209,7 +254,7 @@ represent physical speed.
 
 1. Player tracking (ByteTrack port or per-court-quadrant identity), with fixture
    comparisons against Python like the ball tracker.
-2. Port calibration and analytics (shots, bounces, rallies), then heatmaps.
+2. Port calibration and analytics (shots, bounces, rallies from the audio hits), then heatmaps.
 3. Fine-tune the detector on pickleball (ball/paddle/player) and re-export.
 4. Benchmark sustained processing, memory, and thermals on iPhone 17 Pro;
    evaluate smaller inputs, crop-assisted detection, and live capture.

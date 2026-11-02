@@ -26,18 +26,24 @@ def read_audio(path, rate):
     return np.frombuffer(result.stdout, np.int16).astype(np.float32) / 32768
 
 
-def hit_onsets(samples, rate, config):
-    """Times (s) where band energy jumps by more than rise_db within one short hop."""
+def band_levels(samples, rate, config):
+    """Hop length in samples and the band energy (dB) of each complete hop."""
     cfg = config["audio"]
     hop = max(1, round(rate * cfg["hop_s"]))
     count = len(samples) // hop
-    if count < 2:
-        return []
     frames = np.asarray(samples[:count * hop], np.float32).reshape(count, hop)
     power = np.abs(np.fft.rfft(frames, axis=1)) ** 2
     freqs = np.fft.rfftfreq(hop, 1 / rate)
     band = (freqs >= cfg["band_low_hz"]) & (freqs <= cfg["band_high_hz"])
-    level = 10 * np.log10(power[:, band].sum(axis=1) + 1e-10)
+    return hop, 10 * np.log10(power[:, band].sum(axis=1) + 1e-10)
+
+
+def hit_onsets(samples, rate, config):
+    """Times (s) where band energy jumps by more than rise_db within one short hop."""
+    cfg = config["audio"]
+    hop, level = band_levels(samples, rate, config)
+    if len(level) < 2:
+        return []
     rise = np.diff(level, prepend=level[0])
     # Peak of each rise, so one pop spread over two hops counts once.
     peaks = np.flatnonzero((rise > cfg["rise_db"]) & (rise >= np.append(rise[1:], -np.inf)))

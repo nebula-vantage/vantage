@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import PhotosUI
 import SwiftUI
 import UIKit
@@ -65,8 +66,13 @@ final class RunImporter {
                 try Task.checkCancellation()
                 await RunStore.writeThumbnail(for: video, to: folder.appending(path: AnalysisRun.thumbnailFileName))
                 pending?.progress = 0
+                // Paddle-hit sounds decode alongside the frames; audio takes seconds, frames minutes.
+                async let hits = Self.detectHits(in: video)
                 let result = try await VideoAnalyzer().analyze(video: video, model: model, destination: detections) { value in
                     await MainActor.run { self.pending?.progress = value }
+                }
+                if let hits = await hits {
+                    try JSONEncoder().encode(hits).write(to: folder.appending(path: AudioHits.fileName), options: .atomic)
                 }
                 let run = AnalysisRun(
                     id: id, createdAt: .now, sourceName: source.lastPathComponent,
@@ -84,7 +90,26 @@ final class RunImporter {
             }
         }
     }
+
+    /// Paddle-hit onsets from the video's audio. Nil when there's no audio track, or when it
+    /// can't be decoded: that is logged instead of failing the run, because rallies fall back
+    /// to ball evidence without audio (as on the desktop).
+    private nonisolated static func detectHits(in video: URL) async -> AudioHits? {
+        do {
+            return try await AudioHits.detect(in: video)
+        } catch is CancellationError {
+            return nil
+        } catch {
+            importerLog.error("""
+                No paddle hits for \(video.lastPathComponent, privacy: .public): \
+                \(String(describing: error), privacy: .public)
+                """)
+            return nil
+        }
+    }
 }
+
+private let importerLog = Logger(subsystem: "Vantage", category: "RunImporter")
 
 /// A video from the photo library. Photos hands over a file that's deleted once the import
 /// closure returns, so it's copied into its own temporary folder (keeping the original name).
