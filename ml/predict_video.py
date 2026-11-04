@@ -49,6 +49,9 @@ def resolve_device(model, device, imgsz=1280):
     if device != "auto":
         return device
     import numpy as np
+    import torch
+    if not torch.backends.mps.is_available():  # Ultralytics would quietly fall back to CPU
+        return "cpu"
     try:
         model.predict(np.zeros((imgsz * 9 // 16, imgsz, 3), np.uint8), imgsz=imgsz, device="mps", verbose=False)
         return "mps"

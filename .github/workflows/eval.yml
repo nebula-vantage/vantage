@@ -26,8 +26,9 @@ concurrency:
 jobs:
   eval:
     name: Ball tracking accuracy
-    # Apple silicon: detection uses the GPU when PyTorch's MPS works on the runner, else the CPU.
-    runs-on: macos-15
+    # Linux: GitHub's macOS arm64 runners are capacity-constrained (jobs went unassigned), and
+    # their GPU is unreliable for PyTorch anyway, so detection runs on CPU here.
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: read
@@ -47,7 +48,9 @@ jobs:
           cache-dependency-glob: uv.lock
 
       - name: Install Python dependencies
-        run: uv sync --locked
+        run: |
+          sudo apt-get install -y --no-install-recommends libgl1 > /dev/null  # for opencv-python
+          uv sync --locked
 
       - name: Restore cached detections
         uses: actions/cache/restore@v6
