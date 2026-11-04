@@ -29,6 +29,7 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 | `ios/` | iPhone app (SwiftUI) and `VantageKit`, the on-device analysis package | [ios/README.md](ios/README.md) |
 | `tools/coreml/` | Core ML export of trained models and PyTorch vs Core ML parity checks | [tools/coreml/README.md](tools/coreml/README.md) |
 | `scripts/` | `test.sh` runs every test suite | |
+| `docs/` | Capstone feature list from our design docs, with build status | [docs/capstone-features.md](docs/capstone-features.md) |
 | `assets/` | Local sample videos (git-ignored; download from the [team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu)) | |
 
 Generated or local-only (git-ignored): `artifacts/` (Core ML exports), `reports/`,
