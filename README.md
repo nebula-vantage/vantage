@@ -27,6 +27,7 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 | `pipeline/` | Desktop Python pipeline (the `vantage` package): detection, tracking, court calibration, stats, heatmaps. The reference implementation. | [pipeline/README.md](pipeline/README.md) |
 | `ml/` | Ball labeling, accuracy evaluation, dataset building, detector fine-tuning | [ml/README.md](ml/README.md) |
 | `ios/` | iPhone app (SwiftUI) and `VantageKit`, the on-device analysis package | [ios/README.md](ios/README.md) |
+| `site/` | Public landing page with links to the early access signup form | [site/README.md](site/README.md) |
 | `tools/coreml/` | Core ML export of trained models and PyTorch vs Core ML parity checks | [tools/coreml/README.md](tools/coreml/README.md) |
 | `scripts/` | `test.sh` runs every test suite | |
 | `assets/` | Local sample videos (git-ignored; download from the [team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu)) | |
