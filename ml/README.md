@@ -181,9 +181,9 @@ change edits the suite itself, the comment says the scored frames differ.
   be scored (for example the evaluator crashes or no source downloads); the comment then says so.
   Pull requests from forks get the report in the job summary instead of a comment.
 - Detections are cached by model weights, detection code (`predict_video.py`,
-  `vantage_classes.py`), and library versions, so a change that keeps those only re-scores (a few
-  minutes, mostly setup). Otherwise the Linux runner detects again on CPU, about 15-25 minutes per
-  model.
+  `vantage_classes.py`), and library versions, so a change that keeps those only re-scores: about
+  3 minutes, mostly downloading the clips. Otherwise the Linux runner detects again on CPU: 22
+  minutes for the suite's 8,260 frames, about 26 minutes in all.
 - Footage is downloaded from its original sources on every run and is never cached or uploaded,
   because this repository is public; if a host is down, the comment says which source is missing.
 - The check scores the default `--weights` of `evaluate_external.py` (now
