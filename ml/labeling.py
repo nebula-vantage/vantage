@@ -195,3 +195,23 @@ def evaluate(predictions, labels, radius):
     totals["recall"] = totals["correct"] / totals["visible"] if totals["visible"] else None
     totals["precision"] = totals["correct"] / detections if detections else None
     return totals
+
+
+def miss_causes(frames, predictions, labels, radius):
+    """Why visible balls were missed, counted with evaluate()'s matching rule. For each labeled
+    frame with a ball the prediction is correct, or the detector had a ball candidate on the
+    ball that was not picked (not_selected), or candidates only elsewhere (elsewhere), or no ball
+    candidate at all (no_detection). The first separates tracker from detector problems."""
+    totals = dict(correct=0, not_selected=0, elsewhere=0, no_detection=0)
+    for frame, label in labels.items():
+        if frame >= len(predictions) or label["ball"] is None:
+            continue
+        truth, predicted = center(label["ball"]), predictions[frame]
+        candidates = [center(box) for box, _ in ball_candidates(frames[frame])]
+        if predicted is not None and math.dist(truth, center(predicted)) <= radius:
+            totals["correct"] += 1
+        elif any(math.dist(truth, c) <= radius for c in candidates):
+            totals["not_selected"] += 1
+        else:
+            totals["elsewhere" if candidates else "no_detection"] += 1
+    return totals

@@ -14,7 +14,9 @@ app; Core ML export and conversion checks stay in `tools/coreml/`.
 | `train.py` | Fine-tune YOLO26n at 1280 px on the Apple GPU |
 | `predict_video.py` | Run any checkpoint on a video, writing app-format detections.jsonl |
 | `fetch_eval_data.py` | Download public tennis/badminton/pickleball clips with ball labels (eval only) |
-| `evaluate_external.py` | Score a checkpoint on those clips, per source and per sport |
+| `evaluate_external.py` | Score a checkpoint on those clips, per source and per sport, with miss causes |
+| `plot_external_eval.py` | Chart one or two `evaluate_external.py --json` results |
+| `results/` | Committed eval results (JSON, charts, analysis), one folder per run |
 | `eval_data.py`, `eval_sources.py` | Download/convert helpers and one adapter per public dataset |
 | `EVAL_DATA.md` | What each external eval source is, its license, and how its labels were converted |
 | `labeling.py`, `vantage_classes.py` | Label format, session logic, evaluation, class mapping |
@@ -154,7 +156,9 @@ uv run python ml/evaluate_external.py --weights ml/runs/pickleball-v2/weights/be
 
 Reports raw-detector and tracker recall/precision per source and per sport on clips no model
 was trained on, at the model card's ball operating point (or `--ball-confidence` for a new
-checkpoint). Detections are cached per weights file contents and settings.
+checkpoint), and why the tracker missed visible balls. Detections are cached per weights file
+contents and settings. Latest results: [`results/external-eval-2026-11-04/`](results/external-eval-2026-11-04/README.md)
+(pickleball-v1: 60.0% tracked recall at 92.2% precision on public pickleball clips).
 [EVAL_DATA.md](EVAL_DATA.md) lists each source's viewpoint, license, and label caveats (several
 have no absent-frame labels, so their precision only counts wrong positions).
 
