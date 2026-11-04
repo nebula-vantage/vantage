@@ -71,21 +71,23 @@ quirks) are in each source's docstring in `eval_sources.py` and in `source.json`
 
 ## Baseline (2026-11-04)
 
-`pickleball-v1` (PyTorch, 1280 px, ball threshold 0.20 as shipped), tracked recall / precision
-from `evaluate_external.py`; raw-detector numbers and every clip are in its `--per-clip` output.
+Tracked recall / precision from `evaluate_external.py` (PyTorch, 1280 px), each model at the
+ball threshold it ships with, as in `ml/README.md`: `pickleball-v1` at 0.20, the generic COCO
+`yolo26n` at 0.10. Raw-detector numbers and every clip are in the `--per-clip` output.
 
-| Sport | Labeled (visible) | Tracked recall | Tracked precision |
+| Sport | Labeled (visible) | COCO yolo26n | pickleball-v1 |
 | --- | ---: | ---: | ---: |
-| pickleball | 35,477 (28,234) | 60.0% | 92.2% |
-| tennis | 18,510 (17,826) | 39.9% | 89.4% |
-| badminton | 28,696 (24,784) | 14.6% | 91.7% |
+| pickleball | 35,477 (28,234) | 42.6% / 87.5% | 60.0% / 92.2% |
+| tennis | 18,510 (17,826) | 33.5% / 92.9% | 39.9% / 89.4% |
+| badminton | 28,696 (24,784) | 8.6% / 60.5% | 14.6% / 91.7% |
 
 Pickleball recall matches the held-out topcorner clip (61.6%, `ml/README.md`), from fixed
 amateur cameras (`arnav-pickleball` 58.6%) to a pro stream (`rochester-pickleball` 65.8%).
 Tennis varies with ball size: fixed cameras near the baseline do well (`tenis-backview` 79.4%),
 while small far balls in 4K or at standing height do not (`yonggest-tennis` 14.7%,
 `tennis-analytics` 18.2%). The model was never trained on shuttlecocks, so badminton is a
-lower bound for a multi-sport detector.
+lower bound for a multi-sport detector. Fine-tuning on pickleball also helped tennis and
+badminton recall over the COCO model.
 
 Not fetched automatically but worth adding. Each needs an adapter in `eval_sources.py` first:
 `fetch_roboflow.py` writes training-side data (`ml/external/<dir>`, listed in
