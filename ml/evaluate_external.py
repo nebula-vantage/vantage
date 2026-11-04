@@ -8,7 +8,9 @@ Runs the model over each fetched clip once at a low raw threshold (detections ar
 reports/external-eval/<weights>-<hash>-<imgsz>px-conf<confidence>/<source>/<clip>.jsonl), then
 applies the model's ball operating point (from its model card, e.g. ml/models/pickleball-v1.json,
 or --ball-confidence) and reports recall and precision exactly as evaluate_ball.py does, pooled
-per source and per sport. To score the app instead, run vantage-analyze on
+per source and per sport, plus why the tracker missed visible balls (no ball detection, only
+detections elsewhere, or the ball detected but not picked). To score the app instead, run
+vantage-analyze on
 ml/external/eval/<source>/clips/<clip>.mp4, save the output under the same layout, and pass
 --detections-dir.
 """
@@ -23,13 +25,15 @@ import sys
 
 from eval_data import fetched_sources
 from evaluate_ball import predictors
-from labeling import BALL, ROOT, evaluate, load_detections, load_labels
+from labeling import BALL, ROOT, evaluate, load_detections, load_labels, miss_causes
 
 COUNTS = ("labeled", "visible", "correct", "missed", "false_detection")
+CAUSES = (("no_detection", "no ball detection"), ("elsewhere", "only detections elsewhere"),
+          ("not_selected", "detected, not picked"))
 
 
-def add(totals, result):
-    for key in COUNTS:
+def add(totals, result, keys=COUNTS):
+    for key in keys:
         totals[key] = totals.get(key, 0) + result[key]
 
 
@@ -131,11 +135,15 @@ def main():
             if args.keyframes_only:
                 labels = {k: v for k, v in labels.items() if not v.get("interpolated")}
             radius = args.radius_diagonals * math.hypot(frames[0]["width"], frames[0]["height"])
+            keys = (("clip", f"{name}/{clip['clip']}"), ("source", name), ("sport", spec["sport"]), ("all", "all"))
             for predictor, predict in predictors().items():
-                result = evaluate(predict(frames), labels, radius)
-                for key in (("clip", f"{name}/{clip['clip']}"), ("source", name), ("sport", spec["sport"]),
-                            ("all", "all")):
-                    add(groups.setdefault(key, {}).setdefault(predictor, {}), result)
+                predictions = predict(frames)
+                result = evaluate(predictions, labels, radius)
+                if predictor == "tracked":
+                    result |= miss_causes(frames, predictions, labels, radius)
+                for key in keys:
+                    add(groups.setdefault(key, {}).setdefault(predictor, {}), result,
+                        COUNTS + tuple(c for c, _ in CAUSES) if predictor == "tracked" else COUNTS)
     for by_predictor in groups.values():
         for totals in by_predictor.values():
             rates(totals)
@@ -147,6 +155,7 @@ def main():
 
     if args.json:
         print(json.dumps({"setup": described, "skipped": skipped,
+                          "sports": {name: sources[name]["sport"] for level, name in groups if level == "source"},
                           "results": {f"{level}:{name}": v for (level, name), v in groups.items()}}, indent=1))
         return
     pct = lambda v: "   -  " if v is None else f"{v:6.1%}"
@@ -164,6 +173,15 @@ def main():
             raw, tracked = by_predictor["raw best"], by_predictor["tracked"]
             print(f"{name:{width}s} {raw['labeled']:7d} {raw['visible']:7d}   {pct(raw['recall']):>8s} "
                   f"{pct(raw['precision']):>9s}   {pct(tracked['recall']):>8s} {pct(tracked['precision']):>9s}")
+    print("\nWhy the tracker missed visible balls (% of visible):")
+    print(f"{'':{width}s} " + " ".join(f"{label:>26s}" for _, label in CAUSES))
+    for level in levels:
+        print(f"-- {level}")
+        for (row_level, name), by_predictor in groups.items():
+            tracked = by_predictor["tracked"]
+            if row_level == level:
+                print(f"{name:{width}s} " + " ".join(
+                    f"{pct(tracked[c] / tracked['visible'] if tracked['visible'] else None):>26s}" for c, _ in CAUSES))
 
 
 def load(weights):

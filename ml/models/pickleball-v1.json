@@ -65,6 +65,31 @@
       "ms_per_frame_mac": 11.0
     }
   },
+  "external_eval_2026_11_04": {
+    "data": "ml/EVAL_DATA.md (229 public clips; evaluation only)",
+    "results": "ml/results/external-eval-2026-11-04/",
+    "setup": "PyTorch, 1280 px, ball conf 0.20, match radius 1% of frame diagonal",
+    "pickleball": {
+      "visible_balls": 28234,
+      "tracked_recall": 0.6,
+      "tracked_precision": 0.922
+    },
+    "tennis": {
+      "visible_balls": 17826,
+      "tracked_recall": 0.399,
+      "tracked_precision": 0.894
+    },
+    "badminton": {
+      "visible_balls": 24784,
+      "tracked_recall": 0.146,
+      "tracked_precision": 0.917
+    },
+    "visible_balls_missed_by_cause": {
+      "no_ball_detection": 0.446,
+      "only_detections_elsewhere": 0.12,
+      "detected_not_picked_by_tracker": 0.043
+    }
+  },
   "known_errors": [
     "leaves on court before static-clutter suppression engages (~1 s)",
     "neon-yellow clothing",
