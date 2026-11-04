@@ -1,0 +1,7860 @@
+{
+ "setup": "model pickleball-v1.pt (8387f091), 1280 px, detection threshold 0.1, ball threshold 0.2",
+ "skipped": [],
+ "sports": {
+  "arnav-pickleball": "pickleball",
+  "ballyolo-tennis": "tennis",
+  "kwyoke-badminton": "badminton",
+  "racketvision-badminton": "badminton",
+  "racketvision-tennis": "tennis",
+  "rochester-pickleball": "pickleball",
+  "tenis-backview": "tennis",
+  "tennis-analytics": "tennis",
+  "tnv2pic-pickleball": "pickleball",
+  "tracknet-tennis": "tennis",
+  "tracknetv2-badminton": "badminton",
+  "yonggest-tennis": "tennis"
+ },
+ "results": {
+  "clip:arnav-pickleball/burlington_gold_0300_low_steep_corner": {
+   "raw best": {
+    "labeled": 495,
+    "visible": 495,
+    "correct": 347,
+    "missed": 148,
+    "false_detection": 18,
+    "recall": 0.701010101010101,
+    "precision": 0.9506849315068493
+   },
+   "tracked": {
+    "labeled": 495,
+    "visible": 495,
+    "correct": 350,
+    "missed": 145,
+    "false_detection": 1,
+    "no_detection": 130,
+    "elsewhere": 6,
+    "not_selected": 9,
+    "recall": 0.7070707070707071,
+    "precision": 0.9971509971509972
+   },
+   "tracked, no static filter": {
+    "labeled": 495,
+    "visible": 495,
+    "correct": 355,
+    "missed": 140,
+    "false_detection": 1,
+    "recall": 0.7171717171717171,
+    "precision": 0.9971910112359551
+   }
+  },
+  "source:arnav-pickleball": {
+   "raw best": {
+    "labeled": 1891,
+    "visible": 1891,
+    "correct": 1133,
+    "missed": 758,
+    "false_detection": 174,
+    "recall": 0.5991538868323638,
+    "precision": 0.8668706962509564
+   },
+   "tracked": {
+    "labeled": 1891,
+    "visible": 1891,
+    "correct": 1108,
+    "missed": 783,
+    "false_detection": 59,
+    "no_detection": 584,
+    "elsewhere": 111,
+    "not_selected": 88,
+    "recall": 0.5859333685880487,
+    "precision": 0.9494430162810625
+   },
+   "tracked, no static filter": {
+    "labeled": 1891,
+    "visible": 1891,
+    "correct": 1130,
+    "missed": 761,
+    "false_detection": 81,
+    "recall": 0.597567424643046,
+    "precision": 0.9331131296449215
+   }
+  },
+  "sport:pickleball": {
+   "raw best": {
+    "labeled": 35477,
+    "visible": 28234,
+    "correct": 17731,
+    "missed": 10503,
+    "false_detection": 2668,
+    "recall": 0.6280017000779202,
+    "precision": 0.869209274964459
+   },
+   "tracked": {
+    "labeled": 35477,
+    "visible": 28234,
+    "correct": 16942,
+    "missed": 11292,
+    "false_detection": 1425,
+    "no_detection": 8602,
+    "elsewhere": 1352,
+    "not_selected": 1338,
+    "recall": 0.6000566692640079,
+    "precision": 0.9224152011760222
+   },
+   "tracked, no static filter": {
+    "labeled": 35477,
+    "visible": 28234,
+    "correct": 16945,
+    "missed": 11289,
+    "false_detection": 1684,
+    "recall": 0.6001629241340228,
+    "precision": 0.9096033066723925
+   }
+  },
+  "all:all": {
+   "raw best": {
+    "labeled": 82683,
+    "visible": 70844,
+    "correct": 29302,
+    "missed": 41542,
+    "false_detection": 11420,
+    "recall": 0.41361300886454744,
+    "precision": 0.7195619075683906
+   },
+   "tracked": {
+    "labeled": 82683,
+    "visible": 70844,
+    "correct": 27677,
+    "missed": 43167,
+    "false_detection": 2601,
+    "no_detection": 31600,
+    "elsewhere": 8520,
+    "not_selected": 3047,
+    "recall": 0.390675286545085,
+    "precision": 0.9140960433317921
+   },
+   "tracked, no static filter": {
+    "labeled": 82683,
+    "visible": 70844,
+    "correct": 27168,
+    "missed": 43676,
+    "false_detection": 5241,
+    "recall": 0.38349048613855796,
+    "precision": 0.8382856613903545
+   }
+  },
+  "clip:arnav-pickleball/wolverine_mixed_0200_mid_steep_corner": {
+   "raw best": {
+    "labeled": 239,
+    "visible": 239,
+    "correct": 108,
+    "missed": 131,
+    "false_detection": 126,
+    "recall": 0.45188284518828453,
+    "precision": 0.46153846153846156
+   },
+   "tracked": {
+    "labeled": 239,
+    "visible": 239,
+    "correct": 136,
+    "missed": 103,
+    "false_detection": 34,
+    "no_detection": 5,
+    "elsewhere": 80,
+    "not_selected": 18,
+    "recall": 0.5690376569037657,
+    "precision": 0.8
+   },
+   "tracked, no static filter": {
+    "labeled": 239,
+    "visible": 239,
+    "correct": 138,
+    "missed": 101,
+    "false_detection": 56,
+    "recall": 0.5774058577405857,
+    "precision": 0.711340206185567
+   }
+  },
+  "clip:arnav-pickleball/outdoor_webcam_iynbd_1500_long_high_baseline": {
+   "raw best": {
+    "labeled": 766,
+    "visible": 766,
+    "correct": 485,
+    "missed": 281,
+    "false_detection": 26,
+    "recall": 0.6331592689295039,
+    "precision": 0.949119373776908
+   },
+   "tracked": {
+    "labeled": 766,
+    "visible": 766,
+    "correct": 465,
+    "missed": 301,
+    "false_detection": 21,
+    "no_detection": 255,
+    "elsewhere": 22,
+    "not_selected": 24,
+    "recall": 0.6070496083550914,
+    "precision": 0.9567901234567902
+   },
+   "tracked, no static filter": {
+    "labeled": 766,
+    "visible": 766,
+    "correct": 470,
+    "missed": 296,
+    "false_detection": 21,
+    "recall": 0.6135770234986945,
+    "precision": 0.9572301425661914
+   }
+  },
+  "clip:arnav-pickleball/indoor_doubles_fwuks_0500_long_mid_baseline": {
+   "raw best": {
+    "labeled": 391,
+    "visible": 391,
+    "correct": 193,
+    "missed": 198,
+    "false_detection": 4,
+    "recall": 0.4936061381074169,
+    "precision": 0.9796954314720813
+   },
+   "tracked": {
+    "labeled": 391,
+    "visible": 391,
+    "correct": 157,
+    "missed": 234,
+    "false_detection": 3,
+    "no_detection": 194,
+    "elsewhere": 3,
+    "not_selected": 37,
+    "recall": 0.40153452685422,
+    "precision": 0.98125
+   },
+   "tracked, no static filter": {
+    "labeled": 391,
+    "visible": 391,
+    "correct": 167,
+    "missed": 224,
+    "false_detection": 3,
+    "recall": 0.42710997442455245,
+    "precision": 0.9823529411764705
+   }
+  },
+  "clip:ballyolo-tennis/shunyi_amaetur_4_0_0": {
+   "raw best": {
+    "labeled": 789,
+    "visible": 789,
+    "correct": 176,
+    "missed": 613,
+    "false_detection": 34,
+    "recall": 0.22306717363751585,
+    "precision": 0.8380952380952381
+   },
+   "tracked": {
+    "labeled": 789,
+    "visible": 789,
+    "correct": 151,
+    "missed": 638,
+    "false_detection": 9,
+    "no_detection": 579,
+    "elsewhere": 34,
+    "not_selected": 25,
+    "recall": 0.19138149556400508,
+    "precision": 0.94375
+   },
+   "tracked, no static filter": {
+    "labeled": 789,
+    "visible": 789,
+    "correct": 152,
+    "missed": 637,
+    "false_detection": 9,
+    "recall": 0.1926489226869455,
+    "precision": 0.9440993788819876
+   }
+  },
+  "source:ballyolo-tennis": {
+   "raw best": {
+    "labeled": 3591,
+    "visible": 3591,
+    "correct": 1337,
+    "missed": 2254,
+    "false_detection": 532,
+    "recall": 0.3723196881091618,
+    "precision": 0.7153558052434457
+   },
+   "tracked": {
+    "labeled": 3591,
+    "visible": 3591,
+    "correct": 1157,
+    "missed": 2434,
+    "false_detection": 142,
+    "no_detection": 1722,
+    "elsewhere": 454,
+    "not_selected": 258,
+    "recall": 0.32219437482595376,
+    "precision": 0.8906851424172441
+   },
+   "tracked, no static filter": {
+    "labeled": 3591,
+    "visible": 3591,
+    "correct": 1132,
+    "missed": 2459,
+    "false_detection": 376,
+    "recall": 0.31523252575884153,
+    "precision": 0.7506631299734748
+   }
+  },
+  "sport:tennis": {
+   "raw best": {
+    "labeled": 18510,
+    "visible": 17826,
+    "correct": 7273,
+    "missed": 10553,
+    "false_detection": 3766,
+    "recall": 0.407999551217323,
+    "precision": 0.6588459099556119
+   },
+   "tracked": {
+    "labeled": 18510,
+    "visible": 17826,
+    "correct": 7113,
+    "missed": 10713,
+    "false_detection": 847,
+    "no_detection": 6928,
+    "elsewhere": 2830,
+    "not_selected": 955,
+    "recall": 0.39902389767754964,
+    "precision": 0.8935929648241207
+   },
+   "tracked, no static filter": {
+    "labeled": 18510,
+    "visible": 17826,
+    "correct": 6560,
+    "missed": 11266,
+    "false_detection": 2779,
+    "recall": 0.36800179513070796,
+    "precision": 0.702430667094978
+   }
+  },
+  "clip:ballyolo-tennis/shunyi_amaetur_4_0_3": {
+   "raw best": {
+    "labeled": 940,
+    "visible": 940,
+    "correct": 240,
+    "missed": 700,
+    "false_detection": 157,
+    "recall": 0.2553191489361702,
+    "precision": 0.6045340050377834
+   },
+   "tracked": {
+    "labeled": 940,
+    "visible": 940,
+    "correct": 208,
+    "missed": 732,
+    "false_detection": 18,
+    "no_detection": 543,
+    "elsewhere": 150,
+    "not_selected": 39,
+    "recall": 0.22127659574468084,
+    "precision": 0.9203539823008849
+   },
+   "tracked, no static filter": {
+    "labeled": 940,
+    "visible": 940,
+    "correct": 192,
+    "missed": 748,
+    "false_detection": 63,
+    "recall": 0.20425531914893616,
+    "precision": 0.7529411764705882
+   }
+  },
+  "clip:ballyolo-tennis/amateur_5_5_5_0": {
+   "raw best": {
+    "labeled": 298,
+    "visible": 298,
+    "correct": 24,
+    "missed": 274,
+    "false_detection": 66,
+    "recall": 0.08053691275167785,
+    "precision": 0.26666666666666666
+   },
+   "tracked": {
+    "labeled": 298,
+    "visible": 298,
+    "correct": 18,
+    "missed": 280,
+    "false_detection": 22,
+    "no_detection": 208,
+    "elsewhere": 65,
+    "not_selected": 7,
+    "recall": 0.06040268456375839,
+    "precision": 0.45
+   },
+   "tracked, no static filter": {
+    "labeled": 298,
+    "visible": 298,
+    "correct": 18,
+    "missed": 280,
+    "false_detection": 25,
+    "recall": 0.06040268456375839,
+    "precision": 0.4186046511627907
+   }
+  },
+  "clip:ballyolo-tennis/std_6_0_confort_pullball": {
+   "raw best": {
+    "labeled": 1564,
+    "visible": 1564,
+    "correct": 897,
+    "missed": 667,
+    "false_detection": 275,
+    "recall": 0.5735294117647058,
+    "precision": 0.765358361774744
+   },
+   "tracked": {
+    "labeled": 1564,
+    "visible": 1564,
+    "correct": 780,
+    "missed": 784,
+    "false_detection": 93,
+    "no_detection": 392,
+    "elsewhere": 205,
+    "not_selected": 187,
+    "recall": 0.49872122762148335,
+    "precision": 0.8934707903780069
+   },
+   "tracked, no static filter": {
+    "labeled": 1564,
+    "visible": 1564,
+    "correct": 770,
+    "missed": 794,
+    "false_detection": 279,
+    "recall": 0.49232736572890023,
+    "precision": 0.7340324118207817
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_china_doubles0": {
+   "raw best": {
+    "labeled": 258,
+    "visible": 149,
+    "correct": 0,
+    "missed": 149,
+    "false_detection": 11,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 258,
+    "visible": 149,
+    "correct": 0,
+    "missed": 149,
+    "false_detection": 0,
+    "no_detection": 142,
+    "elsewhere": 7,
+    "not_selected": 0,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 258,
+    "visible": 149,
+    "correct": 0,
+    "missed": 149,
+    "false_detection": 0,
+    "recall": 0.0,
+    "precision": null
+   }
+  },
+  "source:kwyoke-badminton": {
+   "raw best": {
+    "labeled": 6100,
+    "visible": 4768,
+    "correct": 208,
+    "missed": 4560,
+    "false_detection": 380,
+    "recall": 0.0436241610738255,
+    "precision": 0.35374149659863946
+   },
+   "tracked": {
+    "labeled": 6100,
+    "visible": 4768,
+    "correct": 112,
+    "missed": 4656,
+    "false_detection": 60,
+    "no_detection": 4255,
+    "elsewhere": 305,
+    "not_selected": 96,
+    "recall": 0.02348993288590604,
+    "precision": 0.6511627906976745
+   },
+   "tracked, no static filter": {
+    "labeled": 6100,
+    "visible": 4768,
+    "correct": 113,
+    "missed": 4655,
+    "false_detection": 85,
+    "recall": 0.023699664429530202,
+    "precision": 0.5707070707070707
+   }
+  },
+  "sport:badminton": {
+   "raw best": {
+    "labeled": 28696,
+    "visible": 24784,
+    "correct": 4298,
+    "missed": 20486,
+    "false_detection": 4986,
+    "recall": 0.17341833440929633,
+    "precision": 0.462947005601034
+   },
+   "tracked": {
+    "labeled": 28696,
+    "visible": 24784,
+    "correct": 3622,
+    "missed": 21162,
+    "false_detection": 329,
+    "no_detection": 16070,
+    "elsewhere": 4338,
+    "not_selected": 754,
+    "recall": 0.14614267269205938,
+    "precision": 0.9167299417868894
+   },
+   "tracked, no static filter": {
+    "labeled": 28696,
+    "visible": 24784,
+    "correct": 3663,
+    "missed": 21121,
+    "false_detection": 778,
+    "recall": 0.147796965784377,
+    "precision": 0.8248142310290475
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_china_doubles1": {
+   "raw best": {
+    "labeled": 269,
+    "visible": 217,
+    "correct": 8,
+    "missed": 209,
+    "false_detection": 49,
+    "recall": 0.03686635944700461,
+    "precision": 0.14035087719298245
+   },
+   "tracked": {
+    "labeled": 269,
+    "visible": 217,
+    "correct": 6,
+    "missed": 211,
+    "false_detection": 3,
+    "no_detection": 166,
+    "elsewhere": 43,
+    "not_selected": 2,
+    "recall": 0.027649769585253458,
+    "precision": 0.6666666666666666
+   },
+   "tracked, no static filter": {
+    "labeled": 269,
+    "visible": 217,
+    "correct": 7,
+    "missed": 210,
+    "false_detection": 15,
+    "recall": 0.03225806451612903,
+    "precision": 0.3181818181818182
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_china_doubles2": {
+   "raw best": {
+    "labeled": 278,
+    "visible": 208,
+    "correct": 6,
+    "missed": 202,
+    "false_detection": 89,
+    "recall": 0.028846153846153848,
+    "precision": 0.06315789473684211
+   },
+   "tracked": {
+    "labeled": 278,
+    "visible": 208,
+    "correct": 5,
+    "missed": 203,
+    "false_detection": 8,
+    "no_detection": 127,
+    "elsewhere": 75,
+    "not_selected": 1,
+    "recall": 0.02403846153846154,
+    "precision": 0.38461538461538464
+   },
+   "tracked, no static filter": {
+    "labeled": 278,
+    "visible": 208,
+    "correct": 5,
+    "missed": 203,
+    "false_detection": 8,
+    "recall": 0.02403846153846154,
+    "precision": 0.38461538461538464
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_china_doubles3": {
+   "raw best": {
+    "labeled": 295,
+    "visible": 241,
+    "correct": 12,
+    "missed": 229,
+    "false_detection": 63,
+    "recall": 0.04979253112033195,
+    "precision": 0.16
+   },
+   "tracked": {
+    "labeled": 295,
+    "visible": 241,
+    "correct": 7,
+    "missed": 234,
+    "false_detection": 11,
+    "no_detection": 173,
+    "elsewhere": 56,
+    "not_selected": 5,
+    "recall": 0.029045643153526972,
+    "precision": 0.3888888888888889
+   },
+   "tracked, no static filter": {
+    "labeled": 295,
+    "visible": 241,
+    "correct": 7,
+    "missed": 234,
+    "false_detection": 24,
+    "recall": 0.029045643153526972,
+    "precision": 0.22580645161290322
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles0": {
+   "raw best": {
+    "labeled": 274,
+    "visible": 250,
+    "correct": 19,
+    "missed": 231,
+    "false_detection": 20,
+    "recall": 0.076,
+    "precision": 0.48717948717948717
+   },
+   "tracked": {
+    "labeled": 274,
+    "visible": 250,
+    "correct": 11,
+    "missed": 239,
+    "false_detection": 0,
+    "no_detection": 212,
+    "elsewhere": 19,
+    "not_selected": 8,
+    "recall": 0.044,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 274,
+    "visible": 250,
+    "correct": 11,
+    "missed": 239,
+    "false_detection": 0,
+    "recall": 0.044,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles1": {
+   "raw best": {
+    "labeled": 284,
+    "visible": 244,
+    "correct": 51,
+    "missed": 193,
+    "false_detection": 22,
+    "recall": 0.20901639344262296,
+    "precision": 0.6986301369863014
+   },
+   "tracked": {
+    "labeled": 284,
+    "visible": 244,
+    "correct": 35,
+    "missed": 209,
+    "false_detection": 0,
+    "no_detection": 179,
+    "elsewhere": 14,
+    "not_selected": 16,
+    "recall": 0.14344262295081966,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 284,
+    "visible": 244,
+    "correct": 35,
+    "missed": 209,
+    "false_detection": 0,
+    "recall": 0.14344262295081966,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles2": {
+   "raw best": {
+    "labeled": 257,
+    "visible": 209,
+    "correct": 6,
+    "missed": 203,
+    "false_detection": 8,
+    "recall": 0.028708133971291867,
+    "precision": 0.42857142857142855
+   },
+   "tracked": {
+    "labeled": 257,
+    "visible": 209,
+    "correct": 3,
+    "missed": 206,
+    "false_detection": 3,
+    "no_detection": 195,
+    "elsewhere": 8,
+    "not_selected": 3,
+    "recall": 0.014354066985645933,
+    "precision": 0.5
+   },
+   "tracked, no static filter": {
+    "labeled": 257,
+    "visible": 209,
+    "correct": 3,
+    "missed": 206,
+    "false_detection": 3,
+    "recall": 0.014354066985645933,
+    "precision": 0.5
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles3": {
+   "raw best": {
+    "labeled": 1059,
+    "visible": 918,
+    "correct": 33,
+    "missed": 885,
+    "false_detection": 8,
+    "recall": 0.03594771241830065,
+    "precision": 0.8048780487804879
+   },
+   "tracked": {
+    "labeled": 1059,
+    "visible": 918,
+    "correct": 15,
+    "missed": 903,
+    "false_detection": 0,
+    "no_detection": 878,
+    "elsewhere": 7,
+    "not_selected": 18,
+    "recall": 0.016339869281045753,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 1059,
+    "visible": 918,
+    "correct": 15,
+    "missed": 903,
+    "false_detection": 0,
+    "recall": 0.016339869281045753,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles4": {
+   "raw best": {
+    "labeled": 462,
+    "visible": 369,
+    "correct": 6,
+    "missed": 363,
+    "false_detection": 1,
+    "recall": 0.016260162601626018,
+    "precision": 0.8571428571428571
+   },
+   "tracked": {
+    "labeled": 462,
+    "visible": 369,
+    "correct": 1,
+    "missed": 368,
+    "false_detection": 0,
+    "no_detection": 362,
+    "elsewhere": 1,
+    "not_selected": 5,
+    "recall": 0.0027100271002710027,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 462,
+    "visible": 369,
+    "correct": 1,
+    "missed": 368,
+    "false_detection": 0,
+    "recall": 0.0027100271002710027,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles5": {
+   "raw best": {
+    "labeled": 437,
+    "visible": 403,
+    "correct": 17,
+    "missed": 386,
+    "false_detection": 3,
+    "recall": 0.04218362282878412,
+    "precision": 0.85
+   },
+   "tracked": {
+    "labeled": 437,
+    "visible": 403,
+    "correct": 6,
+    "missed": 397,
+    "false_detection": 2,
+    "no_detection": 383,
+    "elsewhere": 3,
+    "not_selected": 11,
+    "recall": 0.01488833746898263,
+    "precision": 0.75
+   },
+   "tracked, no static filter": {
+    "labeled": 437,
+    "visible": 403,
+    "correct": 6,
+    "missed": 397,
+    "false_detection": 2,
+    "recall": 0.01488833746898263,
+    "precision": 0.75
+   }
+  },
+  "clip:kwyoke-badminton/am_doubles_match_clementi_doubles6": {
+   "raw best": {
+    "labeled": 485,
+    "visible": 405,
+    "correct": 23,
+    "missed": 382,
+    "false_detection": 0,
+    "recall": 0.056790123456790124,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 485,
+    "visible": 405,
+    "correct": 10,
+    "missed": 395,
+    "false_detection": 0,
+    "no_detection": 382,
+    "elsewhere": 0,
+    "not_selected": 13,
+    "recall": 0.024691358024691357,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 485,
+    "visible": 405,
+    "correct": 10,
+    "missed": 395,
+    "false_detection": 0,
+    "recall": 0.024691358024691357,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_china2_singles0": {
+   "raw best": {
+    "labeled": 238,
+    "visible": 128,
+    "correct": 0,
+    "missed": 128,
+    "false_detection": 6,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 238,
+    "visible": 128,
+    "correct": 0,
+    "missed": 128,
+    "false_detection": 1,
+    "no_detection": 125,
+    "elsewhere": 3,
+    "not_selected": 0,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked, no static filter": {
+    "labeled": 238,
+    "visible": 128,
+    "correct": 0,
+    "missed": 128,
+    "false_detection": 1,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_china2_singles1": {
+   "raw best": {
+    "labeled": 329,
+    "visible": 231,
+    "correct": 12,
+    "missed": 219,
+    "false_detection": 18,
+    "recall": 0.05194805194805195,
+    "precision": 0.4
+   },
+   "tracked": {
+    "labeled": 329,
+    "visible": 231,
+    "correct": 9,
+    "missed": 222,
+    "false_detection": 3,
+    "no_detection": 208,
+    "elsewhere": 11,
+    "not_selected": 3,
+    "recall": 0.03896103896103896,
+    "precision": 0.75
+   },
+   "tracked, no static filter": {
+    "labeled": 329,
+    "visible": 231,
+    "correct": 9,
+    "missed": 222,
+    "false_detection": 3,
+    "recall": 0.03896103896103896,
+    "precision": 0.75
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_china2_singles2": {
+   "raw best": {
+    "labeled": 207,
+    "visible": 88,
+    "correct": 1,
+    "missed": 87,
+    "false_detection": 0,
+    "recall": 0.011363636363636364,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 207,
+    "visible": 88,
+    "correct": 0,
+    "missed": 88,
+    "false_detection": 0,
+    "no_detection": 87,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 207,
+    "visible": 88,
+    "correct": 0,
+    "missed": 88,
+    "false_detection": 0,
+    "recall": 0.0,
+    "precision": null
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_china2_singles3": {
+   "raw best": {
+    "labeled": 280,
+    "visible": 189,
+    "correct": 5,
+    "missed": 184,
+    "false_detection": 50,
+    "recall": 0.026455026455026454,
+    "precision": 0.09090909090909091
+   },
+   "tracked": {
+    "labeled": 280,
+    "visible": 189,
+    "correct": 2,
+    "missed": 187,
+    "false_detection": 29,
+    "no_detection": 147,
+    "elsewhere": 37,
+    "not_selected": 3,
+    "recall": 0.010582010582010581,
+    "precision": 0.06451612903225806
+   },
+   "tracked, no static filter": {
+    "labeled": 280,
+    "visible": 189,
+    "correct": 2,
+    "missed": 187,
+    "false_detection": 29,
+    "recall": 0.010582010582010581,
+    "precision": 0.06451612903225806
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_yewtee_singles0": {
+   "raw best": {
+    "labeled": 251,
+    "visible": 182,
+    "correct": 4,
+    "missed": 178,
+    "false_detection": 7,
+    "recall": 0.02197802197802198,
+    "precision": 0.36363636363636365
+   },
+   "tracked": {
+    "labeled": 251,
+    "visible": 182,
+    "correct": 0,
+    "missed": 182,
+    "false_detection": 0,
+    "no_detection": 171,
+    "elsewhere": 7,
+    "not_selected": 4,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 251,
+    "visible": 182,
+    "correct": 0,
+    "missed": 182,
+    "false_detection": 0,
+    "recall": 0.0,
+    "precision": null
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_yewtee_singles1": {
+   "raw best": {
+    "labeled": 154,
+    "visible": 123,
+    "correct": 3,
+    "missed": 120,
+    "false_detection": 25,
+    "recall": 0.024390243902439025,
+    "precision": 0.10714285714285714
+   },
+   "tracked": {
+    "labeled": 154,
+    "visible": 123,
+    "correct": 1,
+    "missed": 122,
+    "false_detection": 0,
+    "no_detection": 106,
+    "elsewhere": 14,
+    "not_selected": 2,
+    "recall": 0.008130081300813009,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 154,
+    "visible": 123,
+    "correct": 1,
+    "missed": 122,
+    "false_detection": 0,
+    "recall": 0.008130081300813009,
+    "precision": 1.0
+   }
+  },
+  "clip:kwyoke-badminton/am_singles_match_yewtee_singles2": {
+   "raw best": {
+    "labeled": 283,
+    "visible": 214,
+    "correct": 2,
+    "missed": 212,
+    "false_detection": 0,
+    "recall": 0.009345794392523364,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 283,
+    "visible": 214,
+    "correct": 1,
+    "missed": 213,
+    "false_detection": 0,
+    "no_detection": 212,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.004672897196261682,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 283,
+    "visible": 214,
+    "correct": 1,
+    "missed": 213,
+    "false_detection": 0,
+    "recall": 0.004672897196261682,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match1_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 25,
+    "correct": 1,
+    "missed": 24,
+    "false_detection": 10,
+    "recall": 0.04,
+    "precision": 0.09090909090909091
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 25,
+    "correct": 1,
+    "missed": 24,
+    "false_detection": 10,
+    "no_detection": 19,
+    "elsewhere": 5,
+    "not_selected": 0,
+    "recall": 0.04,
+    "precision": 0.09090909090909091
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 25,
+    "correct": 1,
+    "missed": 24,
+    "false_detection": 10,
+    "recall": 0.04,
+    "precision": 0.09090909090909091
+   }
+  },
+  "source:racketvision-badminton": {
+   "raw best": {
+    "labeled": 2297,
+    "visible": 1948,
+    "correct": 337,
+    "missed": 1611,
+    "false_detection": 407,
+    "recall": 0.17299794661190965,
+    "precision": 0.4529569892473118
+   },
+   "tracked": {
+    "labeled": 2297,
+    "visible": 1948,
+    "correct": 288,
+    "missed": 1660,
+    "false_detection": 96,
+    "no_detection": 1295,
+    "elsewhere": 291,
+    "not_selected": 74,
+    "recall": 0.14784394250513347,
+    "precision": 0.75
+   },
+   "tracked, no static filter": {
+    "labeled": 2297,
+    "visible": 1948,
+    "correct": 283,
+    "missed": 1665,
+    "false_detection": 169,
+    "recall": 0.14527720739219713,
+    "precision": 0.6261061946902655
+   }
+  },
+  "clip:racketvision-badminton/match10_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 6,
+    "missed": 42,
+    "false_detection": 4,
+    "recall": 0.125,
+    "precision": 0.6
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 5,
+    "missed": 43,
+    "false_detection": 3,
+    "no_detection": 39,
+    "elsewhere": 3,
+    "not_selected": 1,
+    "recall": 0.10416666666666667,
+    "precision": 0.625
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 5,
+    "missed": 43,
+    "false_detection": 3,
+    "recall": 0.10416666666666667,
+    "precision": 0.625
+   }
+  },
+  "clip:racketvision-badminton/match11_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 4,
+    "missed": 42,
+    "false_detection": 0,
+    "recall": 0.08695652173913043,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 3,
+    "missed": 43,
+    "false_detection": 0,
+    "no_detection": 42,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.06521739130434782,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 3,
+    "missed": 43,
+    "false_detection": 0,
+    "recall": 0.06521739130434782,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match12_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 4,
+    "missed": 38,
+    "false_detection": 35,
+    "recall": 0.09523809523809523,
+    "precision": 0.10256410256410256
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 4,
+    "missed": 38,
+    "false_detection": 5,
+    "no_detection": 9,
+    "elsewhere": 28,
+    "not_selected": 1,
+    "recall": 0.09523809523809523,
+    "precision": 0.4444444444444444
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 5,
+    "missed": 37,
+    "false_detection": 7,
+    "recall": 0.11904761904761904,
+    "precision": 0.4166666666666667
+   }
+  },
+  "clip:racketvision-badminton/match13_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 8,
+    "missed": 39,
+    "false_detection": 3,
+    "recall": 0.1702127659574468,
+    "precision": 0.7272727272727273
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 5,
+    "missed": 42,
+    "false_detection": 1,
+    "no_detection": 36,
+    "elsewhere": 3,
+    "not_selected": 3,
+    "recall": 0.10638297872340426,
+    "precision": 0.8333333333333334
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 5,
+    "missed": 42,
+    "false_detection": 1,
+    "recall": 0.10638297872340426,
+    "precision": 0.8333333333333334
+   }
+  },
+  "clip:racketvision-badminton/match14_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 2,
+    "missed": 45,
+    "false_detection": 24,
+    "recall": 0.0425531914893617,
+    "precision": 0.07692307692307693
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 1,
+    "missed": 46,
+    "false_detection": 0,
+    "no_detection": 22,
+    "elsewhere": 23,
+    "not_selected": 1,
+    "recall": 0.02127659574468085,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 2,
+    "missed": 45,
+    "false_detection": 2,
+    "recall": 0.0425531914893617,
+    "precision": 0.5
+   }
+  },
+  "clip:racketvision-badminton/match100_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 13,
+    "missed": 29,
+    "false_detection": 2,
+    "recall": 0.30952380952380953,
+    "precision": 0.8666666666666667
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 12,
+    "missed": 30,
+    "false_detection": 2,
+    "no_detection": 27,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.2857142857142857,
+    "precision": 0.8571428571428571
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 12,
+    "missed": 30,
+    "false_detection": 2,
+    "recall": 0.2857142857142857,
+    "precision": 0.8571428571428571
+   }
+  },
+  "clip:racketvision-badminton/match101_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 7,
+    "missed": 36,
+    "false_detection": 5,
+    "recall": 0.16279069767441862,
+    "precision": 0.5833333333333334
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 7,
+    "missed": 36,
+    "false_detection": 4,
+    "no_detection": 31,
+    "elsewhere": 4,
+    "not_selected": 1,
+    "recall": 0.16279069767441862,
+    "precision": 0.6363636363636364
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 7,
+    "missed": 36,
+    "false_detection": 4,
+    "recall": 0.16279069767441862,
+    "precision": 0.6363636363636364
+   }
+  },
+  "clip:racketvision-badminton/match102_000": {
+   "raw best": {
+    "labeled": 49,
+    "visible": 38,
+    "correct": 2,
+    "missed": 36,
+    "false_detection": 0,
+    "recall": 0.05263157894736842,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 49,
+    "visible": 38,
+    "correct": 2,
+    "missed": 36,
+    "false_detection": 0,
+    "no_detection": 36,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.05263157894736842,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 49,
+    "visible": 38,
+    "correct": 2,
+    "missed": 36,
+    "false_detection": 0,
+    "recall": 0.05263157894736842,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match103_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 16,
+    "missed": 29,
+    "false_detection": 15,
+    "recall": 0.35555555555555557,
+    "precision": 0.5161290322580645
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 15,
+    "missed": 30,
+    "false_detection": 2,
+    "no_detection": 18,
+    "elsewhere": 9,
+    "not_selected": 3,
+    "recall": 0.3333333333333333,
+    "precision": 0.8823529411764706
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 14,
+    "missed": 31,
+    "false_detection": 9,
+    "recall": 0.3111111111111111,
+    "precision": 0.6086956521739131
+   }
+  },
+  "clip:racketvision-badminton/match104_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 36,
+    "correct": 7,
+    "missed": 29,
+    "false_detection": 1,
+    "recall": 0.19444444444444445,
+    "precision": 0.875
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 36,
+    "correct": 5,
+    "missed": 31,
+    "false_detection": 0,
+    "no_detection": 29,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.1388888888888889,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 36,
+    "correct": 5,
+    "missed": 31,
+    "false_detection": 0,
+    "recall": 0.1388888888888889,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match105_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 26,
+    "correct": 3,
+    "missed": 23,
+    "false_detection": 2,
+    "recall": 0.11538461538461539,
+    "precision": 0.6
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 26,
+    "correct": 2,
+    "missed": 24,
+    "false_detection": 1,
+    "no_detection": 21,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.07692307692307693,
+    "precision": 0.6666666666666666
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 26,
+    "correct": 2,
+    "missed": 24,
+    "false_detection": 1,
+    "recall": 0.07692307692307693,
+    "precision": 0.6666666666666666
+   }
+  },
+  "clip:racketvision-badminton/match106_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 31,
+    "correct": 4,
+    "missed": 27,
+    "false_detection": 28,
+    "recall": 0.12903225806451613,
+    "precision": 0.125
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 31,
+    "correct": 3,
+    "missed": 28,
+    "false_detection": 3,
+    "no_detection": 7,
+    "elsewhere": 20,
+    "not_selected": 1,
+    "recall": 0.0967741935483871,
+    "precision": 0.5
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 31,
+    "correct": 3,
+    "missed": 28,
+    "false_detection": 5,
+    "recall": 0.0967741935483871,
+    "precision": 0.375
+   }
+  },
+  "clip:racketvision-badminton/match107_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 5,
+    "missed": 40,
+    "false_detection": 12,
+    "recall": 0.1111111111111111,
+    "precision": 0.29411764705882354
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 4,
+    "missed": 41,
+    "false_detection": 0,
+    "no_detection": 29,
+    "elsewhere": 11,
+    "not_selected": 1,
+    "recall": 0.08888888888888889,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 4,
+    "missed": 41,
+    "false_detection": 0,
+    "recall": 0.08888888888888889,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match108_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 6,
+    "missed": 42,
+    "false_detection": 1,
+    "recall": 0.125,
+    "precision": 0.8571428571428571
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 3,
+    "missed": 45,
+    "false_detection": 0,
+    "no_detection": 41,
+    "elsewhere": 1,
+    "not_selected": 3,
+    "recall": 0.0625,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 3,
+    "missed": 45,
+    "false_detection": 0,
+    "recall": 0.0625,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match109_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 35,
+    "correct": 6,
+    "missed": 29,
+    "false_detection": 4,
+    "recall": 0.17142857142857143,
+    "precision": 0.6
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 35,
+    "correct": 2,
+    "missed": 33,
+    "false_detection": 3,
+    "no_detection": 28,
+    "elsewhere": 1,
+    "not_selected": 4,
+    "recall": 0.05714285714285714,
+    "precision": 0.4
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 35,
+    "correct": 2,
+    "missed": 33,
+    "false_detection": 3,
+    "recall": 0.05714285714285714,
+    "precision": 0.4
+   }
+  },
+  "clip:racketvision-badminton/match110_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 9,
+    "missed": 28,
+    "false_detection": 0,
+    "recall": 0.24324324324324326,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 6,
+    "missed": 31,
+    "false_detection": 0,
+    "no_detection": 28,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.16216216216216217,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 6,
+    "missed": 31,
+    "false_detection": 0,
+    "recall": 0.16216216216216217,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match111_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 11,
+    "missed": 32,
+    "false_detection": 3,
+    "recall": 0.2558139534883721,
+    "precision": 0.7857142857142857
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 11,
+    "missed": 32,
+    "false_detection": 2,
+    "no_detection": 29,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.2558139534883721,
+    "precision": 0.8461538461538461
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 11,
+    "missed": 32,
+    "false_detection": 2,
+    "recall": 0.2558139534883721,
+    "precision": 0.8461538461538461
+   }
+  },
+  "clip:racketvision-badminton/match112_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 17,
+    "missed": 33,
+    "false_detection": 14,
+    "recall": 0.34,
+    "precision": 0.5483870967741935
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 12,
+    "missed": 38,
+    "false_detection": 9,
+    "no_detection": 19,
+    "elsewhere": 13,
+    "not_selected": 6,
+    "recall": 0.24,
+    "precision": 0.5714285714285714
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 14,
+    "missed": 36,
+    "false_detection": 10,
+    "recall": 0.28,
+    "precision": 0.5833333333333334
+   }
+  },
+  "clip:racketvision-badminton/match113_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 9,
+    "missed": 31,
+    "false_detection": 0,
+    "recall": 0.225,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 7,
+    "missed": 33,
+    "false_detection": 0,
+    "no_detection": 31,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.175,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 7,
+    "missed": 33,
+    "false_detection": 0,
+    "recall": 0.175,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match114_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 4,
+    "missed": 36,
+    "false_detection": 12,
+    "recall": 0.1,
+    "precision": 0.25
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 3,
+    "missed": 37,
+    "false_detection": 7,
+    "no_detection": 28,
+    "elsewhere": 7,
+    "not_selected": 2,
+    "recall": 0.075,
+    "precision": 0.3
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 3,
+    "missed": 37,
+    "false_detection": 7,
+    "recall": 0.075,
+    "precision": 0.3
+   }
+  },
+  "clip:racketvision-badminton/match115_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 3,
+    "missed": 40,
+    "false_detection": 47,
+    "recall": 0.06976744186046512,
+    "precision": 0.06
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 6,
+    "missed": 37,
+    "false_detection": 0,
+    "no_detection": 0,
+    "elsewhere": 36,
+    "not_selected": 1,
+    "recall": 0.13953488372093023,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 3,
+    "missed": 40,
+    "false_detection": 13,
+    "recall": 0.06976744186046512,
+    "precision": 0.1875
+   }
+  },
+  "clip:racketvision-badminton/match116_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 12,
+    "missed": 33,
+    "false_detection": 0,
+    "recall": 0.26666666666666666,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 9,
+    "missed": 36,
+    "false_detection": 0,
+    "no_detection": 33,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.2,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 9,
+    "missed": 36,
+    "false_detection": 0,
+    "recall": 0.2,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match117_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 10,
+    "missed": 32,
+    "false_detection": 1,
+    "recall": 0.23809523809523808,
+    "precision": 0.9090909090909091
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 10,
+    "missed": 32,
+    "false_detection": 1,
+    "no_detection": 31,
+    "elsewhere": 1,
+    "not_selected": 0,
+    "recall": 0.23809523809523808,
+    "precision": 0.9090909090909091
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 10,
+    "missed": 32,
+    "false_detection": 1,
+    "recall": 0.23809523809523808,
+    "precision": 0.9090909090909091
+   }
+  },
+  "clip:racketvision-badminton/match118_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 1,
+    "missed": 46,
+    "false_detection": 1,
+    "recall": 0.02127659574468085,
+    "precision": 0.5
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 1,
+    "missed": 46,
+    "false_detection": 0,
+    "no_detection": 45,
+    "elsewhere": 1,
+    "not_selected": 0,
+    "recall": 0.02127659574468085,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 1,
+    "missed": 46,
+    "false_detection": 0,
+    "recall": 0.02127659574468085,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match119_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 3,
+    "missed": 43,
+    "false_detection": 3,
+    "recall": 0.06521739130434782,
+    "precision": 0.5
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 3,
+    "missed": 43,
+    "false_detection": 0,
+    "no_detection": 40,
+    "elsewhere": 3,
+    "not_selected": 0,
+    "recall": 0.06521739130434782,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 3,
+    "missed": 43,
+    "false_detection": 0,
+    "recall": 0.06521739130434782,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match120_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 5,
+    "missed": 40,
+    "false_detection": 1,
+    "recall": 0.1111111111111111,
+    "precision": 0.8333333333333334
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 4,
+    "missed": 41,
+    "false_detection": 1,
+    "no_detection": 39,
+    "elsewhere": 1,
+    "not_selected": 1,
+    "recall": 0.08888888888888889,
+    "precision": 0.8
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 4,
+    "missed": 41,
+    "false_detection": 1,
+    "recall": 0.08888888888888889,
+    "precision": 0.8
+   }
+  },
+  "clip:racketvision-badminton/match121_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 6,
+    "missed": 37,
+    "false_detection": 3,
+    "recall": 0.13953488372093023,
+    "precision": 0.6666666666666666
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 4,
+    "missed": 39,
+    "false_detection": 3,
+    "no_detection": 36,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.09302325581395349,
+    "precision": 0.5714285714285714
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 43,
+    "correct": 4,
+    "missed": 39,
+    "false_detection": 3,
+    "recall": 0.09302325581395349,
+    "precision": 0.5714285714285714
+   }
+  },
+  "clip:racketvision-badminton/match122_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 9,
+    "missed": 40,
+    "false_detection": 1,
+    "recall": 0.1836734693877551,
+    "precision": 0.9
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 7,
+    "missed": 42,
+    "false_detection": 0,
+    "no_detection": 39,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.14285714285714285,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 7,
+    "missed": 42,
+    "false_detection": 0,
+    "recall": 0.14285714285714285,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match123_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 0,
+    "missed": 47,
+    "false_detection": 15,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 0,
+    "missed": 47,
+    "false_detection": 7,
+    "no_detection": 32,
+    "elsewhere": 14,
+    "not_selected": 1,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 0,
+    "missed": 47,
+    "false_detection": 8,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:racketvision-badminton/match124_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 7,
+    "missed": 33,
+    "false_detection": 0,
+    "recall": 0.175,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 5,
+    "missed": 35,
+    "false_detection": 0,
+    "no_detection": 33,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.125,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 5,
+    "missed": 35,
+    "false_detection": 0,
+    "recall": 0.125,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match125_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 16,
+    "missed": 32,
+    "false_detection": 1,
+    "recall": 0.3333333333333333,
+    "precision": 0.9411764705882353
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 1,
+    "no_detection": 31,
+    "elsewhere": 1,
+    "not_selected": 1,
+    "recall": 0.3125,
+    "precision": 0.9375
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 1,
+    "recall": 0.3125,
+    "precision": 0.9375
+   }
+  },
+  "clip:racketvision-badminton/match126_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 9,
+    "missed": 39,
+    "false_detection": 0,
+    "recall": 0.1875,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 7,
+    "missed": 41,
+    "false_detection": 0,
+    "no_detection": 39,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.14583333333333334,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 7,
+    "missed": 41,
+    "false_detection": 0,
+    "recall": 0.14583333333333334,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match127_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 2,
+    "recall": 0.3125,
+    "precision": 0.8823529411764706
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 0,
+    "no_detection": 31,
+    "elsewhere": 1,
+    "not_selected": 1,
+    "recall": 0.3125,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 0,
+    "recall": 0.3125,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match128_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 4,
+    "missed": 45,
+    "false_detection": 5,
+    "recall": 0.08163265306122448,
+    "precision": 0.4444444444444444
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 5,
+    "missed": 44,
+    "false_detection": 2,
+    "no_detection": 40,
+    "elsewhere": 3,
+    "not_selected": 1,
+    "recall": 0.10204081632653061,
+    "precision": 0.7142857142857143
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 5,
+    "missed": 44,
+    "false_detection": 2,
+    "recall": 0.10204081632653061,
+    "precision": 0.7142857142857143
+   }
+  },
+  "clip:racketvision-badminton/match129_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 3,
+    "missed": 35,
+    "false_detection": 4,
+    "recall": 0.07894736842105263,
+    "precision": 0.42857142857142855
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 2,
+    "missed": 36,
+    "false_detection": 0,
+    "no_detection": 32,
+    "elsewhere": 3,
+    "not_selected": 1,
+    "recall": 0.05263157894736842,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 2,
+    "missed": 36,
+    "false_detection": 0,
+    "recall": 0.05263157894736842,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match130_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 16,
+    "correct": 2,
+    "missed": 14,
+    "false_detection": 48,
+    "recall": 0.125,
+    "precision": 0.04
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 16,
+    "correct": 3,
+    "missed": 13,
+    "false_detection": 5,
+    "no_detection": 0,
+    "elsewhere": 11,
+    "not_selected": 2,
+    "recall": 0.1875,
+    "precision": 0.375
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 16,
+    "correct": 1,
+    "missed": 15,
+    "false_detection": 37,
+    "recall": 0.0625,
+    "precision": 0.02631578947368421
+   }
+  },
+  "clip:racketvision-badminton/match131_000": {
+   "raw best": {
+    "labeled": 49,
+    "visible": 45,
+    "correct": 2,
+    "missed": 43,
+    "false_detection": 47,
+    "recall": 0.044444444444444446,
+    "precision": 0.04081632653061224
+   },
+   "tracked": {
+    "labeled": 49,
+    "visible": 45,
+    "correct": 7,
+    "missed": 38,
+    "false_detection": 5,
+    "no_detection": 0,
+    "elsewhere": 38,
+    "not_selected": 0,
+    "recall": 0.15555555555555556,
+    "precision": 0.5833333333333334
+   },
+   "tracked, no static filter": {
+    "labeled": 49,
+    "visible": 45,
+    "correct": 6,
+    "missed": 39,
+    "false_detection": 15,
+    "recall": 0.13333333333333333,
+    "precision": 0.2857142857142857
+   }
+  },
+  "clip:racketvision-badminton/match132_000": {
+   "raw best": {
+    "labeled": 49,
+    "visible": 43,
+    "correct": 5,
+    "missed": 38,
+    "false_detection": 0,
+    "recall": 0.11627906976744186,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 49,
+    "visible": 43,
+    "correct": 5,
+    "missed": 38,
+    "false_detection": 0,
+    "no_detection": 38,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.11627906976744186,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 49,
+    "visible": 43,
+    "correct": 5,
+    "missed": 38,
+    "false_detection": 0,
+    "recall": 0.11627906976744186,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match133_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 9,
+    "missed": 39,
+    "false_detection": 1,
+    "recall": 0.1875,
+    "precision": 0.9
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 8,
+    "missed": 40,
+    "false_detection": 0,
+    "no_detection": 39,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.16666666666666666,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 8,
+    "missed": 40,
+    "false_detection": 0,
+    "recall": 0.16666666666666666,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match134_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 15,
+    "missed": 25,
+    "false_detection": 9,
+    "recall": 0.375,
+    "precision": 0.625
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 12,
+    "missed": 28,
+    "false_detection": 6,
+    "no_detection": 18,
+    "elsewhere": 6,
+    "not_selected": 4,
+    "recall": 0.3,
+    "precision": 0.6666666666666666
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 12,
+    "missed": 28,
+    "false_detection": 6,
+    "recall": 0.3,
+    "precision": 0.6666666666666666
+   }
+  },
+  "clip:racketvision-badminton/match135_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 6,
+    "missed": 44,
+    "false_detection": 19,
+    "recall": 0.12,
+    "precision": 0.24
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 6,
+    "missed": 44,
+    "false_detection": 3,
+    "no_detection": 25,
+    "elsewhere": 18,
+    "not_selected": 1,
+    "recall": 0.12,
+    "precision": 0.6666666666666666
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 4,
+    "missed": 46,
+    "false_detection": 6,
+    "recall": 0.08,
+    "precision": 0.4
+   }
+  },
+  "clip:racketvision-badminton/match136_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 14,
+    "missed": 28,
+    "false_detection": 4,
+    "recall": 0.3333333333333333,
+    "precision": 0.7777777777777778
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 12,
+    "missed": 30,
+    "false_detection": 2,
+    "no_detection": 26,
+    "elsewhere": 2,
+    "not_selected": 2,
+    "recall": 0.2857142857142857,
+    "precision": 0.8571428571428571
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 12,
+    "missed": 30,
+    "false_detection": 2,
+    "recall": 0.2857142857142857,
+    "precision": 0.8571428571428571
+   }
+  },
+  "clip:racketvision-badminton/match137_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 15,
+    "missed": 29,
+    "false_detection": 0,
+    "recall": 0.3409090909090909,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 13,
+    "missed": 31,
+    "false_detection": 0,
+    "no_detection": 29,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.29545454545454547,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 13,
+    "missed": 31,
+    "false_detection": 0,
+    "recall": 0.29545454545454547,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-badminton/match138_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 8,
+    "missed": 36,
+    "false_detection": 17,
+    "recall": 0.18181818181818182,
+    "precision": 0.32
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 5,
+    "missed": 39,
+    "false_detection": 6,
+    "no_detection": 22,
+    "elsewhere": 14,
+    "not_selected": 3,
+    "recall": 0.11363636363636363,
+    "precision": 0.45454545454545453
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 5,
+    "missed": 39,
+    "false_detection": 6,
+    "recall": 0.11363636363636363,
+    "precision": 0.45454545454545453
+   }
+  },
+  "clip:racketvision-badminton/match139_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 14,
+    "missed": 30,
+    "false_detection": 3,
+    "recall": 0.3181818181818182,
+    "precision": 0.8235294117647058
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 11,
+    "missed": 33,
+    "false_detection": 2,
+    "no_detection": 28,
+    "elsewhere": 2,
+    "not_selected": 3,
+    "recall": 0.25,
+    "precision": 0.8461538461538461
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 44,
+    "correct": 11,
+    "missed": 33,
+    "false_detection": 2,
+    "recall": 0.25,
+    "precision": 0.8461538461538461
+   }
+  },
+  "clip:racketvision-tennis/match1_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 8,
+    "missed": 34,
+    "false_detection": 0,
+    "recall": 0.19047619047619047,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 7,
+    "missed": 35,
+    "false_detection": 1,
+    "no_detection": 34,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.16666666666666666,
+    "precision": 0.875
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 42,
+    "correct": 7,
+    "missed": 35,
+    "false_detection": 1,
+    "recall": 0.16666666666666666,
+    "precision": 0.875
+   }
+  },
+  "source:racketvision-tennis": {
+   "raw best": {
+    "labeled": 2150,
+    "visible": 1947,
+    "correct": 1063,
+    "missed": 884,
+    "false_detection": 164,
+    "recall": 0.5459681561376477,
+    "precision": 0.8663406682966586
+   },
+   "tracked": {
+    "labeled": 2150,
+    "visible": 1947,
+    "correct": 988,
+    "missed": 959,
+    "false_detection": 90,
+    "no_detection": 746,
+    "elsewhere": 111,
+    "not_selected": 102,
+    "recall": 0.507447354904982,
+    "precision": 0.9165120593692022
+   },
+   "tracked, no static filter": {
+    "labeled": 2150,
+    "visible": 1947,
+    "correct": 975,
+    "missed": 972,
+    "false_detection": 127,
+    "recall": 0.5007704160246533,
+    "precision": 0.8847549909255898
+   }
+  },
+  "clip:racketvision-tennis/match10_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 40,
+    "missed": 8,
+    "false_detection": 6,
+    "recall": 0.8333333333333334,
+    "precision": 0.8695652173913043
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 41,
+    "missed": 7,
+    "false_detection": 4,
+    "no_detection": 3,
+    "elsewhere": 2,
+    "not_selected": 2,
+    "recall": 0.8541666666666666,
+    "precision": 0.9111111111111111
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 40,
+    "missed": 8,
+    "false_detection": 5,
+    "recall": 0.8333333333333334,
+    "precision": 0.8888888888888888
+   }
+  },
+  "clip:racketvision-tennis/match11_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 35,
+    "missed": 11,
+    "false_detection": 9,
+    "recall": 0.7608695652173914,
+    "precision": 0.7954545454545454
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 36,
+    "missed": 10,
+    "false_detection": 2,
+    "no_detection": 5,
+    "elsewhere": 4,
+    "not_selected": 1,
+    "recall": 0.782608695652174,
+    "precision": 0.9473684210526315
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 35,
+    "missed": 11,
+    "false_detection": 6,
+    "recall": 0.7608695652173914,
+    "precision": 0.8536585365853658
+   }
+  },
+  "clip:racketvision-tennis/match12_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 24,
+    "missed": 24,
+    "false_detection": 1,
+    "recall": 0.5,
+    "precision": 0.96
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 20,
+    "missed": 28,
+    "false_detection": 0,
+    "no_detection": 23,
+    "elsewhere": 1,
+    "not_selected": 4,
+    "recall": 0.4166666666666667,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 20,
+    "missed": 28,
+    "false_detection": 0,
+    "recall": 0.4166666666666667,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match13_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 29,
+    "correct": 4,
+    "missed": 25,
+    "false_detection": 0,
+    "recall": 0.13793103448275862,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 29,
+    "correct": 3,
+    "missed": 26,
+    "false_detection": 0,
+    "no_detection": 25,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.10344827586206896,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 29,
+    "correct": 3,
+    "missed": 26,
+    "false_detection": 0,
+    "recall": 0.10344827586206896,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match100_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 46,
+    "missed": 4,
+    "false_detection": 0,
+    "recall": 0.92,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 46,
+    "missed": 4,
+    "false_detection": 0,
+    "no_detection": 4,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.92,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 46,
+    "missed": 4,
+    "false_detection": 0,
+    "recall": 0.92,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match101_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 30,
+    "missed": 19,
+    "false_detection": 2,
+    "recall": 0.6122448979591837,
+    "precision": 0.9375
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 29,
+    "missed": 20,
+    "false_detection": 1,
+    "no_detection": 17,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.5918367346938775,
+    "precision": 0.9666666666666667
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 30,
+    "missed": 19,
+    "false_detection": 1,
+    "recall": 0.6122448979591837,
+    "precision": 0.967741935483871
+   }
+  },
+  "clip:racketvision-tennis/match102_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 24,
+    "missed": 24,
+    "false_detection": 2,
+    "recall": 0.5,
+    "precision": 0.9230769230769231
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 23,
+    "missed": 25,
+    "false_detection": 2,
+    "no_detection": 22,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.4791666666666667,
+    "precision": 0.92
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 23,
+    "missed": 25,
+    "false_detection": 2,
+    "recall": 0.4791666666666667,
+    "precision": 0.92
+   }
+  },
+  "clip:racketvision-tennis/match103_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 33,
+    "correct": 17,
+    "missed": 16,
+    "false_detection": 1,
+    "recall": 0.5151515151515151,
+    "precision": 0.9444444444444444
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 33,
+    "correct": 13,
+    "missed": 20,
+    "false_detection": 1,
+    "no_detection": 15,
+    "elsewhere": 1,
+    "not_selected": 4,
+    "recall": 0.3939393939393939,
+    "precision": 0.9285714285714286
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 33,
+    "correct": 13,
+    "missed": 20,
+    "false_detection": 1,
+    "recall": 0.3939393939393939,
+    "precision": 0.9285714285714286
+   }
+  },
+  "clip:racketvision-tennis/match104_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 21,
+    "missed": 27,
+    "false_detection": 16,
+    "recall": 0.4375,
+    "precision": 0.5675675675675675
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 9,
+    "no_detection": 12,
+    "elsewhere": 12,
+    "not_selected": 9,
+    "recall": 0.3125,
+    "precision": 0.625
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 15,
+    "missed": 33,
+    "false_detection": 9,
+    "recall": 0.3125,
+    "precision": 0.625
+   }
+  },
+  "clip:racketvision-tennis/match105_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 19,
+    "missed": 30,
+    "false_detection": 13,
+    "recall": 0.3877551020408163,
+    "precision": 0.59375
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 18,
+    "missed": 31,
+    "false_detection": 12,
+    "no_detection": 17,
+    "elsewhere": 11,
+    "not_selected": 3,
+    "recall": 0.3673469387755102,
+    "precision": 0.6
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 18,
+    "missed": 31,
+    "false_detection": 12,
+    "recall": 0.3673469387755102,
+    "precision": 0.6
+   }
+  },
+  "clip:racketvision-tennis/match106_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 31,
+    "missed": 16,
+    "false_detection": 7,
+    "recall": 0.6595744680851063,
+    "precision": 0.8157894736842105
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 29,
+    "missed": 18,
+    "false_detection": 3,
+    "no_detection": 9,
+    "elsewhere": 5,
+    "not_selected": 4,
+    "recall": 0.6170212765957447,
+    "precision": 0.90625
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 29,
+    "missed": 18,
+    "false_detection": 3,
+    "recall": 0.6170212765957447,
+    "precision": 0.90625
+   }
+  },
+  "clip:racketvision-tennis/match107_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 44,
+    "missed": 5,
+    "false_detection": 5,
+    "recall": 0.8979591836734694,
+    "precision": 0.8979591836734694
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 41,
+    "missed": 8,
+    "false_detection": 2,
+    "no_detection": 1,
+    "elsewhere": 3,
+    "not_selected": 4,
+    "recall": 0.8367346938775511,
+    "precision": 0.9534883720930233
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 37,
+    "missed": 12,
+    "false_detection": 10,
+    "recall": 0.7551020408163265,
+    "precision": 0.7872340425531915
+   }
+  },
+  "clip:racketvision-tennis/match108_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 13,
+    "missed": 37,
+    "false_detection": 1,
+    "recall": 0.26,
+    "precision": 0.9285714285714286
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 11,
+    "missed": 39,
+    "false_detection": 0,
+    "no_detection": 36,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.22,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 11,
+    "missed": 39,
+    "false_detection": 0,
+    "recall": 0.22,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match109_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 34,
+    "correct": 16,
+    "missed": 18,
+    "false_detection": 1,
+    "recall": 0.47058823529411764,
+    "precision": 0.9411764705882353
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 34,
+    "correct": 15,
+    "missed": 19,
+    "false_detection": 0,
+    "no_detection": 18,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.4411764705882353,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 34,
+    "correct": 15,
+    "missed": 19,
+    "false_detection": 0,
+    "recall": 0.4411764705882353,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match110_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 38,
+    "missed": 12,
+    "false_detection": 0,
+    "recall": 0.76,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 38,
+    "missed": 12,
+    "false_detection": 0,
+    "no_detection": 12,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.76,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 38,
+    "missed": 12,
+    "false_detection": 0,
+    "recall": 0.76,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match111_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 23,
+    "missed": 26,
+    "false_detection": 0,
+    "recall": 0.46938775510204084,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 20,
+    "missed": 29,
+    "false_detection": 0,
+    "no_detection": 26,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.40816326530612246,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 20,
+    "missed": 29,
+    "false_detection": 0,
+    "recall": 0.40816326530612246,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match112_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 41,
+    "missed": 8,
+    "false_detection": 0,
+    "recall": 0.8367346938775511,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 41,
+    "missed": 8,
+    "false_detection": 0,
+    "no_detection": 8,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.8367346938775511,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 41,
+    "missed": 8,
+    "false_detection": 0,
+    "recall": 0.8367346938775511,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match113_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 26,
+    "missed": 22,
+    "false_detection": 22,
+    "recall": 0.5416666666666666,
+    "precision": 0.5416666666666666
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 21,
+    "missed": 27,
+    "false_detection": 16,
+    "no_detection": 2,
+    "elsewhere": 13,
+    "not_selected": 12,
+    "recall": 0.4375,
+    "precision": 0.5675675675675675
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 19,
+    "missed": 29,
+    "false_detection": 22,
+    "recall": 0.3958333333333333,
+    "precision": 0.4634146341463415
+   }
+  },
+  "clip:racketvision-tennis/match114_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 33,
+    "missed": 15,
+    "false_detection": 0,
+    "recall": 0.6875,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 31,
+    "missed": 17,
+    "false_detection": 0,
+    "no_detection": 15,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.6458333333333334,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 32,
+    "missed": 16,
+    "false_detection": 0,
+    "recall": 0.6666666666666666,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match115_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 32,
+    "missed": 15,
+    "false_detection": 15,
+    "recall": 0.6808510638297872,
+    "precision": 0.6808510638297872
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 31,
+    "missed": 16,
+    "false_detection": 2,
+    "no_detection": 2,
+    "elsewhere": 11,
+    "not_selected": 3,
+    "recall": 0.6595744680851063,
+    "precision": 0.9393939393939394
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 30,
+    "missed": 17,
+    "false_detection": 6,
+    "recall": 0.6382978723404256,
+    "precision": 0.8333333333333334
+   }
+  },
+  "clip:racketvision-tennis/match116_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 10,
+    "missed": 39,
+    "false_detection": 2,
+    "recall": 0.20408163265306123,
+    "precision": 0.8333333333333334
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 8,
+    "missed": 41,
+    "false_detection": 0,
+    "no_detection": 37,
+    "elsewhere": 2,
+    "not_selected": 2,
+    "recall": 0.16326530612244897,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 8,
+    "missed": 41,
+    "false_detection": 0,
+    "recall": 0.16326530612244897,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match117_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 24,
+    "missed": 25,
+    "false_detection": 3,
+    "recall": 0.4897959183673469,
+    "precision": 0.8888888888888888
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 23,
+    "missed": 26,
+    "false_detection": 0,
+    "no_detection": 23,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.46938775510204084,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 23,
+    "missed": 26,
+    "false_detection": 0,
+    "recall": 0.46938775510204084,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match118_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 24,
+    "missed": 13,
+    "false_detection": 0,
+    "recall": 0.6486486486486487,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 23,
+    "missed": 14,
+    "false_detection": 1,
+    "no_detection": 13,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.6216216216216216,
+    "precision": 0.9583333333333334
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 37,
+    "correct": 23,
+    "missed": 14,
+    "false_detection": 1,
+    "recall": 0.6216216216216216,
+    "precision": 0.9583333333333334
+   }
+  },
+  "clip:racketvision-tennis/match119_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 9,
+    "missed": 38,
+    "false_detection": 0,
+    "recall": 0.19148936170212766,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 8,
+    "missed": 39,
+    "false_detection": 0,
+    "no_detection": 38,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.1702127659574468,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 8,
+    "missed": 39,
+    "false_detection": 0,
+    "recall": 0.1702127659574468,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match120_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 28,
+    "missed": 21,
+    "false_detection": 0,
+    "recall": 0.5714285714285714,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 28,
+    "missed": 21,
+    "false_detection": 0,
+    "no_detection": 21,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.5714285714285714,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 28,
+    "missed": 21,
+    "false_detection": 0,
+    "recall": 0.5714285714285714,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match121_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 30,
+    "missed": 20,
+    "false_detection": 7,
+    "recall": 0.6,
+    "precision": 0.8108108108108109
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 27,
+    "missed": 23,
+    "false_detection": 3,
+    "no_detection": 13,
+    "elsewhere": 6,
+    "not_selected": 4,
+    "recall": 0.54,
+    "precision": 0.9
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 24,
+    "missed": 26,
+    "false_detection": 7,
+    "recall": 0.48,
+    "precision": 0.7741935483870968
+   }
+  },
+  "clip:racketvision-tennis/match122_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 7,
+    "missed": 38,
+    "false_detection": 0,
+    "recall": 0.15555555555555556,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 6,
+    "missed": 39,
+    "false_detection": 0,
+    "no_detection": 38,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.13333333333333333,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 6,
+    "missed": 39,
+    "false_detection": 0,
+    "recall": 0.13333333333333333,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match123_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 33,
+    "missed": 16,
+    "false_detection": 0,
+    "recall": 0.673469387755102,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 31,
+    "missed": 18,
+    "false_detection": 0,
+    "no_detection": 16,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.6326530612244898,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 31,
+    "missed": 18,
+    "false_detection": 0,
+    "recall": 0.6326530612244898,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match124_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 25,
+    "missed": 22,
+    "false_detection": 0,
+    "recall": 0.5319148936170213,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 24,
+    "missed": 23,
+    "false_detection": 0,
+    "no_detection": 22,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.5106382978723404,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 47,
+    "correct": 24,
+    "missed": 23,
+    "false_detection": 0,
+    "recall": 0.5106382978723404,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match125_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 20,
+    "missed": 29,
+    "false_detection": 5,
+    "recall": 0.40816326530612246,
+    "precision": 0.8
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 18,
+    "missed": 31,
+    "false_detection": 3,
+    "no_detection": 24,
+    "elsewhere": 3,
+    "not_selected": 4,
+    "recall": 0.3673469387755102,
+    "precision": 0.8571428571428571
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 18,
+    "missed": 31,
+    "false_detection": 3,
+    "recall": 0.3673469387755102,
+    "precision": 0.8571428571428571
+   }
+  },
+  "clip:racketvision-tennis/match126_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 14,
+    "missed": 25,
+    "false_detection": 1,
+    "recall": 0.358974358974359,
+    "precision": 0.9333333333333333
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 12,
+    "missed": 27,
+    "false_detection": 1,
+    "no_detection": 25,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.3076923076923077,
+    "precision": 0.9230769230769231
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 11,
+    "missed": 28,
+    "false_detection": 1,
+    "recall": 0.28205128205128205,
+    "precision": 0.9166666666666666
+   }
+  },
+  "clip:racketvision-tennis/match127_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 40,
+    "missed": 8,
+    "false_detection": 1,
+    "recall": 0.8333333333333334,
+    "precision": 0.975609756097561
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 40,
+    "missed": 8,
+    "false_detection": 0,
+    "no_detection": 7,
+    "elsewhere": 1,
+    "not_selected": 0,
+    "recall": 0.8333333333333334,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 48,
+    "correct": 40,
+    "missed": 8,
+    "false_detection": 0,
+    "recall": 0.8333333333333334,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match128_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 20,
+    "missed": 18,
+    "false_detection": 12,
+    "recall": 0.5263157894736842,
+    "precision": 0.625
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 20,
+    "missed": 18,
+    "false_detection": 4,
+    "no_detection": 9,
+    "elsewhere": 9,
+    "not_selected": 0,
+    "recall": 0.5263157894736842,
+    "precision": 0.8333333333333334
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 38,
+    "correct": 19,
+    "missed": 19,
+    "false_detection": 6,
+    "recall": 0.5,
+    "precision": 0.76
+   }
+  },
+  "clip:racketvision-tennis/match129_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 20,
+    "missed": 20,
+    "false_detection": 0,
+    "recall": 0.5,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 19,
+    "missed": 21,
+    "false_detection": 0,
+    "no_detection": 20,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.475,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 40,
+    "correct": 19,
+    "missed": 21,
+    "false_detection": 0,
+    "recall": 0.475,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match130_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 22,
+    "missed": 19,
+    "false_detection": 1,
+    "recall": 0.5365853658536586,
+    "precision": 0.9565217391304348
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 20,
+    "missed": 21,
+    "false_detection": 1,
+    "no_detection": 18,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.4878048780487805,
+    "precision": 0.9523809523809523
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 20,
+    "missed": 21,
+    "false_detection": 1,
+    "recall": 0.4878048780487805,
+    "precision": 0.9523809523809523
+   }
+  },
+  "clip:racketvision-tennis/match131_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 26,
+    "missed": 13,
+    "false_detection": 23,
+    "recall": 0.6666666666666666,
+    "precision": 0.5306122448979592
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 16,
+    "missed": 23,
+    "false_detection": 17,
+    "no_detection": 0,
+    "elsewhere": 13,
+    "not_selected": 10,
+    "recall": 0.41025641025641024,
+    "precision": 0.48484848484848486
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 16,
+    "missed": 23,
+    "false_detection": 22,
+    "recall": 0.41025641025641024,
+    "precision": 0.42105263157894735
+   }
+  },
+  "clip:racketvision-tennis/match132_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 38,
+    "missed": 8,
+    "false_detection": 0,
+    "recall": 0.8260869565217391,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 37,
+    "missed": 9,
+    "false_detection": 0,
+    "no_detection": 8,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.8043478260869565,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 46,
+    "correct": 37,
+    "missed": 9,
+    "false_detection": 0,
+    "recall": 0.8043478260869565,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match133_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 6,
+    "missed": 33,
+    "false_detection": 0,
+    "recall": 0.15384615384615385,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 5,
+    "missed": 34,
+    "false_detection": 0,
+    "no_detection": 33,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.1282051282051282,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 39,
+    "correct": 5,
+    "missed": 34,
+    "false_detection": 0,
+    "recall": 0.1282051282051282,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match134_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 25,
+    "missed": 16,
+    "false_detection": 0,
+    "recall": 0.6097560975609756,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 22,
+    "missed": 19,
+    "false_detection": 0,
+    "no_detection": 16,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.5365853658536586,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 41,
+    "correct": 22,
+    "missed": 19,
+    "false_detection": 0,
+    "recall": 0.5365853658536586,
+    "precision": 1.0
+   }
+  },
+  "clip:racketvision-tennis/match135_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 36,
+    "missed": 13,
+    "false_detection": 3,
+    "recall": 0.7346938775510204,
+    "precision": 0.9230769230769231
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 34,
+    "missed": 15,
+    "false_detection": 0,
+    "no_detection": 10,
+    "elsewhere": 3,
+    "not_selected": 2,
+    "recall": 0.6938775510204082,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 49,
+    "correct": 33,
+    "missed": 16,
+    "false_detection": 3,
+    "recall": 0.673469387755102,
+    "precision": 0.9166666666666666
+   }
+  },
+  "clip:racketvision-tennis/match136_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 11,
+    "missed": 34,
+    "false_detection": 5,
+    "recall": 0.24444444444444444,
+    "precision": 0.6875
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 10,
+    "missed": 35,
+    "false_detection": 5,
+    "no_detection": 29,
+    "elsewhere": 4,
+    "not_selected": 2,
+    "recall": 0.2222222222222222,
+    "precision": 0.6666666666666666
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 45,
+    "correct": 10,
+    "missed": 35,
+    "false_detection": 5,
+    "recall": 0.2222222222222222,
+    "precision": 0.6666666666666666
+   }
+  },
+  "clip:racketvision-tennis/match137_000": {
+   "raw best": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 30,
+    "missed": 20,
+    "false_detection": 0,
+    "recall": 0.6,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 28,
+    "missed": 22,
+    "false_detection": 0,
+    "no_detection": 20,
+    "elsewhere": 0,
+    "not_selected": 2,
+    "recall": 0.56,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 50,
+    "visible": 50,
+    "correct": 28,
+    "missed": 22,
+    "false_detection": 0,
+    "recall": 0.56,
+    "precision": 1.0
+   }
+  },
+  "clip:rochester-pickleball/inplayballs": {
+   "raw best": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 7226,
+    "missed": 3238,
+    "false_detection": 1341,
+    "recall": 0.6905581039755352,
+    "precision": 0.8434691257149527
+   },
+   "tracked": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 6886,
+    "missed": 3578,
+    "false_detection": 725,
+    "no_detection": 1949,
+    "elsewhere": 910,
+    "not_selected": 719,
+    "recall": 0.658065749235474,
+    "precision": 0.9047431349362764
+   },
+   "tracked, no static filter": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 6826,
+    "missed": 3638,
+    "false_detection": 921,
+    "recall": 0.6523318042813455,
+    "precision": 0.8811152704272621
+   }
+  },
+  "source:rochester-pickleball": {
+   "raw best": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 7226,
+    "missed": 3238,
+    "false_detection": 1341,
+    "recall": 0.6905581039755352,
+    "precision": 0.8434691257149527
+   },
+   "tracked": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 6886,
+    "missed": 3578,
+    "false_detection": 725,
+    "no_detection": 1949,
+    "elsewhere": 910,
+    "not_selected": 719,
+    "recall": 0.658065749235474,
+    "precision": 0.9047431349362764
+   },
+   "tracked, no static filter": {
+    "labeled": 10589,
+    "visible": 10464,
+    "correct": 6826,
+    "missed": 3638,
+    "false_detection": 921,
+    "recall": 0.6523318042813455,
+    "precision": 0.8811152704272621
+   }
+  },
+  "clip:tenis-backview/video1": {
+   "raw best": {
+    "labeled": 250,
+    "visible": 250,
+    "correct": 214,
+    "missed": 36,
+    "false_detection": 2,
+    "recall": 0.856,
+    "precision": 0.9907407407407407
+   },
+   "tracked": {
+    "labeled": 250,
+    "visible": 250,
+    "correct": 205,
+    "missed": 45,
+    "false_detection": 0,
+    "no_detection": 34,
+    "elsewhere": 2,
+    "not_selected": 9,
+    "recall": 0.82,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 250,
+    "visible": 250,
+    "correct": 206,
+    "missed": 44,
+    "false_detection": 0,
+    "recall": 0.824,
+    "precision": 1.0
+   }
+  },
+  "source:tenis-backview": {
+   "raw best": {
+    "labeled": 2237,
+    "visible": 2237,
+    "correct": 1720,
+    "missed": 517,
+    "false_detection": 178,
+    "recall": 0.7688869021010282,
+    "precision": 0.9062170706006323
+   },
+   "tracked": {
+    "labeled": 2237,
+    "visible": 2237,
+    "correct": 1776,
+    "missed": 461,
+    "false_detection": 3,
+    "no_detection": 339,
+    "elsewhere": 95,
+    "not_selected": 27,
+    "recall": 0.7939204291461779,
+    "precision": 0.9983136593591906
+   },
+   "tracked, no static filter": {
+    "labeled": 2237,
+    "visible": 2237,
+    "correct": 1749,
+    "missed": 488,
+    "false_detection": 63,
+    "recall": 0.7818506928922664,
+    "precision": 0.9652317880794702
+   }
+  },
+  "clip:tenis-backview/video2": {
+   "raw best": {
+    "labeled": 272,
+    "visible": 272,
+    "correct": 134,
+    "missed": 138,
+    "false_detection": 6,
+    "recall": 0.49264705882352944,
+    "precision": 0.9571428571428572
+   },
+   "tracked": {
+    "labeled": 272,
+    "visible": 272,
+    "correct": 127,
+    "missed": 145,
+    "false_detection": 3,
+    "no_detection": 132,
+    "elsewhere": 5,
+    "not_selected": 8,
+    "recall": 0.46691176470588236,
+    "precision": 0.9769230769230769
+   },
+   "tracked, no static filter": {
+    "labeled": 272,
+    "visible": 272,
+    "correct": 127,
+    "missed": 145,
+    "false_detection": 3,
+    "recall": 0.46691176470588236,
+    "precision": 0.9769230769230769
+   }
+  },
+  "clip:tenis-backview/video3": {
+   "raw best": {
+    "labeled": 202,
+    "visible": 202,
+    "correct": 157,
+    "missed": 45,
+    "false_detection": 7,
+    "recall": 0.7772277227722773,
+    "precision": 0.9573170731707317
+   },
+   "tracked": {
+    "labeled": 202,
+    "visible": 202,
+    "correct": 161,
+    "missed": 41,
+    "false_detection": 0,
+    "no_detection": 38,
+    "elsewhere": 2,
+    "not_selected": 1,
+    "recall": 0.7970297029702971,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 202,
+    "visible": 202,
+    "correct": 159,
+    "missed": 43,
+    "false_detection": 3,
+    "recall": 0.7871287128712872,
+    "precision": 0.9814814814814815
+   }
+  },
+  "clip:tenis-backview/video4": {
+   "raw best": {
+    "labeled": 394,
+    "visible": 394,
+    "correct": 371,
+    "missed": 23,
+    "false_detection": 17,
+    "recall": 0.9416243654822335,
+    "precision": 0.9561855670103093
+   },
+   "tracked": {
+    "labeled": 394,
+    "visible": 394,
+    "correct": 379,
+    "missed": 15,
+    "false_detection": 0,
+    "no_detection": 6,
+    "elsewhere": 8,
+    "not_selected": 1,
+    "recall": 0.9619289340101523,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 394,
+    "visible": 394,
+    "correct": 370,
+    "missed": 24,
+    "false_detection": 8,
+    "recall": 0.9390862944162437,
+    "precision": 0.9788359788359788
+   }
+  },
+  "clip:tenis-backview/video5": {
+   "raw best": {
+    "labeled": 164,
+    "visible": 164,
+    "correct": 118,
+    "missed": 46,
+    "false_detection": 8,
+    "recall": 0.7195121951219512,
+    "precision": 0.9365079365079365
+   },
+   "tracked": {
+    "labeled": 164,
+    "visible": 164,
+    "correct": 122,
+    "missed": 42,
+    "false_detection": 0,
+    "no_detection": 38,
+    "elsewhere": 3,
+    "not_selected": 1,
+    "recall": 0.7439024390243902,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 164,
+    "visible": 164,
+    "correct": 122,
+    "missed": 42,
+    "false_detection": 0,
+    "recall": 0.7439024390243902,
+    "precision": 1.0
+   }
+  },
+  "clip:tenis-backview/video6": {
+   "raw best": {
+    "labeled": 273,
+    "visible": 273,
+    "correct": 260,
+    "missed": 13,
+    "false_detection": 0,
+    "recall": 0.9523809523809523,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 273,
+    "visible": 273,
+    "correct": 259,
+    "missed": 14,
+    "false_detection": 0,
+    "no_detection": 13,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.9487179487179487,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 273,
+    "visible": 273,
+    "correct": 260,
+    "missed": 13,
+    "false_detection": 0,
+    "recall": 0.9523809523809523,
+    "precision": 1.0
+   }
+  },
+  "clip:tenis-backview/video7": {
+   "raw best": {
+    "labeled": 269,
+    "visible": 269,
+    "correct": 144,
+    "missed": 125,
+    "false_detection": 73,
+    "recall": 0.5353159851301115,
+    "precision": 0.663594470046083
+   },
+   "tracked": {
+    "labeled": 269,
+    "visible": 269,
+    "correct": 146,
+    "missed": 123,
+    "false_detection": 0,
+    "no_detection": 52,
+    "elsewhere": 67,
+    "not_selected": 4,
+    "recall": 0.5427509293680297,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 269,
+    "visible": 269,
+    "correct": 146,
+    "missed": 123,
+    "false_detection": 28,
+    "recall": 0.5427509293680297,
+    "precision": 0.8390804597701149
+   }
+  },
+  "clip:tenis-backview/video8": {
+   "raw best": {
+    "labeled": 179,
+    "visible": 179,
+    "correct": 154,
+    "missed": 25,
+    "false_detection": 1,
+    "recall": 0.8603351955307262,
+    "precision": 0.9935483870967742
+   },
+   "tracked": {
+    "labeled": 179,
+    "visible": 179,
+    "correct": 154,
+    "missed": 25,
+    "false_detection": 0,
+    "no_detection": 24,
+    "elsewhere": 1,
+    "not_selected": 0,
+    "recall": 0.8603351955307262,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 179,
+    "visible": 179,
+    "correct": 154,
+    "missed": 25,
+    "false_detection": 0,
+    "recall": 0.8603351955307262,
+    "precision": 1.0
+   }
+  },
+  "clip:tenis-backview/video9": {
+   "raw best": {
+    "labeled": 170,
+    "visible": 170,
+    "correct": 168,
+    "missed": 2,
+    "false_detection": 0,
+    "recall": 0.9882352941176471,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 170,
+    "visible": 170,
+    "correct": 168,
+    "missed": 2,
+    "false_detection": 0,
+    "no_detection": 2,
+    "elsewhere": 0,
+    "not_selected": 0,
+    "recall": 0.9882352941176471,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 170,
+    "visible": 170,
+    "correct": 168,
+    "missed": 2,
+    "false_detection": 0,
+    "recall": 0.9882352941176471,
+    "precision": 1.0
+   }
+  },
+  "clip:tenis-backview/video10": {
+   "raw best": {
+    "labeled": 64,
+    "visible": 64,
+    "correct": 0,
+    "missed": 64,
+    "false_detection": 64,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 64,
+    "visible": 64,
+    "correct": 55,
+    "missed": 9,
+    "false_detection": 0,
+    "no_detection": 0,
+    "elsewhere": 7,
+    "not_selected": 2,
+    "recall": 0.859375,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 64,
+    "visible": 64,
+    "correct": 37,
+    "missed": 27,
+    "false_detection": 21,
+    "recall": 0.578125,
+    "precision": 0.6379310344827587
+   }
+  },
+  "clip:tennis-analytics/video6_clip1": {
+   "raw best": {
+    "labeled": 297,
+    "visible": 226,
+    "correct": 44,
+    "missed": 182,
+    "false_detection": 5,
+    "recall": 0.19469026548672566,
+    "precision": 0.8979591836734694
+   },
+   "tracked": {
+    "labeled": 297,
+    "visible": 226,
+    "correct": 32,
+    "missed": 194,
+    "false_detection": 6,
+    "no_detection": 179,
+    "elsewhere": 2,
+    "not_selected": 13,
+    "recall": 0.1415929203539823,
+    "precision": 0.8421052631578947
+   },
+   "tracked, no static filter": {
+    "labeled": 297,
+    "visible": 226,
+    "correct": 32,
+    "missed": 194,
+    "false_detection": 6,
+    "recall": 0.1415929203539823,
+    "precision": 0.8421052631578947
+   }
+  },
+  "source:tennis-analytics": {
+   "raw best": {
+    "labeled": 1782,
+    "visible": 1550,
+    "correct": 324,
+    "missed": 1226,
+    "false_detection": 16,
+    "recall": 0.20903225806451614,
+    "precision": 0.9529411764705882
+   },
+   "tracked": {
+    "labeled": 1782,
+    "visible": 1550,
+    "correct": 282,
+    "missed": 1268,
+    "false_detection": 14,
+    "no_detection": 1212,
+    "elsewhere": 13,
+    "not_selected": 43,
+    "recall": 0.18193548387096775,
+    "precision": 0.9527027027027027
+   },
+   "tracked, no static filter": {
+    "labeled": 1782,
+    "visible": 1550,
+    "correct": 282,
+    "missed": 1268,
+    "false_detection": 14,
+    "recall": 0.18193548387096775,
+    "precision": 0.9527027027027027
+   }
+  },
+  "clip:tennis-analytics/video1_clip6": {
+   "raw best": {
+    "labeled": 373,
+    "visible": 269,
+    "correct": 133,
+    "missed": 136,
+    "false_detection": 4,
+    "recall": 0.4944237918215613,
+    "precision": 0.9708029197080292
+   },
+   "tracked": {
+    "labeled": 373,
+    "visible": 269,
+    "correct": 124,
+    "missed": 145,
+    "false_detection": 3,
+    "no_detection": 132,
+    "elsewhere": 4,
+    "not_selected": 9,
+    "recall": 0.46096654275092935,
+    "precision": 0.9763779527559056
+   },
+   "tracked, no static filter": {
+    "labeled": 373,
+    "visible": 269,
+    "correct": 124,
+    "missed": 145,
+    "false_detection": 3,
+    "recall": 0.46096654275092935,
+    "precision": 0.9763779527559056
+   }
+  },
+  "clip:tennis-analytics/video2_clip7": {
+   "raw best": {
+    "labeled": 346,
+    "visible": 297,
+    "correct": 52,
+    "missed": 245,
+    "false_detection": 7,
+    "recall": 0.1750841750841751,
+    "precision": 0.8813559322033898
+   },
+   "tracked": {
+    "labeled": 346,
+    "visible": 297,
+    "correct": 47,
+    "missed": 250,
+    "false_detection": 5,
+    "no_detection": 238,
+    "elsewhere": 7,
+    "not_selected": 5,
+    "recall": 0.15824915824915825,
+    "precision": 0.9038461538461539
+   },
+   "tracked, no static filter": {
+    "labeled": 346,
+    "visible": 297,
+    "correct": 47,
+    "missed": 250,
+    "false_detection": 5,
+    "recall": 0.15824915824915825,
+    "precision": 0.9038461538461539
+   }
+  },
+  "clip:tennis-analytics/video3_clip8": {
+   "raw best": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 26,
+    "missed": 212,
+    "false_detection": 0,
+    "recall": 0.1092436974789916,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 21,
+    "missed": 217,
+    "false_detection": 0,
+    "no_detection": 212,
+    "elsewhere": 0,
+    "not_selected": 5,
+    "recall": 0.08823529411764706,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 21,
+    "missed": 217,
+    "false_detection": 0,
+    "recall": 0.08823529411764706,
+    "precision": 1.0
+   }
+  },
+  "clip:tennis-analytics/video4_clip7": {
+   "raw best": {
+    "labeled": 245,
+    "visible": 239,
+    "correct": 49,
+    "missed": 190,
+    "false_detection": 0,
+    "recall": 0.20502092050209206,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 245,
+    "visible": 239,
+    "correct": 41,
+    "missed": 198,
+    "false_detection": 0,
+    "no_detection": 190,
+    "elsewhere": 0,
+    "not_selected": 8,
+    "recall": 0.17154811715481172,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 245,
+    "visible": 239,
+    "correct": 41,
+    "missed": 198,
+    "false_detection": 0,
+    "recall": 0.17154811715481172,
+    "precision": 1.0
+   }
+  },
+  "clip:tennis-analytics/video5_clip6": {
+   "raw best": {
+    "labeled": 283,
+    "visible": 281,
+    "correct": 20,
+    "missed": 261,
+    "false_detection": 0,
+    "recall": 0.0711743772241993,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 283,
+    "visible": 281,
+    "correct": 17,
+    "missed": 264,
+    "false_detection": 0,
+    "no_detection": 261,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.060498220640569395,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 283,
+    "visible": 281,
+    "correct": 17,
+    "missed": 264,
+    "false_detection": 0,
+    "recall": 0.060498220640569395,
+    "precision": 1.0
+   }
+  },
+  "clip:tnv2pic-pickleball/test_1_01_00": {
+   "raw best": {
+    "labeled": 3631,
+    "visible": 2639,
+    "correct": 1898,
+    "missed": 741,
+    "false_detection": 208,
+    "recall": 0.7192118226600985,
+    "precision": 0.9012345679012346
+   },
+   "tracked": {
+    "labeled": 3631,
+    "visible": 2639,
+    "correct": 1818,
+    "missed": 821,
+    "false_detection": 126,
+    "no_detection": 741,
+    "elsewhere": 0,
+    "not_selected": 80,
+    "recall": 0.6888973095869647,
+    "precision": 0.9351851851851852
+   },
+   "tracked, no static filter": {
+    "labeled": 3631,
+    "visible": 2639,
+    "correct": 1857,
+    "missed": 782,
+    "false_detection": 165,
+    "recall": 0.7036756347101175,
+    "precision": 0.9183976261127597
+   }
+  },
+  "source:tnv2pic-pickleball": {
+   "raw best": {
+    "labeled": 22997,
+    "visible": 15879,
+    "correct": 9372,
+    "missed": 6507,
+    "false_detection": 1153,
+    "recall": 0.5902134895144531,
+    "precision": 0.8904513064133016
+   },
+   "tracked": {
+    "labeled": 22997,
+    "visible": 15879,
+    "correct": 8948,
+    "missed": 6931,
+    "false_detection": 641,
+    "no_detection": 6069,
+    "elsewhere": 331,
+    "not_selected": 531,
+    "recall": 0.5635115561433339,
+    "precision": 0.9331525706538742
+   },
+   "tracked, no static filter": {
+    "labeled": 22997,
+    "visible": 15879,
+    "correct": 8989,
+    "missed": 6890,
+    "false_detection": 682,
+    "recall": 0.5660935827193149,
+    "precision": 0.9294798883259229
+   }
+  },
+  "clip:tnv2pic-pickleball/test_1_02_00": {
+   "raw best": {
+    "labeled": 9011,
+    "visible": 6557,
+    "correct": 3602,
+    "missed": 2955,
+    "false_detection": 709,
+    "recall": 0.5493365868537441,
+    "precision": 0.8355369983762468
+   },
+   "tracked": {
+    "labeled": 9011,
+    "visible": 6557,
+    "correct": 3471,
+    "missed": 3086,
+    "false_detection": 402,
+    "no_detection": 2578,
+    "elsewhere": 273,
+    "not_selected": 235,
+    "recall": 0.5293579380814397,
+    "precision": 0.8962044926413633
+   },
+   "tracked, no static filter": {
+    "labeled": 9011,
+    "visible": 6557,
+    "correct": 3473,
+    "missed": 3084,
+    "false_detection": 404,
+    "recall": 0.5296629556199481,
+    "precision": 0.8957957183389218
+   }
+  },
+  "clip:tnv2pic-pickleball/train_1_07_00": {
+   "raw best": {
+    "labeled": 10355,
+    "visible": 6683,
+    "correct": 3872,
+    "missed": 2811,
+    "false_detection": 236,
+    "recall": 0.5793805177315576,
+    "precision": 0.9425511197663097
+   },
+   "tracked": {
+    "labeled": 10355,
+    "visible": 6683,
+    "correct": 3659,
+    "missed": 3024,
+    "false_detection": 113,
+    "no_detection": 2750,
+    "elsewhere": 58,
+    "not_selected": 216,
+    "recall": 0.547508603920395,
+    "precision": 0.9700424178154825
+   },
+   "tracked, no static filter": {
+    "labeled": 10355,
+    "visible": 6683,
+    "correct": 3659,
+    "missed": 3024,
+    "false_detection": 113,
+    "recall": 0.547508603920395,
+    "precision": 0.9700424178154825
+   }
+  },
+  "clip:tracknet-tennis/game4_clip1": {
+   "raw best": {
+    "labeled": 595,
+    "visible": 594,
+    "correct": 154,
+    "missed": 440,
+    "false_detection": 439,
+    "recall": 0.25925925925925924,
+    "precision": 0.2596964586846543
+   },
+   "tracked": {
+    "labeled": 595,
+    "visible": 594,
+    "correct": 225,
+    "missed": 369,
+    "false_detection": 22,
+    "no_detection": 2,
+    "elsewhere": 326,
+    "not_selected": 41,
+    "recall": 0.3787878787878788,
+    "precision": 0.9109311740890689
+   },
+   "tracked, no static filter": {
+    "labeled": 595,
+    "visible": 594,
+    "correct": 130,
+    "missed": 464,
+    "false_detection": 341,
+    "recall": 0.21885521885521886,
+    "precision": 0.2760084925690021
+   }
+  },
+  "source:tracknet-tennis": {
+   "raw best": {
+    "labeled": 7898,
+    "visible": 7649,
+    "correct": 2701,
+    "missed": 4948,
+    "false_detection": 2646,
+    "recall": 0.3531180546476664,
+    "precision": 0.5051430708808677
+   },
+   "tracked": {
+    "labeled": 7898,
+    "visible": 7649,
+    "correct": 2785,
+    "missed": 4864,
+    "false_detection": 548,
+    "no_detection": 2415,
+    "elsewhere": 1928,
+    "not_selected": 521,
+    "recall": 0.36409988233756047,
+    "precision": 0.8355835583558355
+   },
+   "tracked, no static filter": {
+    "labeled": 7898,
+    "visible": 7649,
+    "correct": 2297,
+    "missed": 5352,
+    "false_detection": 1980,
+    "recall": 0.30030069290103284,
+    "precision": 0.5370586859948562
+   }
+  },
+  "clip:tracknet-tennis/game4_clip2": {
+   "raw best": {
+    "labeled": 482,
+    "visible": 482,
+    "correct": 132,
+    "missed": 350,
+    "false_detection": 350,
+    "recall": 0.27385892116182575,
+    "precision": 0.27385892116182575
+   },
+   "tracked": {
+    "labeled": 482,
+    "visible": 482,
+    "correct": 181,
+    "missed": 301,
+    "false_detection": 22,
+    "no_detection": 0,
+    "elsewhere": 279,
+    "not_selected": 22,
+    "recall": 0.3755186721991701,
+    "precision": 0.8916256157635468
+   },
+   "tracked, no static filter": {
+    "labeled": 482,
+    "visible": 482,
+    "correct": 144,
+    "missed": 338,
+    "false_detection": 214,
+    "recall": 0.2987551867219917,
+    "precision": 0.4022346368715084
+   }
+  },
+  "clip:tracknet-tennis/game4_clip3": {
+   "raw best": {
+    "labeled": 112,
+    "visible": 112,
+    "correct": 22,
+    "missed": 90,
+    "false_detection": 90,
+    "recall": 0.19642857142857142,
+    "precision": 0.19642857142857142
+   },
+   "tracked": {
+    "labeled": 112,
+    "visible": 112,
+    "correct": 39,
+    "missed": 73,
+    "false_detection": 16,
+    "no_detection": 0,
+    "elsewhere": 65,
+    "not_selected": 8,
+    "recall": 0.3482142857142857,
+    "precision": 0.7090909090909091
+   },
+   "tracked, no static filter": {
+    "labeled": 112,
+    "visible": 112,
+    "correct": 25,
+    "missed": 87,
+    "false_detection": 75,
+    "recall": 0.22321428571428573,
+    "precision": 0.25
+   }
+  },
+  "clip:tracknet-tennis/game4_clip4": {
+   "raw best": {
+    "labeled": 102,
+    "visible": 102,
+    "correct": 40,
+    "missed": 62,
+    "false_detection": 62,
+    "recall": 0.39215686274509803,
+    "precision": 0.39215686274509803
+   },
+   "tracked": {
+    "labeled": 102,
+    "visible": 102,
+    "correct": 59,
+    "missed": 43,
+    "false_detection": 0,
+    "no_detection": 0,
+    "elsewhere": 40,
+    "not_selected": 3,
+    "recall": 0.5784313725490197,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 102,
+    "visible": 102,
+    "correct": 48,
+    "missed": 54,
+    "false_detection": 38,
+    "recall": 0.47058823529411764,
+    "precision": 0.5581395348837209
+   }
+  },
+  "clip:tracknet-tennis/game4_clip5": {
+   "raw best": {
+    "labeled": 224,
+    "visible": 221,
+    "correct": 79,
+    "missed": 142,
+    "false_detection": 138,
+    "recall": 0.3574660633484163,
+    "precision": 0.3640552995391705
+   },
+   "tracked": {
+    "labeled": 224,
+    "visible": 221,
+    "correct": 100,
+    "missed": 121,
+    "false_detection": 14,
+    "no_detection": 7,
+    "elsewhere": 96,
+    "not_selected": 18,
+    "recall": 0.45248868778280543,
+    "precision": 0.8771929824561403
+   },
+   "tracked, no static filter": {
+    "labeled": 224,
+    "visible": 221,
+    "correct": 60,
+    "missed": 161,
+    "false_detection": 112,
+    "recall": 0.27149321266968324,
+    "precision": 0.3488372093023256
+   }
+  },
+  "clip:tracknet-tennis/game4_clip6": {
+   "raw best": {
+    "labeled": 232,
+    "visible": 232,
+    "correct": 57,
+    "missed": 175,
+    "false_detection": 173,
+    "recall": 0.24568965517241378,
+    "precision": 0.24782608695652175
+   },
+   "tracked": {
+    "labeled": 232,
+    "visible": 232,
+    "correct": 89,
+    "missed": 143,
+    "false_detection": 22,
+    "no_detection": 2,
+    "elsewhere": 125,
+    "not_selected": 16,
+    "recall": 0.38362068965517243,
+    "precision": 0.8018018018018018
+   },
+   "tracked, no static filter": {
+    "labeled": 232,
+    "visible": 232,
+    "correct": 76,
+    "missed": 156,
+    "false_detection": 101,
+    "recall": 0.3275862068965517,
+    "precision": 0.4293785310734463
+   }
+  },
+  "clip:tracknet-tennis/game4_clip7": {
+   "raw best": {
+    "labeled": 482,
+    "visible": 434,
+    "correct": 126,
+    "missed": 308,
+    "false_detection": 335,
+    "recall": 0.2903225806451613,
+    "precision": 0.27331887201735355
+   },
+   "tracked": {
+    "labeled": 482,
+    "visible": 434,
+    "correct": 187,
+    "missed": 247,
+    "false_detection": 12,
+    "no_detection": 4,
+    "elsewhere": 224,
+    "not_selected": 19,
+    "recall": 0.4308755760368664,
+    "precision": 0.9396984924623115
+   },
+   "tracked, no static filter": {
+    "labeled": 482,
+    "visible": 434,
+    "correct": 135,
+    "missed": 299,
+    "false_detection": 188,
+    "recall": 0.31105990783410137,
+    "precision": 0.4179566563467492
+   }
+  },
+  "clip:tracknet-tennis/game8_clip1": {
+   "raw best": {
+    "labeled": 118,
+    "visible": 118,
+    "correct": 35,
+    "missed": 83,
+    "false_detection": 1,
+    "recall": 0.2966101694915254,
+    "precision": 0.9722222222222222
+   },
+   "tracked": {
+    "labeled": 118,
+    "visible": 118,
+    "correct": 29,
+    "missed": 89,
+    "false_detection": 1,
+    "no_detection": 82,
+    "elsewhere": 1,
+    "not_selected": 6,
+    "recall": 0.2457627118644068,
+    "precision": 0.9666666666666667
+   },
+   "tracked, no static filter": {
+    "labeled": 118,
+    "visible": 118,
+    "correct": 29,
+    "missed": 89,
+    "false_detection": 1,
+    "recall": 0.2457627118644068,
+    "precision": 0.9666666666666667
+   }
+  },
+  "clip:tracknet-tennis/game8_clip2": {
+   "raw best": {
+    "labeled": 97,
+    "visible": 95,
+    "correct": 10,
+    "missed": 85,
+    "false_detection": 22,
+    "recall": 0.10526315789473684,
+    "precision": 0.3125
+   },
+   "tracked": {
+    "labeled": 97,
+    "visible": 95,
+    "correct": 7,
+    "missed": 88,
+    "false_detection": 1,
+    "no_detection": 65,
+    "elsewhere": 19,
+    "not_selected": 4,
+    "recall": 0.07368421052631578,
+    "precision": 0.875
+   },
+   "tracked, no static filter": {
+    "labeled": 97,
+    "visible": 95,
+    "correct": 7,
+    "missed": 88,
+    "false_detection": 1,
+    "recall": 0.07368421052631578,
+    "precision": 0.875
+   }
+  },
+  "clip:tracknet-tennis/game8_clip3": {
+   "raw best": {
+    "labeled": 413,
+    "visible": 383,
+    "correct": 114,
+    "missed": 269,
+    "false_detection": 8,
+    "recall": 0.29765013054830286,
+    "precision": 0.9344262295081968
+   },
+   "tracked": {
+    "labeled": 413,
+    "visible": 383,
+    "correct": 97,
+    "missed": 286,
+    "false_detection": 4,
+    "no_detection": 263,
+    "elsewhere": 6,
+    "not_selected": 17,
+    "recall": 0.25326370757180156,
+    "precision": 0.9603960396039604
+   },
+   "tracked, no static filter": {
+    "labeled": 413,
+    "visible": 383,
+    "correct": 97,
+    "missed": 286,
+    "false_detection": 4,
+    "recall": 0.25326370757180156,
+    "precision": 0.9603960396039604
+   }
+  },
+  "clip:tracknet-tennis/game8_clip4": {
+   "raw best": {
+    "labeled": 133,
+    "visible": 133,
+    "correct": 71,
+    "missed": 62,
+    "false_detection": 1,
+    "recall": 0.5338345864661654,
+    "precision": 0.9861111111111112
+   },
+   "tracked": {
+    "labeled": 133,
+    "visible": 133,
+    "correct": 65,
+    "missed": 68,
+    "false_detection": 0,
+    "no_detection": 61,
+    "elsewhere": 0,
+    "not_selected": 7,
+    "recall": 0.48872180451127817,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 133,
+    "visible": 133,
+    "correct": 65,
+    "missed": 68,
+    "false_detection": 0,
+    "recall": 0.48872180451127817,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game8_clip5": {
+   "raw best": {
+    "labeled": 87,
+    "visible": 79,
+    "correct": 22,
+    "missed": 57,
+    "false_detection": 0,
+    "recall": 0.27848101265822783,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 87,
+    "visible": 79,
+    "correct": 18,
+    "missed": 61,
+    "false_detection": 0,
+    "no_detection": 57,
+    "elsewhere": 0,
+    "not_selected": 4,
+    "recall": 0.22784810126582278,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 87,
+    "visible": 79,
+    "correct": 18,
+    "missed": 61,
+    "false_detection": 0,
+    "recall": 0.22784810126582278,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game8_clip6": {
+   "raw best": {
+    "labeled": 131,
+    "visible": 66,
+    "correct": 16,
+    "missed": 50,
+    "false_detection": 0,
+    "recall": 0.24242424242424243,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 131,
+    "visible": 66,
+    "correct": 13,
+    "missed": 53,
+    "false_detection": 0,
+    "no_detection": 50,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.19696969696969696,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 131,
+    "visible": 66,
+    "correct": 13,
+    "missed": 53,
+    "false_detection": 0,
+    "recall": 0.19696969696969696,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game8_clip7": {
+   "raw best": {
+    "labeled": 422,
+    "visible": 422,
+    "correct": 161,
+    "missed": 261,
+    "false_detection": 15,
+    "recall": 0.3815165876777251,
+    "precision": 0.9147727272727273
+   },
+   "tracked": {
+    "labeled": 422,
+    "visible": 422,
+    "correct": 141,
+    "missed": 281,
+    "false_detection": 10,
+    "no_detection": 246,
+    "elsewhere": 13,
+    "not_selected": 22,
+    "recall": 0.3341232227488152,
+    "precision": 0.9337748344370861
+   },
+   "tracked, no static filter": {
+    "labeled": 422,
+    "visible": 422,
+    "correct": 141,
+    "missed": 281,
+    "false_detection": 10,
+    "recall": 0.3341232227488152,
+    "precision": 0.9337748344370861
+   }
+  },
+  "clip:tracknet-tennis/game8_clip8": {
+   "raw best": {
+    "labeled": 319,
+    "visible": 319,
+    "correct": 80,
+    "missed": 239,
+    "false_detection": 3,
+    "recall": 0.2507836990595611,
+    "precision": 0.963855421686747
+   },
+   "tracked": {
+    "labeled": 319,
+    "visible": 319,
+    "correct": 62,
+    "missed": 257,
+    "false_detection": 2,
+    "no_detection": 236,
+    "elsewhere": 2,
+    "not_selected": 19,
+    "recall": 0.19435736677115986,
+    "precision": 0.96875
+   },
+   "tracked, no static filter": {
+    "labeled": 319,
+    "visible": 319,
+    "correct": 62,
+    "missed": 257,
+    "false_detection": 2,
+    "recall": 0.19435736677115986,
+    "precision": 0.96875
+   }
+  },
+  "clip:tracknet-tennis/game8_clip9": {
+   "raw best": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 89,
+    "missed": 149,
+    "false_detection": 0,
+    "recall": 0.3739495798319328,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 80,
+    "missed": 158,
+    "false_detection": 0,
+    "no_detection": 149,
+    "elsewhere": 0,
+    "not_selected": 9,
+    "recall": 0.33613445378151263,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 80,
+    "missed": 158,
+    "false_detection": 0,
+    "recall": 0.33613445378151263,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game9_clip1": {
+   "raw best": {
+    "labeled": 83,
+    "visible": 83,
+    "correct": 16,
+    "missed": 67,
+    "false_detection": 16,
+    "recall": 0.1927710843373494,
+    "precision": 0.5
+   },
+   "tracked": {
+    "labeled": 83,
+    "visible": 83,
+    "correct": 11,
+    "missed": 72,
+    "false_detection": 0,
+    "no_detection": 51,
+    "elsewhere": 16,
+    "not_selected": 5,
+    "recall": 0.13253012048192772,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 83,
+    "visible": 83,
+    "correct": 11,
+    "missed": 72,
+    "false_detection": 0,
+    "recall": 0.13253012048192772,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game9_clip2": {
+   "raw best": {
+    "labeled": 258,
+    "visible": 258,
+    "correct": 95,
+    "missed": 163,
+    "false_detection": 13,
+    "recall": 0.3682170542635659,
+    "precision": 0.8796296296296297
+   },
+   "tracked": {
+    "labeled": 258,
+    "visible": 258,
+    "correct": 88,
+    "missed": 170,
+    "false_detection": 5,
+    "no_detection": 150,
+    "elsewhere": 11,
+    "not_selected": 9,
+    "recall": 0.34108527131782945,
+    "precision": 0.946236559139785
+   },
+   "tracked, no static filter": {
+    "labeled": 258,
+    "visible": 258,
+    "correct": 88,
+    "missed": 170,
+    "false_detection": 5,
+    "recall": 0.34108527131782945,
+    "precision": 0.946236559139785
+   }
+  },
+  "clip:tracknet-tennis/game9_clip3": {
+   "raw best": {
+    "labeled": 355,
+    "visible": 355,
+    "correct": 123,
+    "missed": 232,
+    "false_detection": 38,
+    "recall": 0.3464788732394366,
+    "precision": 0.7639751552795031
+   },
+   "tracked": {
+    "labeled": 355,
+    "visible": 355,
+    "correct": 103,
+    "missed": 252,
+    "false_detection": 27,
+    "no_detection": 194,
+    "elsewhere": 38,
+    "not_selected": 20,
+    "recall": 0.29014084507042254,
+    "precision": 0.7923076923076923
+   },
+   "tracked, no static filter": {
+    "labeled": 355,
+    "visible": 355,
+    "correct": 103,
+    "missed": 252,
+    "false_detection": 27,
+    "recall": 0.29014084507042254,
+    "precision": 0.7923076923076923
+   }
+  },
+  "clip:tracknet-tennis/game9_clip4": {
+   "raw best": {
+    "labeled": 106,
+    "visible": 106,
+    "correct": 41,
+    "missed": 65,
+    "false_detection": 25,
+    "recall": 0.3867924528301887,
+    "precision": 0.6212121212121212
+   },
+   "tracked": {
+    "labeled": 106,
+    "visible": 106,
+    "correct": 26,
+    "missed": 80,
+    "false_detection": 19,
+    "no_detection": 40,
+    "elsewhere": 23,
+    "not_selected": 17,
+    "recall": 0.24528301886792453,
+    "precision": 0.5777777777777777
+   },
+   "tracked, no static filter": {
+    "labeled": 106,
+    "visible": 106,
+    "correct": 26,
+    "missed": 80,
+    "false_detection": 19,
+    "recall": 0.24528301886792453,
+    "precision": 0.5777777777777777
+   }
+  },
+  "clip:tracknet-tennis/game9_clip5": {
+   "raw best": {
+    "labeled": 291,
+    "visible": 261,
+    "correct": 79,
+    "missed": 182,
+    "false_detection": 65,
+    "recall": 0.30268199233716475,
+    "precision": 0.5486111111111112
+   },
+   "tracked": {
+    "labeled": 291,
+    "visible": 261,
+    "correct": 69,
+    "missed": 192,
+    "false_detection": 28,
+    "no_detection": 129,
+    "elsewhere": 53,
+    "not_selected": 10,
+    "recall": 0.26436781609195403,
+    "precision": 0.711340206185567
+   },
+   "tracked, no static filter": {
+    "labeled": 291,
+    "visible": 261,
+    "correct": 69,
+    "missed": 192,
+    "false_detection": 33,
+    "recall": 0.26436781609195403,
+    "precision": 0.6764705882352942
+   }
+  },
+  "clip:tracknet-tennis/game9_clip6": {
+   "raw best": {
+    "labeled": 109,
+    "visible": 109,
+    "correct": 35,
+    "missed": 74,
+    "false_detection": 16,
+    "recall": 0.3211009174311927,
+    "precision": 0.6862745098039216
+   },
+   "tracked": {
+    "labeled": 109,
+    "visible": 109,
+    "correct": 30,
+    "missed": 79,
+    "false_detection": 10,
+    "no_detection": 58,
+    "elsewhere": 16,
+    "not_selected": 5,
+    "recall": 0.27522935779816515,
+    "precision": 0.75
+   },
+   "tracked, no static filter": {
+    "labeled": 109,
+    "visible": 109,
+    "correct": 30,
+    "missed": 79,
+    "false_detection": 10,
+    "recall": 0.27522935779816515,
+    "precision": 0.75
+   }
+  },
+  "clip:tracknet-tennis/game9_clip7": {
+   "raw best": {
+    "labeled": 87,
+    "visible": 87,
+    "correct": 13,
+    "missed": 74,
+    "false_detection": 10,
+    "recall": 0.14942528735632185,
+    "precision": 0.5652173913043478
+   },
+   "tracked": {
+    "labeled": 87,
+    "visible": 87,
+    "correct": 12,
+    "missed": 75,
+    "false_detection": 7,
+    "no_detection": 64,
+    "elsewhere": 9,
+    "not_selected": 2,
+    "recall": 0.13793103448275862,
+    "precision": 0.631578947368421
+   },
+   "tracked, no static filter": {
+    "labeled": 87,
+    "visible": 87,
+    "correct": 12,
+    "missed": 75,
+    "false_detection": 7,
+    "recall": 0.13793103448275862,
+    "precision": 0.631578947368421
+   }
+  },
+  "clip:tracknet-tennis/game9_clip8": {
+   "raw best": {
+    "labeled": 56,
+    "visible": 56,
+    "correct": 41,
+    "missed": 15,
+    "false_detection": 0,
+    "recall": 0.7321428571428571,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 56,
+    "visible": 56,
+    "correct": 40,
+    "missed": 16,
+    "false_detection": 0,
+    "no_detection": 15,
+    "elsewhere": 0,
+    "not_selected": 1,
+    "recall": 0.7142857142857143,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 56,
+    "visible": 56,
+    "correct": 40,
+    "missed": 16,
+    "false_detection": 0,
+    "recall": 0.7142857142857143,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknet-tennis/game9_clip9": {
+   "raw best": {
+    "labeled": 223,
+    "visible": 223,
+    "correct": 58,
+    "missed": 165,
+    "false_detection": 9,
+    "recall": 0.2600896860986547,
+    "precision": 0.8656716417910447
+   },
+   "tracked": {
+    "labeled": 223,
+    "visible": 223,
+    "correct": 52,
+    "missed": 171,
+    "false_detection": 4,
+    "no_detection": 156,
+    "elsewhere": 6,
+    "not_selected": 9,
+    "recall": 0.23318385650224216,
+    "precision": 0.9285714285714286
+   },
+   "tracked, no static filter": {
+    "labeled": 223,
+    "visible": 223,
+    "correct": 52,
+    "missed": 171,
+    "false_detection": 4,
+    "recall": 0.23318385650224216,
+    "precision": 0.9285714285714286
+   }
+  },
+  "clip:tracknet-tennis/game10_clip1": {
+   "raw best": {
+    "labeled": 316,
+    "visible": 316,
+    "correct": 172,
+    "missed": 144,
+    "false_detection": 122,
+    "recall": 0.5443037974683544,
+    "precision": 0.5850340136054422
+   },
+   "tracked": {
+    "labeled": 316,
+    "visible": 316,
+    "correct": 182,
+    "missed": 134,
+    "false_detection": 38,
+    "no_detection": 22,
+    "elsewhere": 87,
+    "not_selected": 25,
+    "recall": 0.5759493670886076,
+    "precision": 0.8272727272727273
+   },
+   "tracked, no static filter": {
+    "labeled": 316,
+    "visible": 316,
+    "correct": 79,
+    "missed": 237,
+    "false_detection": 174,
+    "recall": 0.25,
+    "precision": 0.31225296442687744
+   }
+  },
+  "clip:tracknet-tennis/game10_clip2": {
+   "raw best": {
+    "labeled": 132,
+    "visible": 132,
+    "correct": 74,
+    "missed": 58,
+    "false_detection": 32,
+    "recall": 0.5606060606060606,
+    "precision": 0.6981132075471698
+   },
+   "tracked": {
+    "labeled": 132,
+    "visible": 132,
+    "correct": 67,
+    "missed": 65,
+    "false_detection": 12,
+    "no_detection": 26,
+    "elsewhere": 23,
+    "not_selected": 16,
+    "recall": 0.5075757575757576,
+    "precision": 0.8481012658227848
+   },
+   "tracked, no static filter": {
+    "labeled": 132,
+    "visible": 132,
+    "correct": 72,
+    "missed": 60,
+    "false_detection": 24,
+    "recall": 0.5454545454545454,
+    "precision": 0.75
+   }
+  },
+  "clip:tracknet-tennis/game10_clip3": {
+   "raw best": {
+    "labeled": 188,
+    "visible": 188,
+    "correct": 73,
+    "missed": 115,
+    "false_detection": 56,
+    "recall": 0.3882978723404255,
+    "precision": 0.5658914728682171
+   },
+   "tracked": {
+    "labeled": 188,
+    "visible": 188,
+    "correct": 69,
+    "missed": 119,
+    "false_detection": 18,
+    "no_detection": 59,
+    "elsewhere": 36,
+    "not_selected": 24,
+    "recall": 0.3670212765957447,
+    "precision": 0.7931034482758621
+   },
+   "tracked, no static filter": {
+    "labeled": 188,
+    "visible": 188,
+    "correct": 56,
+    "missed": 132,
+    "false_detection": 47,
+    "recall": 0.2978723404255319,
+    "precision": 0.5436893203883495
+   }
+  },
+  "clip:tracknet-tennis/game10_clip4": {
+   "raw best": {
+    "labeled": 47,
+    "visible": 47,
+    "correct": 33,
+    "missed": 14,
+    "false_detection": 12,
+    "recall": 0.7021276595744681,
+    "precision": 0.7333333333333333
+   },
+   "tracked": {
+    "labeled": 47,
+    "visible": 47,
+    "correct": 33,
+    "missed": 14,
+    "false_detection": 5,
+    "no_detection": 2,
+    "elsewhere": 8,
+    "not_selected": 4,
+    "recall": 0.7021276595744681,
+    "precision": 0.868421052631579
+   },
+   "tracked, no static filter": {
+    "labeled": 47,
+    "visible": 47,
+    "correct": 25,
+    "missed": 22,
+    "false_detection": 15,
+    "recall": 0.5319148936170213,
+    "precision": 0.625
+   }
+  },
+  "clip:tracknet-tennis/game10_clip5": {
+   "raw best": {
+    "labeled": 65,
+    "visible": 65,
+    "correct": 38,
+    "missed": 27,
+    "false_detection": 17,
+    "recall": 0.5846153846153846,
+    "precision": 0.6909090909090909
+   },
+   "tracked": {
+    "labeled": 65,
+    "visible": 65,
+    "correct": 38,
+    "missed": 27,
+    "false_detection": 4,
+    "no_detection": 10,
+    "elsewhere": 15,
+    "not_selected": 2,
+    "recall": 0.5846153846153846,
+    "precision": 0.9047619047619048
+   },
+   "tracked, no static filter": {
+    "labeled": 65,
+    "visible": 65,
+    "correct": 38,
+    "missed": 27,
+    "false_detection": 4,
+    "recall": 0.5846153846153846,
+    "precision": 0.9047619047619048
+   }
+  },
+  "clip:tracknet-tennis/game10_clip6": {
+   "raw best": {
+    "labeled": 292,
+    "visible": 292,
+    "correct": 117,
+    "missed": 175,
+    "false_detection": 107,
+    "recall": 0.4006849315068493,
+    "precision": 0.5223214285714286
+   },
+   "tracked": {
+    "labeled": 292,
+    "visible": 292,
+    "correct": 109,
+    "missed": 183,
+    "false_detection": 35,
+    "no_detection": 68,
+    "elsewhere": 86,
+    "not_selected": 29,
+    "recall": 0.3732876712328767,
+    "precision": 0.7569444444444444
+   },
+   "tracked, no static filter": {
+    "labeled": 292,
+    "visible": 292,
+    "correct": 80,
+    "missed": 212,
+    "false_detection": 112,
+    "recall": 0.273972602739726,
+    "precision": 0.4166666666666667
+   }
+  },
+  "clip:tracknet-tennis/game10_clip7": {
+   "raw best": {
+    "labeled": 142,
+    "visible": 142,
+    "correct": 65,
+    "missed": 77,
+    "false_detection": 21,
+    "recall": 0.45774647887323944,
+    "precision": 0.7558139534883721
+   },
+   "tracked": {
+    "labeled": 142,
+    "visible": 142,
+    "correct": 48,
+    "missed": 94,
+    "false_detection": 22,
+    "no_detection": 56,
+    "elsewhere": 17,
+    "not_selected": 21,
+    "recall": 0.3380281690140845,
+    "precision": 0.6857142857142857
+   },
+   "tracked, no static filter": {
+    "labeled": 142,
+    "visible": 142,
+    "correct": 48,
+    "missed": 94,
+    "false_detection": 22,
+    "recall": 0.3380281690140845,
+    "precision": 0.6857142857142857
+   }
+  },
+  "clip:tracknet-tennis/game10_clip8": {
+   "raw best": {
+    "labeled": 80,
+    "visible": 64,
+    "correct": 9,
+    "missed": 55,
+    "false_detection": 71,
+    "recall": 0.140625,
+    "precision": 0.1125
+   },
+   "tracked": {
+    "labeled": 80,
+    "visible": 64,
+    "correct": 3,
+    "missed": 61,
+    "false_detection": 38,
+    "no_detection": 0,
+    "elsewhere": 38,
+    "not_selected": 23,
+    "recall": 0.046875,
+    "precision": 0.07317073170731707
+   },
+   "tracked, no static filter": {
+    "labeled": 80,
+    "visible": 64,
+    "correct": 0,
+    "missed": 64,
+    "false_detection": 73,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:tracknet-tennis/game10_clip9": {
+   "raw best": {
+    "labeled": 49,
+    "visible": 49,
+    "correct": 25,
+    "missed": 24,
+    "false_detection": 24,
+    "recall": 0.5102040816326531,
+    "precision": 0.5102040816326531
+   },
+   "tracked": {
+    "labeled": 49,
+    "visible": 49,
+    "correct": 5,
+    "missed": 44,
+    "false_detection": 35,
+    "no_detection": 0,
+    "elsewhere": 20,
+    "not_selected": 24,
+    "recall": 0.10204081632653061,
+    "precision": 0.125
+   },
+   "tracked, no static filter": {
+    "labeled": 49,
+    "visible": 49,
+    "correct": 4,
+    "missed": 45,
+    "false_detection": 37,
+    "recall": 0.08163265306122448,
+    "precision": 0.0975609756097561
+   }
+  },
+  "clip:tracknet-tennis/game10_clip10": {
+   "raw best": {
+    "labeled": 166,
+    "visible": 166,
+    "correct": 87,
+    "missed": 79,
+    "false_detection": 72,
+    "recall": 0.5240963855421686,
+    "precision": 0.5471698113207547
+   },
+   "tracked": {
+    "labeled": 166,
+    "visible": 166,
+    "correct": 102,
+    "missed": 64,
+    "false_detection": 27,
+    "no_detection": 7,
+    "elsewhere": 40,
+    "not_selected": 17,
+    "recall": 0.6144578313253012,
+    "precision": 0.7906976744186046
+   },
+   "tracked, no static filter": {
+    "labeled": 166,
+    "visible": 166,
+    "correct": 75,
+    "missed": 91,
+    "false_detection": 66,
+    "recall": 0.45180722891566266,
+    "precision": 0.5319148936170213
+   }
+  },
+  "clip:tracknet-tennis/game10_clip11": {
+   "raw best": {
+    "labeled": 80,
+    "visible": 39,
+    "correct": 9,
+    "missed": 30,
+    "false_detection": 63,
+    "recall": 0.23076923076923078,
+    "precision": 0.125
+   },
+   "tracked": {
+    "labeled": 80,
+    "visible": 39,
+    "correct": 4,
+    "missed": 35,
+    "false_detection": 14,
+    "no_detection": 8,
+    "elsewhere": 20,
+    "not_selected": 7,
+    "recall": 0.10256410256410256,
+    "precision": 0.2222222222222222
+   },
+   "tracked, no static filter": {
+    "labeled": 80,
+    "visible": 39,
+    "correct": 4,
+    "missed": 35,
+    "false_detection": 37,
+    "recall": 0.10256410256410256,
+    "precision": 0.0975609756097561
+   }
+  },
+  "clip:tracknet-tennis/game10_clip12": {
+   "raw best": {
+    "labeled": 586,
+    "visible": 581,
+    "correct": 290,
+    "missed": 291,
+    "false_detection": 220,
+    "recall": 0.4991394148020654,
+    "precision": 0.5686274509803921
+   },
+   "tracked": {
+    "labeled": 586,
+    "visible": 581,
+    "correct": 302,
+    "missed": 279,
+    "false_detection": 74,
+    "no_detection": 76,
+    "elsewhere": 170,
+    "not_selected": 33,
+    "recall": 0.5197934595524957,
+    "precision": 0.8031914893617021
+   },
+   "tracked, no static filter": {
+    "labeled": 586,
+    "visible": 581,
+    "correct": 255,
+    "missed": 326,
+    "false_detection": 177,
+    "recall": 0.4388984509466437,
+    "precision": 0.5902777777777778
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_00_01": {
+   "raw best": {
+    "labeled": 200,
+    "visible": 163,
+    "correct": 0,
+    "missed": 163,
+    "false_detection": 112,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 200,
+    "visible": 163,
+    "correct": 0,
+    "missed": 163,
+    "false_detection": 0,
+    "no_detection": 69,
+    "elsewhere": 94,
+    "not_selected": 0,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 200,
+    "visible": 163,
+    "correct": 0,
+    "missed": 163,
+    "false_detection": 2,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "source:tracknetv2-badminton": {
+   "raw best": {
+    "labeled": 20299,
+    "visible": 18068,
+    "correct": 3753,
+    "missed": 14315,
+    "false_detection": 4199,
+    "recall": 0.20771529776400266,
+    "precision": 0.47195674044265595
+   },
+   "tracked": {
+    "labeled": 20299,
+    "visible": 18068,
+    "correct": 3222,
+    "missed": 14846,
+    "false_detection": 173,
+    "no_detection": 10520,
+    "elsewhere": 3742,
+    "not_selected": 584,
+    "recall": 0.1783263227806066,
+    "precision": 0.9490427098674521
+   },
+   "tracked, no static filter": {
+    "labeled": 20299,
+    "visible": 18068,
+    "correct": 3267,
+    "missed": 14801,
+    "false_detection": 524,
+    "recall": 0.1808169138808944,
+    "precision": 0.8617778950145081
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_01_01": {
+   "raw best": {
+    "labeled": 189,
+    "visible": 170,
+    "correct": 1,
+    "missed": 169,
+    "false_detection": 110,
+    "recall": 0.0058823529411764705,
+    "precision": 0.009009009009009009
+   },
+   "tracked": {
+    "labeled": 189,
+    "visible": 170,
+    "correct": 0,
+    "missed": 170,
+    "false_detection": 0,
+    "no_detection": 72,
+    "elsewhere": 97,
+    "not_selected": 1,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 189,
+    "visible": 170,
+    "correct": 1,
+    "missed": 169,
+    "false_detection": 13,
+    "recall": 0.0058823529411764705,
+    "precision": 0.07142857142857142
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_01_02": {
+   "raw best": {
+    "labeled": 440,
+    "visible": 391,
+    "correct": 19,
+    "missed": 372,
+    "false_detection": 59,
+    "recall": 0.04859335038363171,
+    "precision": 0.24358974358974358
+   },
+   "tracked": {
+    "labeled": 440,
+    "visible": 391,
+    "correct": 17,
+    "missed": 374,
+    "false_detection": 11,
+    "no_detection": 319,
+    "elsewhere": 50,
+    "not_selected": 5,
+    "recall": 0.043478260869565216,
+    "precision": 0.6071428571428571
+   },
+   "tracked, no static filter": {
+    "labeled": 440,
+    "visible": 391,
+    "correct": 17,
+    "missed": 374,
+    "false_detection": 11,
+    "recall": 0.043478260869565216,
+    "precision": 0.6071428571428571
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_01_03": {
+   "raw best": {
+    "labeled": 313,
+    "visible": 295,
+    "correct": 3,
+    "missed": 292,
+    "false_detection": 230,
+    "recall": 0.010169491525423728,
+    "precision": 0.012875536480686695
+   },
+   "tracked": {
+    "labeled": 313,
+    "visible": 295,
+    "correct": 3,
+    "missed": 292,
+    "false_detection": 0,
+    "no_detection": 76,
+    "elsewhere": 215,
+    "not_selected": 1,
+    "recall": 0.010169491525423728,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 313,
+    "visible": 295,
+    "correct": 4,
+    "missed": 291,
+    "false_detection": 13,
+    "recall": 0.013559322033898305,
+    "precision": 0.23529411764705882
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_01_04": {
+   "raw best": {
+    "labeled": 243,
+    "visible": 220,
+    "correct": 3,
+    "missed": 217,
+    "false_detection": 60,
+    "recall": 0.013636363636363636,
+    "precision": 0.047619047619047616
+   },
+   "tracked": {
+    "labeled": 243,
+    "visible": 220,
+    "correct": 2,
+    "missed": 218,
+    "false_detection": 0,
+    "no_detection": 166,
+    "elsewhere": 51,
+    "not_selected": 1,
+    "recall": 0.00909090909090909,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 243,
+    "visible": 220,
+    "correct": 2,
+    "missed": 218,
+    "false_detection": 0,
+    "recall": 0.00909090909090909,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_02_04": {
+   "raw best": {
+    "labeled": 714,
+    "visible": 640,
+    "correct": 25,
+    "missed": 615,
+    "false_detection": 212,
+    "recall": 0.0390625,
+    "precision": 0.10548523206751055
+   },
+   "tracked": {
+    "labeled": 714,
+    "visible": 640,
+    "correct": 19,
+    "missed": 621,
+    "false_detection": 1,
+    "no_detection": 427,
+    "elsewhere": 187,
+    "not_selected": 7,
+    "recall": 0.0296875,
+    "precision": 0.95
+   },
+   "tracked, no static filter": {
+    "labeled": 714,
+    "visible": 640,
+    "correct": 20,
+    "missed": 620,
+    "false_detection": 26,
+    "recall": 0.03125,
+    "precision": 0.43478260869565216
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_03_04": {
+   "raw best": {
+    "labeled": 135,
+    "visible": 128,
+    "correct": 2,
+    "missed": 126,
+    "false_detection": 47,
+    "recall": 0.015625,
+    "precision": 0.04081632653061224
+   },
+   "tracked": {
+    "labeled": 135,
+    "visible": 128,
+    "correct": 0,
+    "missed": 128,
+    "false_detection": 0,
+    "no_detection": 81,
+    "elsewhere": 45,
+    "not_selected": 2,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 135,
+    "visible": 128,
+    "correct": 1,
+    "missed": 127,
+    "false_detection": 1,
+    "recall": 0.0078125,
+    "precision": 0.5
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_03_05": {
+   "raw best": {
+    "labeled": 745,
+    "visible": 681,
+    "correct": 32,
+    "missed": 649,
+    "false_detection": 98,
+    "recall": 0.04698972099853157,
+    "precision": 0.24615384615384617
+   },
+   "tracked": {
+    "labeled": 745,
+    "visible": 681,
+    "correct": 20,
+    "missed": 661,
+    "false_detection": 12,
+    "no_detection": 558,
+    "elsewhere": 91,
+    "not_selected": 12,
+    "recall": 0.02936857562408223,
+    "precision": 0.625
+   },
+   "tracked, no static filter": {
+    "labeled": 745,
+    "visible": 681,
+    "correct": 22,
+    "missed": 659,
+    "false_detection": 25,
+    "recall": 0.032305433186490456,
+    "precision": 0.46808510638297873
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_04_05": {
+   "raw best": {
+    "labeled": 94,
+    "visible": 94,
+    "correct": 2,
+    "missed": 92,
+    "false_detection": 36,
+    "recall": 0.02127659574468085,
+    "precision": 0.05263157894736842
+   },
+   "tracked": {
+    "labeled": 94,
+    "visible": 94,
+    "correct": 0,
+    "missed": 94,
+    "false_detection": 0,
+    "no_detection": 56,
+    "elsewhere": 36,
+    "not_selected": 2,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 94,
+    "visible": 94,
+    "correct": 0,
+    "missed": 94,
+    "false_detection": 8,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m1_1_05_05": {
+   "raw best": {
+    "labeled": 157,
+    "visible": 138,
+    "correct": 13,
+    "missed": 125,
+    "false_detection": 33,
+    "recall": 0.09420289855072464,
+    "precision": 0.2826086956521739
+   },
+   "tracked": {
+    "labeled": 157,
+    "visible": 138,
+    "correct": 9,
+    "missed": 129,
+    "false_detection": 11,
+    "no_detection": 93,
+    "elsewhere": 32,
+    "not_selected": 4,
+    "recall": 0.06521739130434782,
+    "precision": 0.45
+   },
+   "tracked, no static filter": {
+    "labeled": 157,
+    "visible": 138,
+    "correct": 9,
+    "missed": 129,
+    "false_detection": 11,
+    "recall": 0.06521739130434782,
+    "precision": 0.45
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_01_00": {
+   "raw best": {
+    "labeled": 296,
+    "visible": 284,
+    "correct": 3,
+    "missed": 281,
+    "false_detection": 265,
+    "recall": 0.01056338028169014,
+    "precision": 0.011194029850746268
+   },
+   "tracked": {
+    "labeled": 296,
+    "visible": 284,
+    "correct": 4,
+    "missed": 280,
+    "false_detection": 0,
+    "no_detection": 26,
+    "elsewhere": 248,
+    "not_selected": 6,
+    "recall": 0.014084507042253521,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 296,
+    "visible": 284,
+    "correct": 8,
+    "missed": 276,
+    "false_detection": 42,
+    "recall": 0.028169014084507043,
+    "precision": 0.16
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_02_00": {
+   "raw best": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 4,
+    "missed": 326,
+    "false_detection": 333,
+    "recall": 0.012121212121212121,
+    "precision": 0.011869436201780416
+   },
+   "tracked": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 3,
+    "missed": 327,
+    "false_detection": 0,
+    "no_detection": 25,
+    "elsewhere": 299,
+    "not_selected": 3,
+    "recall": 0.00909090909090909,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 6,
+    "missed": 324,
+    "false_detection": 24,
+    "recall": 0.01818181818181818,
+    "precision": 0.2
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_03_00": {
+   "raw best": {
+    "labeled": 431,
+    "visible": 415,
+    "correct": 28,
+    "missed": 387,
+    "false_detection": 338,
+    "recall": 0.06746987951807229,
+    "precision": 0.07650273224043716
+   },
+   "tracked": {
+    "labeled": 431,
+    "visible": 415,
+    "correct": 17,
+    "missed": 398,
+    "false_detection": 0,
+    "no_detection": 62,
+    "elsewhere": 317,
+    "not_selected": 19,
+    "recall": 0.04096385542168675,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 431,
+    "visible": 415,
+    "correct": 30,
+    "missed": 385,
+    "false_detection": 36,
+    "recall": 0.07228915662650602,
+    "precision": 0.45454545454545453
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_04_00": {
+   "raw best": {
+    "labeled": 515,
+    "visible": 487,
+    "correct": 0,
+    "missed": 487,
+    "false_detection": 492,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 515,
+    "visible": 487,
+    "correct": 0,
+    "missed": 487,
+    "false_detection": 1,
+    "no_detection": 20,
+    "elsewhere": 465,
+    "not_selected": 2,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked, no static filter": {
+    "labeled": 515,
+    "visible": 487,
+    "correct": 2,
+    "missed": 485,
+    "false_detection": 49,
+    "recall": 0.004106776180698152,
+    "precision": 0.0392156862745098
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_05_00": {
+   "raw best": {
+    "labeled": 424,
+    "visible": 373,
+    "correct": 0,
+    "missed": 373,
+    "false_detection": 394,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 424,
+    "visible": 373,
+    "correct": 0,
+    "missed": 373,
+    "false_detection": 0,
+    "no_detection": 29,
+    "elsewhere": 344,
+    "not_selected": 0,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 424,
+    "visible": 373,
+    "correct": 0,
+    "missed": 373,
+    "false_detection": 12,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_05_01": {
+   "raw best": {
+    "labeled": 115,
+    "visible": 92,
+    "correct": 0,
+    "missed": 92,
+    "false_detection": 99,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 115,
+    "visible": 92,
+    "correct": 0,
+    "missed": 92,
+    "false_detection": 0,
+    "no_detection": 16,
+    "elsewhere": 76,
+    "not_selected": 0,
+    "recall": 0.0,
+    "precision": null
+   },
+   "tracked, no static filter": {
+    "labeled": 115,
+    "visible": 92,
+    "correct": 0,
+    "missed": 92,
+    "false_detection": 0,
+    "recall": 0.0,
+    "precision": null
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_05_02": {
+   "raw best": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 10,
+    "missed": 320,
+    "false_detection": 348,
+    "recall": 0.030303030303030304,
+    "precision": 0.027932960893854747
+   },
+   "tracked": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 12,
+    "missed": 318,
+    "false_detection": 12,
+    "no_detection": 5,
+    "elsewhere": 311,
+    "not_selected": 2,
+    "recall": 0.03636363636363636,
+    "precision": 0.5
+   },
+   "tracked, no static filter": {
+    "labeled": 363,
+    "visible": 330,
+    "correct": 2,
+    "missed": 328,
+    "false_detection": 74,
+    "recall": 0.006060606060606061,
+    "precision": 0.02631578947368421
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_05_03": {
+   "raw best": {
+    "labeled": 127,
+    "visible": 90,
+    "correct": 3,
+    "missed": 87,
+    "false_detection": 103,
+    "recall": 0.03333333333333333,
+    "precision": 0.02830188679245283
+   },
+   "tracked": {
+    "labeled": 127,
+    "visible": 90,
+    "correct": 2,
+    "missed": 88,
+    "false_detection": 0,
+    "no_detection": 13,
+    "elsewhere": 74,
+    "not_selected": 1,
+    "recall": 0.022222222222222223,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 127,
+    "visible": 90,
+    "correct": 0,
+    "missed": 90,
+    "false_detection": 11,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m2_1_06_03": {
+   "raw best": {
+    "labeled": 588,
+    "visible": 526,
+    "correct": 5,
+    "missed": 521,
+    "false_detection": 553,
+    "recall": 0.009505703422053232,
+    "precision": 0.008960573476702509
+   },
+   "tracked": {
+    "labeled": 588,
+    "visible": 526,
+    "correct": 5,
+    "missed": 521,
+    "false_detection": 0,
+    "no_detection": 27,
+    "elsewhere": 488,
+    "not_selected": 6,
+    "recall": 0.009505703422053232,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 588,
+    "visible": 526,
+    "correct": 10,
+    "missed": 516,
+    "false_detection": 35,
+    "recall": 0.019011406844106463,
+    "precision": 0.2222222222222222
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_00_01": {
+   "raw best": {
+    "labeled": 225,
+    "visible": 216,
+    "correct": 55,
+    "missed": 161,
+    "false_detection": 20,
+    "recall": 0.25462962962962965,
+    "precision": 0.7333333333333333
+   },
+   "tracked": {
+    "labeled": 225,
+    "visible": 216,
+    "correct": 35,
+    "missed": 181,
+    "false_detection": 3,
+    "no_detection": 141,
+    "elsewhere": 19,
+    "not_selected": 21,
+    "recall": 0.16203703703703703,
+    "precision": 0.9210526315789473
+   },
+   "tracked, no static filter": {
+    "labeled": 225,
+    "visible": 216,
+    "correct": 38,
+    "missed": 178,
+    "false_detection": 10,
+    "recall": 0.17592592592592593,
+    "precision": 0.7916666666666666
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_00_02": {
+   "raw best": {
+    "labeled": 129,
+    "visible": 123,
+    "correct": 23,
+    "missed": 100,
+    "false_detection": 2,
+    "recall": 0.18699186991869918,
+    "precision": 0.92
+   },
+   "tracked": {
+    "labeled": 129,
+    "visible": 123,
+    "correct": 17,
+    "missed": 106,
+    "false_detection": 0,
+    "no_detection": 98,
+    "elsewhere": 2,
+    "not_selected": 6,
+    "recall": 0.13821138211382114,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 129,
+    "visible": 123,
+    "correct": 17,
+    "missed": 106,
+    "false_detection": 0,
+    "recall": 0.13821138211382114,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_00_03": {
+   "raw best": {
+    "labeled": 324,
+    "visible": 311,
+    "correct": 77,
+    "missed": 234,
+    "false_detection": 8,
+    "recall": 0.24758842443729903,
+    "precision": 0.9058823529411765
+   },
+   "tracked": {
+    "labeled": 324,
+    "visible": 311,
+    "correct": 54,
+    "missed": 257,
+    "false_detection": 9,
+    "no_detection": 227,
+    "elsewhere": 7,
+    "not_selected": 23,
+    "recall": 0.17363344051446947,
+    "precision": 0.8571428571428571
+   },
+   "tracked, no static filter": {
+    "labeled": 324,
+    "visible": 311,
+    "correct": 54,
+    "missed": 257,
+    "false_detection": 9,
+    "recall": 0.17363344051446947,
+    "precision": 0.8571428571428571
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_01_03": {
+   "raw best": {
+    "labeled": 743,
+    "visible": 683,
+    "correct": 97,
+    "missed": 586,
+    "false_detection": 21,
+    "recall": 0.14202049780380674,
+    "precision": 0.8220338983050848
+   },
+   "tracked": {
+    "labeled": 743,
+    "visible": 683,
+    "correct": 71,
+    "missed": 612,
+    "false_detection": 3,
+    "no_detection": 565,
+    "elsewhere": 21,
+    "not_selected": 26,
+    "recall": 0.10395314787701318,
+    "precision": 0.9594594594594594
+   },
+   "tracked, no static filter": {
+    "labeled": 743,
+    "visible": 683,
+    "correct": 71,
+    "missed": 612,
+    "false_detection": 3,
+    "recall": 0.10395314787701318,
+    "precision": 0.9594594594594594
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_02_03": {
+   "raw best": {
+    "labeled": 380,
+    "visible": 351,
+    "correct": 83,
+    "missed": 268,
+    "false_detection": 7,
+    "recall": 0.23646723646723647,
+    "precision": 0.9222222222222223
+   },
+   "tracked": {
+    "labeled": 380,
+    "visible": 351,
+    "correct": 36,
+    "missed": 315,
+    "false_detection": 0,
+    "no_detection": 261,
+    "elsewhere": 7,
+    "not_selected": 47,
+    "recall": 0.10256410256410256,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 380,
+    "visible": 351,
+    "correct": 36,
+    "missed": 315,
+    "false_detection": 0,
+    "recall": 0.10256410256410256,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_02_04": {
+   "raw best": {
+    "labeled": 690,
+    "visible": 618,
+    "correct": 118,
+    "missed": 500,
+    "false_detection": 24,
+    "recall": 0.19093851132686085,
+    "precision": 0.8309859154929577
+   },
+   "tracked": {
+    "labeled": 690,
+    "visible": 618,
+    "correct": 98,
+    "missed": 520,
+    "false_detection": 5,
+    "no_detection": 480,
+    "elsewhere": 18,
+    "not_selected": 22,
+    "recall": 0.15857605177993528,
+    "precision": 0.9514563106796117
+   },
+   "tracked, no static filter": {
+    "labeled": 690,
+    "visible": 618,
+    "correct": 98,
+    "missed": 520,
+    "false_detection": 5,
+    "recall": 0.15857605177993528,
+    "precision": 0.9514563106796117
+   }
+  },
+  "clip:tracknetv2-badminton/amateur_m3_1_02_05": {
+   "raw best": {
+    "labeled": 523,
+    "visible": 486,
+    "correct": 82,
+    "missed": 404,
+    "false_detection": 10,
+    "recall": 0.16872427983539096,
+    "precision": 0.8913043478260869
+   },
+   "tracked": {
+    "labeled": 523,
+    "visible": 486,
+    "correct": 60,
+    "missed": 426,
+    "false_detection": 5,
+    "no_detection": 395,
+    "elsewhere": 9,
+    "not_selected": 22,
+    "recall": 0.12345679012345678,
+    "precision": 0.9230769230769231
+   },
+   "tracked, no static filter": {
+    "labeled": 523,
+    "visible": 486,
+    "correct": 60,
+    "missed": 426,
+    "false_detection": 5,
+    "recall": 0.12345679012345678,
+    "precision": 0.9230769230769231
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_05_02": {
+   "raw best": {
+    "labeled": 478,
+    "visible": 451,
+    "correct": 249,
+    "missed": 202,
+    "false_detection": 17,
+    "recall": 0.5521064301552107,
+    "precision": 0.9360902255639098
+   },
+   "tracked": {
+    "labeled": 478,
+    "visible": 451,
+    "correct": 238,
+    "missed": 213,
+    "false_detection": 15,
+    "no_detection": 188,
+    "elsewhere": 9,
+    "not_selected": 16,
+    "recall": 0.5277161862527716,
+    "precision": 0.9407114624505929
+   },
+   "tracked, no static filter": {
+    "labeled": 478,
+    "visible": 451,
+    "correct": 242,
+    "missed": 209,
+    "false_detection": 15,
+    "recall": 0.5365853658536586,
+    "precision": 0.9416342412451362
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_05_03": {
+   "raw best": {
+    "labeled": 353,
+    "visible": 311,
+    "correct": 167,
+    "missed": 144,
+    "false_detection": 14,
+    "recall": 0.5369774919614148,
+    "precision": 0.9226519337016574
+   },
+   "tracked": {
+    "labeled": 353,
+    "visible": 311,
+    "correct": 156,
+    "missed": 155,
+    "false_detection": 9,
+    "no_detection": 137,
+    "elsewhere": 7,
+    "not_selected": 11,
+    "recall": 0.5016077170418006,
+    "precision": 0.9454545454545454
+   },
+   "tracked, no static filter": {
+    "labeled": 353,
+    "visible": 311,
+    "correct": 156,
+    "missed": 155,
+    "false_detection": 9,
+    "recall": 0.5016077170418006,
+    "precision": 0.9454545454545454
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_06_03": {
+   "raw best": {
+    "labeled": 309,
+    "visible": 309,
+    "correct": 112,
+    "missed": 197,
+    "false_detection": 17,
+    "recall": 0.36245954692556637,
+    "precision": 0.8682170542635659
+   },
+   "tracked": {
+    "labeled": 309,
+    "visible": 309,
+    "correct": 93,
+    "missed": 216,
+    "false_detection": 10,
+    "no_detection": 180,
+    "elsewhere": 17,
+    "not_selected": 19,
+    "recall": 0.30097087378640774,
+    "precision": 0.9029126213592233
+   },
+   "tracked, no static filter": {
+    "labeled": 309,
+    "visible": 309,
+    "correct": 93,
+    "missed": 216,
+    "false_detection": 10,
+    "recall": 0.30097087378640774,
+    "precision": 0.9029126213592233
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_07_03": {
+   "raw best": {
+    "labeled": 624,
+    "visible": 548,
+    "correct": 278,
+    "missed": 270,
+    "false_detection": 25,
+    "recall": 0.5072992700729927,
+    "precision": 0.9174917491749175
+   },
+   "tracked": {
+    "labeled": 624,
+    "visible": 548,
+    "correct": 262,
+    "missed": 286,
+    "false_detection": 16,
+    "no_detection": 253,
+    "elsewhere": 17,
+    "not_selected": 16,
+    "recall": 0.4781021897810219,
+    "precision": 0.9424460431654677
+   },
+   "tracked, no static filter": {
+    "labeled": 624,
+    "visible": 548,
+    "correct": 264,
+    "missed": 284,
+    "false_detection": 16,
+    "recall": 0.48175182481751827,
+    "precision": 0.9428571428571428
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_07_04": {
+   "raw best": {
+    "labeled": 136,
+    "visible": 80,
+    "correct": 38,
+    "missed": 42,
+    "false_detection": 4,
+    "recall": 0.475,
+    "precision": 0.9047619047619048
+   },
+   "tracked": {
+    "labeled": 136,
+    "visible": 80,
+    "correct": 35,
+    "missed": 45,
+    "false_detection": 1,
+    "no_detection": 40,
+    "elsewhere": 2,
+    "not_selected": 3,
+    "recall": 0.4375,
+    "precision": 0.9722222222222222
+   },
+   "tracked, no static filter": {
+    "labeled": 136,
+    "visible": 80,
+    "correct": 35,
+    "missed": 45,
+    "false_detection": 1,
+    "recall": 0.4375,
+    "precision": 0.9722222222222222
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_07_06": {
+   "raw best": {
+    "labeled": 295,
+    "visible": 282,
+    "correct": 94,
+    "missed": 188,
+    "false_detection": 16,
+    "recall": 0.3333333333333333,
+    "precision": 0.8545454545454545
+   },
+   "tracked": {
+    "labeled": 295,
+    "visible": 282,
+    "correct": 89,
+    "missed": 193,
+    "false_detection": 6,
+    "no_detection": 173,
+    "elsewhere": 12,
+    "not_selected": 8,
+    "recall": 0.31560283687943264,
+    "precision": 0.9368421052631579
+   },
+   "tracked, no static filter": {
+    "labeled": 295,
+    "visible": 282,
+    "correct": 89,
+    "missed": 193,
+    "false_detection": 6,
+    "recall": 0.31560283687943264,
+    "precision": 0.9368421052631579
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_09_06": {
+   "raw best": {
+    "labeled": 63,
+    "visible": 63,
+    "correct": 42,
+    "missed": 21,
+    "false_detection": 5,
+    "recall": 0.6666666666666666,
+    "precision": 0.8936170212765957
+   },
+   "tracked": {
+    "labeled": 63,
+    "visible": 63,
+    "correct": 42,
+    "missed": 21,
+    "false_detection": 1,
+    "no_detection": 16,
+    "elsewhere": 4,
+    "not_selected": 1,
+    "recall": 0.6666666666666666,
+    "precision": 0.9767441860465116
+   },
+   "tracked, no static filter": {
+    "labeled": 63,
+    "visible": 63,
+    "correct": 42,
+    "missed": 21,
+    "false_detection": 1,
+    "recall": 0.6666666666666666,
+    "precision": 0.9767441860465116
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_1_09_07": {
+   "raw best": {
+    "labeled": 632,
+    "visible": 565,
+    "correct": 264,
+    "missed": 301,
+    "false_detection": 24,
+    "recall": 0.4672566371681416,
+    "precision": 0.9166666666666666
+   },
+   "tracked": {
+    "labeled": 632,
+    "visible": 565,
+    "correct": 253,
+    "missed": 312,
+    "false_detection": 11,
+    "no_detection": 278,
+    "elsewhere": 18,
+    "not_selected": 16,
+    "recall": 0.44778761061946903,
+    "precision": 0.9583333333333334
+   },
+   "tracked, no static filter": {
+    "labeled": 632,
+    "visible": 565,
+    "correct": 253,
+    "missed": 312,
+    "false_detection": 11,
+    "recall": 0.44778761061946903,
+    "precision": 0.9583333333333334
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_2_02_07": {
+   "raw best": {
+    "labeled": 131,
+    "visible": 131,
+    "correct": 58,
+    "missed": 73,
+    "false_detection": 0,
+    "recall": 0.44274809160305345,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 131,
+    "visible": 131,
+    "correct": 53,
+    "missed": 78,
+    "false_detection": 0,
+    "no_detection": 73,
+    "elsewhere": 0,
+    "not_selected": 5,
+    "recall": 0.40458015267175573,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 131,
+    "visible": 131,
+    "correct": 53,
+    "missed": 78,
+    "false_detection": 0,
+    "recall": 0.40458015267175573,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_2_03_08": {
+   "raw best": {
+    "labeled": 99,
+    "visible": 83,
+    "correct": 36,
+    "missed": 47,
+    "false_detection": 1,
+    "recall": 0.43373493975903615,
+    "precision": 0.972972972972973
+   },
+   "tracked": {
+    "labeled": 99,
+    "visible": 83,
+    "correct": 34,
+    "missed": 49,
+    "false_detection": 1,
+    "no_detection": 46,
+    "elsewhere": 1,
+    "not_selected": 2,
+    "recall": 0.40963855421686746,
+    "precision": 0.9714285714285714
+   },
+   "tracked, no static filter": {
+    "labeled": 99,
+    "visible": 83,
+    "correct": 34,
+    "missed": 49,
+    "false_detection": 1,
+    "recall": 0.40963855421686746,
+    "precision": 0.9714285714285714
+   }
+  },
+  "clip:tracknetv2-badminton/test_m1_2_03_10": {
+   "raw best": {
+    "labeled": 539,
+    "visible": 452,
+    "correct": 225,
+    "missed": 227,
+    "false_detection": 10,
+    "recall": 0.497787610619469,
+    "precision": 0.9574468085106383
+   },
+   "tracked": {
+    "labeled": 539,
+    "visible": 452,
+    "correct": 210,
+    "missed": 242,
+    "false_detection": 7,
+    "no_detection": 219,
+    "elsewhere": 7,
+    "not_selected": 16,
+    "recall": 0.4646017699115044,
+    "precision": 0.967741935483871
+   },
+   "tracked, no static filter": {
+    "labeled": 539,
+    "visible": 452,
+    "correct": 217,
+    "missed": 235,
+    "false_detection": 6,
+    "recall": 0.48008849557522126,
+    "precision": 0.9730941704035875
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_1_03_03": {
+   "raw best": {
+    "labeled": 351,
+    "visible": 263,
+    "correct": 50,
+    "missed": 213,
+    "false_detection": 0,
+    "recall": 0.19011406844106463,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 351,
+    "visible": 263,
+    "correct": 38,
+    "missed": 225,
+    "false_detection": 0,
+    "no_detection": 213,
+    "elsewhere": 0,
+    "not_selected": 12,
+    "recall": 0.1444866920152091,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 351,
+    "visible": 263,
+    "correct": 38,
+    "missed": 225,
+    "false_detection": 0,
+    "recall": 0.1444866920152091,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_1_04_04": {
+   "raw best": {
+    "labeled": 208,
+    "visible": 167,
+    "correct": 43,
+    "missed": 124,
+    "false_detection": 4,
+    "recall": 0.25748502994011974,
+    "precision": 0.9148936170212766
+   },
+   "tracked": {
+    "labeled": 208,
+    "visible": 167,
+    "correct": 37,
+    "missed": 130,
+    "false_detection": 1,
+    "no_detection": 120,
+    "elsewhere": 4,
+    "not_selected": 6,
+    "recall": 0.2215568862275449,
+    "precision": 0.9736842105263158
+   },
+   "tracked, no static filter": {
+    "labeled": 208,
+    "visible": 167,
+    "correct": 37,
+    "missed": 130,
+    "false_detection": 1,
+    "recall": 0.2215568862275449,
+    "precision": 0.9736842105263158
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_1_11_11": {
+   "raw best": {
+    "labeled": 669,
+    "visible": 531,
+    "correct": 158,
+    "missed": 373,
+    "false_detection": 6,
+    "recall": 0.2975517890772128,
+    "precision": 0.9634146341463414
+   },
+   "tracked": {
+    "labeled": 669,
+    "visible": 531,
+    "correct": 136,
+    "missed": 395,
+    "false_detection": 2,
+    "no_detection": 370,
+    "elsewhere": 3,
+    "not_selected": 22,
+    "recall": 0.256120527306968,
+    "precision": 0.9855072463768116
+   },
+   "tracked, no static filter": {
+    "labeled": 669,
+    "visible": 531,
+    "correct": 136,
+    "missed": 395,
+    "false_detection": 2,
+    "recall": 0.256120527306968,
+    "precision": 0.9855072463768116
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_1_13_12": {
+   "raw best": {
+    "labeled": 533,
+    "visible": 470,
+    "correct": 111,
+    "missed": 359,
+    "false_detection": 5,
+    "recall": 0.23617021276595745,
+    "precision": 0.9568965517241379
+   },
+   "tracked": {
+    "labeled": 533,
+    "visible": 470,
+    "correct": 95,
+    "missed": 375,
+    "false_detection": 0,
+    "no_detection": 354,
+    "elsewhere": 5,
+    "not_selected": 16,
+    "recall": 0.20212765957446807,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 533,
+    "visible": 470,
+    "correct": 95,
+    "missed": 375,
+    "false_detection": 0,
+    "recall": 0.20212765957446807,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_1_19_15": {
+   "raw best": {
+    "labeled": 633,
+    "visible": 539,
+    "correct": 159,
+    "missed": 380,
+    "false_detection": 2,
+    "recall": 0.2949907235621521,
+    "precision": 0.9875776397515528
+   },
+   "tracked": {
+    "labeled": 633,
+    "visible": 539,
+    "correct": 138,
+    "missed": 401,
+    "false_detection": 0,
+    "no_detection": 379,
+    "elsewhere": 1,
+    "not_selected": 21,
+    "recall": 0.2560296846011132,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 633,
+    "visible": 539,
+    "correct": 138,
+    "missed": 401,
+    "false_detection": 0,
+    "recall": 0.2560296846011132,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_2_02_05": {
+   "raw best": {
+    "labeled": 734,
+    "visible": 601,
+    "correct": 171,
+    "missed": 430,
+    "false_detection": 1,
+    "recall": 0.28452579034941766,
+    "precision": 0.9941860465116279
+   },
+   "tracked": {
+    "labeled": 734,
+    "visible": 601,
+    "correct": 151,
+    "missed": 450,
+    "false_detection": 0,
+    "no_detection": 429,
+    "elsewhere": 1,
+    "not_selected": 20,
+    "recall": 0.2512479201331115,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 734,
+    "visible": 601,
+    "correct": 151,
+    "missed": 450,
+    "false_detection": 0,
+    "recall": 0.2512479201331115,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m2_2_08_12": {
+   "raw best": {
+    "labeled": 578,
+    "visible": 456,
+    "correct": 69,
+    "missed": 387,
+    "false_detection": 2,
+    "recall": 0.1513157894736842,
+    "precision": 0.971830985915493
+   },
+   "tracked": {
+    "labeled": 578,
+    "visible": 456,
+    "correct": 51,
+    "missed": 405,
+    "false_detection": 0,
+    "no_detection": 385,
+    "elsewhere": 2,
+    "not_selected": 18,
+    "recall": 0.1118421052631579,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 578,
+    "visible": 456,
+    "correct": 51,
+    "missed": 405,
+    "false_detection": 0,
+    "recall": 0.1118421052631579,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_02_00": {
+   "raw best": {
+    "labeled": 661,
+    "visible": 618,
+    "correct": 111,
+    "missed": 507,
+    "false_detection": 7,
+    "recall": 0.1796116504854369,
+    "precision": 0.940677966101695
+   },
+   "tracked": {
+    "labeled": 661,
+    "visible": 618,
+    "correct": 95,
+    "missed": 523,
+    "false_detection": 5,
+    "no_detection": 500,
+    "elsewhere": 6,
+    "not_selected": 17,
+    "recall": 0.15372168284789645,
+    "precision": 0.95
+   },
+   "tracked, no static filter": {
+    "labeled": 661,
+    "visible": 618,
+    "correct": 95,
+    "missed": 523,
+    "false_detection": 5,
+    "recall": 0.15372168284789645,
+    "precision": 0.95
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_03_02": {
+   "raw best": {
+    "labeled": 360,
+    "visible": 352,
+    "correct": 80,
+    "missed": 272,
+    "false_detection": 0,
+    "recall": 0.22727272727272727,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 360,
+    "visible": 352,
+    "correct": 65,
+    "missed": 287,
+    "false_detection": 0,
+    "no_detection": 272,
+    "elsewhere": 0,
+    "not_selected": 15,
+    "recall": 0.1846590909090909,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 360,
+    "visible": 352,
+    "correct": 65,
+    "missed": 287,
+    "false_detection": 0,
+    "recall": 0.1846590909090909,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_05_02": {
+   "raw best": {
+    "labeled": 735,
+    "visible": 689,
+    "correct": 203,
+    "missed": 486,
+    "false_detection": 14,
+    "recall": 0.2946298984034833,
+    "precision": 0.9354838709677419
+   },
+   "tracked": {
+    "labeled": 735,
+    "visible": 689,
+    "correct": 180,
+    "missed": 509,
+    "false_detection": 10,
+    "no_detection": 474,
+    "elsewhere": 12,
+    "not_selected": 23,
+    "recall": 0.2612481857764877,
+    "precision": 0.9473684210526315
+   },
+   "tracked, no static filter": {
+    "labeled": 735,
+    "visible": 689,
+    "correct": 182,
+    "missed": 507,
+    "false_detection": 10,
+    "recall": 0.2641509433962264,
+    "precision": 0.9479166666666666
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_05_03": {
+   "raw best": {
+    "labeled": 108,
+    "visible": 69,
+    "correct": 27,
+    "missed": 42,
+    "false_detection": 0,
+    "recall": 0.391304347826087,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 108,
+    "visible": 69,
+    "correct": 24,
+    "missed": 45,
+    "false_detection": 0,
+    "no_detection": 42,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.34782608695652173,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 108,
+    "visible": 69,
+    "correct": 24,
+    "missed": 45,
+    "false_detection": 0,
+    "recall": 0.34782608695652173,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_06_05": {
+   "raw best": {
+    "labeled": 215,
+    "visible": 178,
+    "correct": 24,
+    "missed": 154,
+    "false_detection": 1,
+    "recall": 0.1348314606741573,
+    "precision": 0.96
+   },
+   "tracked": {
+    "labeled": 215,
+    "visible": 178,
+    "correct": 19,
+    "missed": 159,
+    "false_detection": 0,
+    "no_detection": 153,
+    "elsewhere": 1,
+    "not_selected": 5,
+    "recall": 0.10674157303370786,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 215,
+    "visible": 178,
+    "correct": 19,
+    "missed": 159,
+    "false_detection": 0,
+    "recall": 0.10674157303370786,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_06_06": {
+   "raw best": {
+    "labeled": 264,
+    "visible": 220,
+    "correct": 61,
+    "missed": 159,
+    "false_detection": 2,
+    "recall": 0.2772727272727273,
+    "precision": 0.9682539682539683
+   },
+   "tracked": {
+    "labeled": 264,
+    "visible": 220,
+    "correct": 48,
+    "missed": 172,
+    "false_detection": 1,
+    "no_detection": 157,
+    "elsewhere": 2,
+    "not_selected": 13,
+    "recall": 0.21818181818181817,
+    "precision": 0.9795918367346939
+   },
+   "tracked, no static filter": {
+    "labeled": 264,
+    "visible": 220,
+    "correct": 50,
+    "missed": 170,
+    "false_detection": 1,
+    "recall": 0.22727272727272727,
+    "precision": 0.9803921568627451
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_08_08": {
+   "raw best": {
+    "labeled": 256,
+    "visible": 213,
+    "correct": 37,
+    "missed": 176,
+    "false_detection": 2,
+    "recall": 0.17370892018779344,
+    "precision": 0.9487179487179487
+   },
+   "tracked": {
+    "labeled": 256,
+    "visible": 213,
+    "correct": 30,
+    "missed": 183,
+    "false_detection": 1,
+    "no_detection": 174,
+    "elsewhere": 2,
+    "not_selected": 7,
+    "recall": 0.14084507042253522,
+    "precision": 0.967741935483871
+   },
+   "tracked, no static filter": {
+    "labeled": 256,
+    "visible": 213,
+    "correct": 30,
+    "missed": 183,
+    "false_detection": 1,
+    "recall": 0.14084507042253522,
+    "precision": 0.967741935483871
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_08_09": {
+   "raw best": {
+    "labeled": 173,
+    "visible": 130,
+    "correct": 41,
+    "missed": 89,
+    "false_detection": 1,
+    "recall": 0.3153846153846154,
+    "precision": 0.9761904761904762
+   },
+   "tracked": {
+    "labeled": 173,
+    "visible": 130,
+    "correct": 35,
+    "missed": 95,
+    "false_detection": 0,
+    "no_detection": 88,
+    "elsewhere": 1,
+    "not_selected": 6,
+    "recall": 0.2692307692307692,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 173,
+    "visible": 130,
+    "correct": 39,
+    "missed": 91,
+    "false_detection": 0,
+    "recall": 0.3,
+    "precision": 1.0
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_09_12": {
+   "raw best": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 40,
+    "missed": 198,
+    "false_detection": 1,
+    "recall": 0.16806722689075632,
+    "precision": 0.975609756097561
+   },
+   "tracked": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 31,
+    "missed": 207,
+    "false_detection": 1,
+    "no_detection": 197,
+    "elsewhere": 1,
+    "not_selected": 9,
+    "recall": 0.13025210084033614,
+    "precision": 0.96875
+   },
+   "tracked, no static filter": {
+    "labeled": 238,
+    "visible": 238,
+    "correct": 31,
+    "missed": 207,
+    "false_detection": 1,
+    "recall": 0.13025210084033614,
+    "precision": 0.96875
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_09_15": {
+   "raw best": {
+    "labeled": 145,
+    "visible": 145,
+    "correct": 44,
+    "missed": 101,
+    "false_detection": 3,
+    "recall": 0.30344827586206896,
+    "precision": 0.9361702127659575
+   },
+   "tracked": {
+    "labeled": 145,
+    "visible": 145,
+    "correct": 40,
+    "missed": 105,
+    "false_detection": 1,
+    "no_detection": 98,
+    "elsewhere": 3,
+    "not_selected": 4,
+    "recall": 0.27586206896551724,
+    "precision": 0.975609756097561
+   },
+   "tracked, no static filter": {
+    "labeled": 145,
+    "visible": 145,
+    "correct": 40,
+    "missed": 105,
+    "false_detection": 1,
+    "recall": 0.27586206896551724,
+    "precision": 0.975609756097561
+   }
+  },
+  "clip:tracknetv2-badminton/test_m3_1_10_16": {
+   "raw best": {
+    "labeled": 313,
+    "visible": 279,
+    "correct": 73,
+    "missed": 206,
+    "false_detection": 1,
+    "recall": 0.2616487455197133,
+    "precision": 0.9864864864864865
+   },
+   "tracked": {
+    "labeled": 313,
+    "visible": 279,
+    "correct": 60,
+    "missed": 219,
+    "false_detection": 1,
+    "no_detection": 205,
+    "elsewhere": 1,
+    "not_selected": 13,
+    "recall": 0.21505376344086022,
+    "precision": 0.9836065573770492
+   },
+   "tracked, no static filter": {
+    "labeled": 313,
+    "visible": 279,
+    "correct": 60,
+    "missed": 219,
+    "false_detection": 1,
+    "recall": 0.21505376344086022,
+    "precision": 0.9836065573770492
+   }
+  },
+  "clip:yonggest-tennis/20260411_sw_zy_rally": {
+   "raw best": {
+    "labeled": 622,
+    "visible": 622,
+    "correct": 128,
+    "missed": 494,
+    "false_detection": 0,
+    "recall": 0.2057877813504823,
+    "precision": 1.0
+   },
+   "tracked": {
+    "labeled": 622,
+    "visible": 622,
+    "correct": 125,
+    "missed": 497,
+    "false_detection": 0,
+    "no_detection": 494,
+    "elsewhere": 0,
+    "not_selected": 3,
+    "recall": 0.20096463022508038,
+    "precision": 1.0
+   },
+   "tracked, no static filter": {
+    "labeled": 622,
+    "visible": 622,
+    "correct": 125,
+    "missed": 497,
+    "false_detection": 0,
+    "recall": 0.20096463022508038,
+    "precision": 1.0
+   }
+  },
+  "source:yonggest-tennis": {
+   "raw best": {
+    "labeled": 852,
+    "visible": 852,
+    "correct": 128,
+    "missed": 724,
+    "false_detection": 230,
+    "recall": 0.15023474178403756,
+    "precision": 0.3575418994413408
+   },
+   "tracked": {
+    "labeled": 852,
+    "visible": 852,
+    "correct": 125,
+    "missed": 727,
+    "false_detection": 50,
+    "no_detection": 494,
+    "elsewhere": 229,
+    "not_selected": 4,
+    "recall": 0.1467136150234742,
+    "precision": 0.7142857142857143
+   },
+   "tracked, no static filter": {
+    "labeled": 852,
+    "visible": 852,
+    "correct": 125,
+    "missed": 727,
+    "false_detection": 219,
+    "recall": 0.1467136150234742,
+    "precision": 0.3633720930232558
+   }
+  },
+  "clip:yonggest-tennis/20260328_cb_ag_serve": {
+   "raw best": {
+    "labeled": 230,
+    "visible": 230,
+    "correct": 0,
+    "missed": 230,
+    "false_detection": 230,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked": {
+    "labeled": 230,
+    "visible": 230,
+    "correct": 0,
+    "missed": 230,
+    "false_detection": 50,
+    "no_detection": 0,
+    "elsewhere": 229,
+    "not_selected": 1,
+    "recall": 0.0,
+    "precision": 0.0
+   },
+   "tracked, no static filter": {
+    "labeled": 230,
+    "visible": 230,
+    "correct": 0,
+    "missed": 230,
+    "false_detection": 219,
+    "recall": 0.0,
+    "precision": 0.0
+   }
+  }
+ }
+}

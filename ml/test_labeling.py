@@ -3,8 +3,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from labeling import (LabelSession, best_raw_balls, evaluate, label_centers, load_labels, save_labels,
-                      tracked_balls)
+from labeling import (LabelSession, best_raw_balls, evaluate, label_centers, load_labels, miss_causes,
+                      save_labels, tracked_balls)
 
 
 def frame(t, xs, conf=0.5):
@@ -76,6 +76,16 @@ class EvaluationTests(unittest.TestCase):
                          {"labeled": 4, "visible": 3, "correct": 1, "missed": 2, "false_detection": 2})
         self.assertAlmostEqual(result["recall"], 1 / 3)
         self.assertAlmostEqual(result["precision"], 1 / 3)
+
+    def test_miss_causes_split_tracker_from_detector_misses(self):
+        # Frame 0 correct; 1 ball detected but another candidate picked; 2 only a far candidate;
+        # 3 nothing detected; 4 no ball (not counted); 5 beyond the predictions (not counted).
+        frames = [frame(0, [100]), frame(0, [100, 300]), frame(0, [300]), frame(0, []), frame(0, [100])]
+        labels = {f: {"ball": [97, 97, 103, 103]} for f in (0, 1, 2, 3, 5)} | {4: {"ball": None}}
+        predictions = [[97, 97, 103, 103], [297, 97, 303, 103], [297, 97, 303, 103], None, None]
+        self.assertEqual(miss_causes(frames, predictions, labels, radius=5),
+                         {"correct": 1, "not_selected": 1, "elsewhere": 1, "no_detection": 1})
+        self.assertEqual(evaluate(predictions, labels, radius=5)["correct"], 1, "same matching rule")
 
     def test_predictors_on_detections(self):
         # Moving ball plus a brighter static distractor at x=600.

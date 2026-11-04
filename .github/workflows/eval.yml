@@ -1,0 +1,120 @@
+# Scores ball tracking on a fixed subset of public clips (ml/EVAL_DATA.md, eval_data.SUITES["ci"])
+# for every pull request that can change it, next to its base branch, and posts the comparison as
+# a pull request comment (updated on each push). Informational: an accuracy change never fails it;
+# the check fails only if this commit cannot be scored, and the comment then says so.
+# Footage is downloaded from its original sources on every run and never cached or uploaded: this
+# repository is public and most of it may not be redistributed. Only detections (model output) are
+# cached, keyed by the models, detection code, and lockfile, so a change that keeps those re-scores
+# in seconds.
+name: Accuracy
+
+on:
+  pull_request:
+    paths: ["pipeline/vantage/**", "ml/**", "scripts/eval_pr.sh", ".github/workflows/eval.yml", "uv.lock"]
+  push:
+    branches: [main]
+    paths: ["pipeline/vantage/**", "ml/**", "scripts/eval_pr.sh", ".github/workflows/eval.yml", "uv.lock"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    name: Ball tracking accuracy
+    # Linux: GitHub's macOS arm64 runners are capacity-constrained (jobs went unassigned), and
+    # their GPU is unreliable for PyTorch anyway, so detection runs on CPU here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch the base commit
+        if: env.BASE_SHA != '' && env.BASE_SHA != '0000000000000000000000000000000000000000'
+        run: git fetch --no-tags --depth=1 origin "$BASE_SHA"
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install Python dependencies
+        run: |
+          sudo apt-get install -y --no-install-recommends libgl1 > /dev/null  # for opencv-python
+          uv sync --locked
+
+      - name: Restore cached detections
+        uses: actions/cache/restore@v6
+        with:
+          path: reports/external-eval
+          # A pull request's own older entry would hide main's newer one; keying by what makes
+          # detections lets a rebased pull request pick up main's entry for the same models.
+          key: eval-detections-${{ hashFiles('ml/models/*.pt', 'ml/predict_video.py', 'ml/vantage_classes.py', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            eval-detections-${{ hashFiles('ml/models/*.pt', 'ml/predict_video.py', 'ml/vantage_classes.py', 'uv.lock') }}-
+            eval-detections-
+
+      - name: Count cached detections
+        id: before
+        run: echo "files=$(find reports/external-eval -name '*.jsonl' 2>/dev/null | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Score this change and its base
+        env:
+          GITHUB_TOKEN: ${{ github.token }}  # authenticated GitHub API calls while downloading
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          EVAL_BASE_LABEL: ${{ github.event.pull_request.base.ref || 'previous main' }}
+        run: |
+          # A pull request checkout is GitHub's merge of the PR into its base; name it by the PR's commit.
+          export EVAL_HEAD_LABEL="${{ github.event_name == 'pull_request' && 'this PR' || 'this commit' }} (${HEAD_SHA:0:7})"
+          base=""
+          if git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then base="$BASE_SHA"; fi
+          scripts/eval_pr.sh "$base" reports/eval-pr
+          cat reports/eval-pr/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Count new detections
+        id: after
+        if: always()
+        run: echo "files=$(find reports/external-eval -name '*.jsonl' 2>/dev/null | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Save new detections
+        if: always() && steps.after.outputs.files != steps.before.outputs.files
+        uses: actions/cache/save@v6
+        with:
+          path: reports/external-eval
+          key: eval-detections-${{ hashFiles('ml/models/*.pt', 'ml/predict_video.py', 'ml/vantage_classes.py', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # Pull requests from forks get a read-only token; their results stay in the job summary.
+      - name: Comment on the pull request
+        if: >-
+          !cancelled() && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker="<!-- vantage-accuracy-report -->"
+          if [ ! -s reports/eval-pr/report.md ]; then
+            mkdir -p reports/eval-pr
+            printf '%s\n## Ball tracking accuracy\n\nThis PR (%s) could not be scored; see [the run](%s).\n' \
+              "$marker" "${HEAD_SHA:0:7}" "$RUN_URL" > reports/eval-pr/report.md
+          fi
+          # Only this workflow's own comment: anyone can post a comment starting with the marker.
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" \
+            | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@reports/eval-pr/report.md > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@reports/eval-pr/report.md > /dev/null
+          fi

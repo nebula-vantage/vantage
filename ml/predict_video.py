@@ -26,7 +26,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--imgsz", type=int, default=1280)
     parser.add_argument("--confidence", type=float, default=0.10, help="same raw threshold as the app")
-    parser.add_argument("--device", default="mps")
+    parser.add_argument("--device", default="auto", help="auto (Apple GPU if it works, else CPU), mps, cpu, or 0")
     parser.add_argument("--max-frames", type=int, default=0)
     args = parser.parse_args()
 
@@ -43,8 +43,25 @@ def load_model(weights):
     return model
 
 
-def predict_video(model, video, output, *, imgsz=1280, confidence=0.10, device="mps", max_frames=0):
-    """Write detections.jsonl for every frame of video; returns the frame count."""
+def resolve_device(model, device, imgsz=1280):
+    """"auto" means the Apple GPU (mps) when a full-size inference works there, else the CPU.
+    GitHub's macOS runners report MPS as available but can fail on it, so a real run decides."""
+    if device != "auto":
+        return device
+    import numpy as np
+    import torch
+    if not torch.backends.mps.is_available():  # Ultralytics would quietly fall back to CPU
+        return "cpu"
+    try:
+        model.predict(np.zeros((imgsz * 9 // 16, imgsz, 3), np.uint8), imgsz=imgsz, device="mps", verbose=False)
+        return "mps"
+    except Exception:  # no MPS (Linux), or it fails at runtime
+        return "cpu"
+
+
+def predict_video(model, video, output, *, imgsz=1280, confidence=0.10, device="auto", max_frames=0):
+    """Write detections.jsonl for every frame of video (or the first max_frames); returns the count."""
+    device = resolve_device(model, device, imgsz)
     mapping = canonical_map(model.names)
     capture = cv2.VideoCapture(str(video))
     fps = capture.get(cv2.CAP_PROP_FPS) or 30.0

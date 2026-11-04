@@ -3,12 +3,16 @@
     uv run python ml/fetch_eval_data.py --all          # once: download and convert the clips
     uv run python ml/evaluate_external.py --weights ml/models/pickleball-v1.pt
     uv run python ml/evaluate_external.py --weights yolo26n.pt --sport tennis --per-clip
+    uv run python ml/evaluate_external.py --suite ci --json     # what CI scores on every pull request
 
 Runs the model over each fetched clip once at a low raw threshold (detections are cached in
-reports/external-eval/<weights>-<hash>-<imgsz>px-conf<confidence>/<source>/<clip>.jsonl), then
+reports/external-eval/<weights>-<hash>-<code>-<imgsz>px-conf<confidence>/<source>/<clip>.jsonl,
+where <code> covers the detection code and library versions), then
 applies the model's ball operating point (from its model card, e.g. ml/models/pickleball-v1.json,
 or --ball-confidence) and reports recall and precision exactly as evaluate_ball.py does, pooled
-per source and per sport. To score the app instead, run vantage-analyze on
+per source and per sport, plus why the tracker missed visible balls (no ball detection, only
+detections elsewhere, or the ball detected but not picked). To score the app instead, run
+vantage-analyze on
 ml/external/eval/<source>/clips/<clip>.mp4, save the output under the same layout, and pass
 --detections-dir.
 """
@@ -21,15 +25,17 @@ import os
 from pathlib import Path
 import sys
 
-from eval_data import fetched_sources
+from eval_data import SUITES, fetched_sources
 from evaluate_ball import predictors
-from labeling import BALL, ROOT, evaluate, load_detections, load_labels
+from labeling import BALL, ROOT, evaluate, load_detections, load_labels, miss_causes
 
 COUNTS = ("labeled", "visible", "correct", "missed", "false_detection")
+CAUSES = (("no_detection", "no ball detection"), ("elsewhere", "only detections elsewhere"),
+          ("not_selected", "detected, not picked"))
 
 
-def add(totals, result):
-    for key in COUNTS:
+def add(totals, result, keys=COUNTS):
+    for key in keys:
         totals[key] = totals.get(key, 0) + result[key]
 
 
@@ -38,6 +44,19 @@ def rates(totals):
     totals["recall"] = totals["correct"] / totals["visible"] if totals["visible"] else None
     totals["precision"] = totals["correct"] / predictions if predictions else None
     return totals
+
+
+def detection_fingerprint():
+    """Short hash of what turns frames into detections besides the weights: this checkout's
+    detection code and the installed library versions. Part of the cache key, so a change to
+    either detects again instead of reusing old detections."""
+    from importlib.metadata import version
+    digest = hashlib.sha256()
+    for name in ("predict_video.py", "vantage_classes.py"):
+        digest.update((Path(__file__).resolve().parent / name).read_bytes())
+    for package in ("ultralytics", "torch", "opencv-python"):
+        digest.update(f"{package}=={version(package)}".encode())
+    return digest.hexdigest()[:8]
 
 
 def card_ball_confidence(weights):
@@ -63,6 +82,10 @@ def main():
     parser.add_argument("--detections-dir", type=Path,
                         help="score detections made elsewhere (<dir>/<source>/<clip>.jsonl) instead of running --weights")
     parser.add_argument("--source", action="append", help="only these sources (repeatable)")
+    parser.add_argument("--suite", choices=sorted(SUITES),
+                        help="score a named subset (eval_data.SUITES): its sources, each clip cut to its first N frames")
+    parser.add_argument("--cache-dir", type=Path, default=ROOT / "reports" / "external-eval",
+                        help="where detections are cached (default reports/external-eval)")
     parser.add_argument("--sport", choices=("tennis", "badminton", "pickleball"))
     parser.add_argument("--keyframes-only", action="store_true",
                         help="ignore labels a source interpolated between hand-placed keyframes")
@@ -72,7 +95,7 @@ def main():
                         help="raw detection threshold for all classes (default 0.10, as predict_video.py)")
     parser.add_argument("--ball-confidence", type=float,
                         help="ball operating point applied when scoring (default: the model card's, else none)")
-    parser.add_argument("--device", default="mps")
+    parser.add_argument("--device", default="auto", help="auto (Apple GPU if it works, else CPU), mps, cpu, or 0")
     parser.add_argument("--per-clip", action="store_true", help="also print every clip")
     parser.add_argument("--json", action="store_true", help="print machine-readable results")
     args = parser.parse_args()
@@ -81,8 +104,12 @@ def main():
     missing = sorted(set(args.source or ()) - set(fetched))
     if missing:
         raise SystemExit(f"Not fetched (or misspelled): {', '.join(missing)}; see ml/fetch_eval_data.py --list")
+    limits = SUITES.get(args.suite, {})
+    # A suite reports, rather than fails on, sources that could not be fetched (e.g. a host down in CI).
+    unfetched = sorted(set(limits) - set(fetched))
     sources = {name: spec for name, spec in fetched.items()
-               if (not args.source or name in args.source) and (not args.sport or spec["sport"] == args.sport)}
+               if (not args.source or name in args.source) and (not args.sport or spec["sport"] == args.sport)
+               and (not limits or name in limits)}
     if not sources:
         raise SystemExit("No matching fetched sources; run ml/fetch_eval_data.py first (see --list).")
 
@@ -99,8 +126,8 @@ def main():
             model = load(weights)
             weights = Path(model.ckpt_path)
         digest = hashlib.sha256(weights.read_bytes()).hexdigest()[:8]
-        detections_dir = (ROOT / "reports" / "external-eval"
-                          / f"{weights.stem}-{digest}-{args.imgsz}px-conf{args.confidence:g}")
+        detections_dir = (args.cache_dir / f"{weights.stem}-{digest}-{detection_fingerprint()}"
+                                           f"-{args.imgsz}px-conf{args.confidence:g}")
         ball_confidence = args.ball_confidence if args.ball_confidence is not None else card_ball_confidence(weights)
         if ball_confidence is not None and ball_confidence < args.confidence:
             origin = "--ball-confidence" if args.ball_confidence is not None else f"{weights.stem}.json model card"
@@ -112,48 +139,63 @@ def main():
     skipped = []
     for name, spec in sources.items():
         for clip in spec["clips"]:
-            detections_path = detections_dir / name / f"{clip['clip']}.jsonl"
+            # Score the first `limit` frames: from a full detections file if there is one, else
+            # from (or into) a file of just those frames. Labels past them are not scored.
+            limit = min(limits.get(name) or clip["frames"], clip["frames"])
+            detections_path, expected = detections_dir / name / f"{clip['clip']}.jsonl", clip["frames"]
+            if limit < clip["frames"] and not detections_path.exists():
+                # The clip's length is in the name, so a re-converted clip is detected again.
+                detections_path = detections_path.with_name(f"{clip['clip']}.first{limit}of{clip['frames']}.jsonl")
+                expected = limit
             if not detections_path.exists():
                 if args.detections_dir:
                     raise SystemExit(f"Missing {detections_path}")
                 model = model or load(args.weights)
-                detect(model, ROOT / clip["video"], detections_path, clip["frames"], args)
+                detect(model, ROOT / clip["video"], detections_path, limit, args)
             frames = load_detections(detections_path)
-            if len(frames) != clip["frames"]:
+            if len(frames) != expected:
                 if not args.detections_dir:
-                    raise SystemExit(f"{detections_path} has {len(frames)} frames but the clip decodes "
-                                     f"{clip['frames']}; delete it to detect again")
-                skipped.append(f"{name}/{clip['clip']} ({len(frames)} of {clip['frames']} frames)")
+                    raise SystemExit(f"{detections_path} has {len(frames)} frames but should have {expected}; "
+                                     "delete it to detect again")
+                skipped.append(f"{name}/{clip['clip']} ({len(frames)} of {expected} frames)")
                 continue
+            frames = frames[:limit]
             if ball_confidence is not None:
                 drop_weak_balls(frames, ball_confidence)
             labels = load_labels(ROOT / clip["labels"])
             if args.keyframes_only:
                 labels = {k: v for k, v in labels.items() if not v.get("interpolated")}
             radius = args.radius_diagonals * math.hypot(frames[0]["width"], frames[0]["height"])
+            keys = (("clip", f"{name}/{clip['clip']}"), ("source", name), ("sport", spec["sport"]), ("all", "all"))
             for predictor, predict in predictors().items():
-                result = evaluate(predict(frames), labels, radius)
-                for key in (("clip", f"{name}/{clip['clip']}"), ("source", name), ("sport", spec["sport"]),
-                            ("all", "all")):
-                    add(groups.setdefault(key, {}).setdefault(predictor, {}), result)
+                predictions = predict(frames)
+                result = evaluate(predictions, labels, radius)
+                if predictor == "tracked":
+                    result |= miss_causes(frames, predictions, labels, radius)
+                for key in keys:
+                    add(groups.setdefault(key, {}).setdefault(predictor, {}), result,
+                        COUNTS + tuple(c for c, _ in CAUSES) if predictor == "tracked" else COUNTS)
     for by_predictor in groups.values():
         for totals in by_predictor.values():
             rates(totals)
     if skipped:
         print(f"Skipped {len(skipped)} clips whose detections do not cover every frame (indices would not "
               f"line up): {', '.join(skipped)}", file=sys.stderr)
+    if unfetched:
+        print(f"Not fetched, so not scored: {', '.join(unfetched)}", file=sys.stderr)
     if not groups:
         raise SystemExit("No clip could be scored.")
 
     if args.json:
-        print(json.dumps({"setup": described, "skipped": skipped,
+        print(json.dumps({"setup": described, "suite": args.suite, "unfetched": unfetched, "skipped": skipped,
+                          "sports": {name: sources[name]["sport"] for level, name in groups if level == "source"},
                           "results": {f"{level}:{name}": v for (level, name), v in groups.items()}}, indent=1))
         return
     pct = lambda v: "   -  " if v is None else f"{v:6.1%}"
     levels = ("clip", "source", "sport", "all") if args.per_clip else ("source", "sport", "all")
     width = max(len(name) for level, name in groups if level in levels)
     print(f"{described}; match radius {args.radius_diagonals:.1%} of diagonal"
-          f"{'; keyframes only' if args.keyframes_only else ''}\n")
+          f"{'; keyframes only' if args.keyframes_only else ''}{f'; suite {args.suite}' if args.suite else ''}\n")
     print(f"{'':{width}s} {'labeled':>7s} {'visible':>7s}   {'raw best':^18s}   {'tracked':^18s}")
     print(f"{'':{width}s} {'':7s} {'':7s}   {'recall':>8s} {'precision':>9s}   {'recall':>8s} {'precision':>9s}")
     for level in levels:
@@ -164,6 +206,15 @@ def main():
             raw, tracked = by_predictor["raw best"], by_predictor["tracked"]
             print(f"{name:{width}s} {raw['labeled']:7d} {raw['visible']:7d}   {pct(raw['recall']):>8s} "
                   f"{pct(raw['precision']):>9s}   {pct(tracked['recall']):>8s} {pct(tracked['precision']):>9s}")
+    print("\nWhy the tracker missed visible balls (% of visible):")
+    print(f"{'':{width}s} " + " ".join(f"{label:>26s}" for _, label in CAUSES))
+    for level in levels:
+        print(f"-- {level}")
+        for (row_level, name), by_predictor in groups.items():
+            tracked = by_predictor["tracked"]
+            if row_level == level:
+                print(f"{name:{width}s} " + " ".join(
+                    f"{pct(tracked[c] / tracked['visible'] if tracked['visible'] else None):>26s}" for c, _ in CAUSES))
 
 
 def load(weights):
@@ -174,12 +225,17 @@ def load(weights):
 
 
 def detect(model, video, output, expected_frames, args):
-    """Run the model over a clip into output, keeping it only if every frame was decoded."""
-    from predict_video import predict_video
-    print(f"detecting {output.parent.name}/{output.stem}", file=sys.stderr)
-    partial = output.with_name(f".{output.stem}.{os.getpid()}.part")
+    """Run the model over a clip's first expected_frames frames into output, keeping it only if
+    all of them were decoded."""
+    from predict_video import predict_video, resolve_device
     with contextlib.redirect_stdout(sys.stderr):
-        count = predict_video(model, video, partial, imgsz=args.imgsz, confidence=args.confidence, device=args.device)
+        if args.device == "auto":
+            args.device = resolve_device(model, "auto", args.imgsz)
+            print(f"detecting on {args.device}", file=sys.stderr)
+        print(f"detecting {output.parent.name}/{output.stem}", file=sys.stderr)
+        partial = output.with_name(f".{output.stem}.{os.getpid()}.part")
+        count = predict_video(model, video, partial, imgsz=args.imgsz, confidence=args.confidence,
+                              device=args.device, max_frames=expected_frames)
     if count != expected_frames:
         partial.unlink()
         raise SystemExit(f"{video} decoded {count} frames, expected {expected_frames}")

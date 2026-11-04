@@ -14,7 +14,10 @@ app; Core ML export and conversion checks stay in `tools/coreml/`.
 | `train.py` | Fine-tune YOLO26n at 1280 px on the Apple GPU |
 | `predict_video.py` | Run any checkpoint on a video, writing app-format detections.jsonl |
 | `fetch_eval_data.py` | Download public tennis/badminton/pickleball clips with ball labels (eval only) |
-| `evaluate_external.py` | Score a checkpoint on those clips, per source and per sport |
+| `evaluate_external.py` | Score a checkpoint on those clips, per source and per sport, with miss causes |
+| `plot_external_eval.py` | Chart one or two `evaluate_external.py --json` results |
+| `compare_eval.py` | Markdown comparison of two results (the accuracy comment on pull requests) |
+| `results/` | Committed eval results (JSON, charts, analysis), one folder per run |
 | `eval_data.py`, `eval_sources.py` | Download/convert helpers and one adapter per public dataset |
 | `EVAL_DATA.md` | What each external eval source is, its license, and how its labels were converted |
 | `labeling.py`, `vantage_classes.py` | Label format, session logic, evaluation, class mapping |
@@ -154,9 +157,43 @@ uv run python ml/evaluate_external.py --weights ml/runs/pickleball-v2/weights/be
 
 Reports raw-detector and tracker recall/precision per source and per sport on clips no model
 was trained on, at the model card's ball operating point (or `--ball-confidence` for a new
-checkpoint). Detections are cached per weights file contents and settings.
+checkpoint), and why the tracker missed visible balls. Detections are cached per weights file
+contents and settings. Latest results: [`results/external-eval-2026-11-04/`](results/external-eval-2026-11-04/README.md)
+(pickleball-v1: 60.0% tracked recall at 92.2% precision on public pickleball clips).
 [EVAL_DATA.md](EVAL_DATA.md) lists each source's viewpoint, license, and label caveats (several
 have no absent-frame labels, so their precision only counts wrong positions).
+
+### Accuracy check on pull requests
+
+Every pull request that touches `pipeline/vantage/`, `ml/`, or `uv.lock` runs
+[`.github/workflows/eval.yml`](../.github/workflows/eval.yml). It scores the change and its base
+branch on the `ci` suite (`eval_data.SUITES`: four public sources, all three sports, the first
+120-900 frames of each clip, about 6,700 labeled frames) and posts one comment, updated on every
+push, with tracked and detector recall/precision per sport and source and why balls were missed.
+Both runs use the same downloaded clips and labels, so a difference comes from the change: the
+tracker or config, the default model, the detection code or libraries, or the evaluator. If the
+change edits the suite itself, the comment says the scored frames differ.
+
+- Each change shows points and frames; it is bold (🟢 better, 🔴 worse) at 0.5 points or more and
+  at least 5 frames. Per-sport precision rests on few predictions for tennis and badminton (a few
+  dozen to a few hundred), so read those rows with that in mind.
+- A change in accuracy never fails the pull request. The check fails only if this commit cannot
+  be scored (for example the evaluator crashes or no source downloads); the comment then says so.
+  Pull requests from forks get the report in the job summary instead of a comment.
+- Detections are cached by model weights, detection code (`predict_video.py`,
+  `vantage_classes.py`), and library versions, so a change that keeps those only re-scores: about
+  3 minutes, mostly downloading the clips. Otherwise the Linux runner detects again on CPU: 22
+  minutes for the suite's 8,260 frames, about 26 minutes in all.
+- Footage is downloaded from its original sources on every run and is never cached or uploaded,
+  because this repository is public; if a host is down, the comment says which source is missing.
+- The check scores the default `--weights` of `evaluate_external.py` (now
+  `ml/models/pickleball-v1.pt`). A pull request that ships a different model (the Core ML export in
+  `ci.yml` and the Xcode project, or `CONFIG["model"]`) should commit its `.pt` under `ml/models/`
+  with a model card whose `operating_point.ball_confidence` matches `export_model.py
+  --ball-confidence`, and point that default at it; the comment then compares the two models.
+- Preview the comment locally: `git fetch origin && scripts/eval_pr.sh $(git merge-base HEAD
+  origin/main)` writes `reports/eval-pr/report.md`. It scores your working tree as it is,
+  uncommitted changes included.
 
 ## Labeling plan
 

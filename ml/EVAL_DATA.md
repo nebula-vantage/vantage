@@ -25,8 +25,9 @@ uv run python ml/evaluate_ball.py --labels ml/external/eval/tracknet-tennis/labe
 ```
 
 `evaluate_external.py` runs the model over every clip once at the raw 0.10 threshold (cached
-under `reports/external-eval/<weights>-<hash>-<imgsz>px-conf<threshold>/`, so a retrained
-`best.pt` or a new setting never reuses old detections), applies the model's ball operating
+under `reports/external-eval/<weights>-<hash>-<code>-<imgsz>px-conf<threshold>/`, where `<code>`
+covers the detection code and library versions, so a retrained `best.pt`, a new setting, or a
+library update never reuses old detections), applies the model's ball operating
 point from its model card (0.20 for `pickleball-v1`, the threshold the app ships; override with
 `--ball-confidence`), and reports recall/precision with the same rules as `evaluate_ball.py`
 (1% of the frame diagonal), per source and per sport. To score the app's Core ML path, run
@@ -41,6 +42,9 @@ box is a nominal size because scoring compares centers. Extra per-frame fields a
 later metrics:
 `visibility` (the source's class), `event` (`hit` / `bounce`), and `interpolated` (CVAT
 frames between hand keyframes; `--keyframes-only` skips them).
+
+Pull requests are scored automatically on a small subset (`--suite ci`); see "Accuracy check on
+pull requests" in `ml/README.md`.
 
 ## Fetched sources
 
@@ -81,13 +85,17 @@ ball threshold it ships with, as in `ml/README.md`: `pickleball-v1` at 0.20, the
 | tennis | 18,510 (17,826) | 33.5% / 92.9% | 39.9% / 89.4% |
 | badminton | 28,696 (24,784) | 8.6% / 60.5% | 14.6% / 91.7% |
 
-Pickleball recall matches the held-out topcorner clip (61.6%, `ml/README.md`), from fixed
-amateur cameras (`arnav-pickleball` 58.6%) to a pro stream (`rochester-pickleball` 65.8%).
+Pickleball recall is close to the held-out topcorner clip in PyTorch (62.8%, `ml/README.md`),
+from fixed amateur cameras (`arnav-pickleball` 58.6%) to a pro stream (`rochester-pickleball`
+65.8%).
 Tennis varies with ball size: fixed cameras near the baseline do well (`tenis-backview` 79.4%),
 while small far balls in 4K or at standing height do not (`yonggest-tennis` 14.7%,
 `tennis-analytics` 18.2%). The model was never trained on shuttlecocks, so badminton is a
 lower bound for a multi-sport detector. Fine-tuning on pickleball also helped tennis and
-badminton recall over the COCO model.
+badminton recall over the COCO model. Misses are detector misses: 44.6% of visible balls got no
+ball detection at all, and only 4.3% were detected but not picked by the tracker. Charts, the
+full JSON output, and the analysis are in
+[`ml/results/external-eval-2026-11-04/`](results/external-eval-2026-11-04/README.md).
 
 Not fetched automatically but worth adding. Each needs an adapter in `eval_sources.py` first:
 `fetch_roboflow.py` writes training-side data (`ml/external/<dir>`, listed in
