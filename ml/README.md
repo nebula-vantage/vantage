@@ -13,12 +13,19 @@ app; Core ML export and conversion checks stay in `tools/coreml/`.
 | `build_dataset.py` | Build the YOLO training set (player, ball, paddle) from the spec |
 | `train.py` | Fine-tune YOLO26n at 1280 px on the Apple GPU |
 | `predict_video.py` | Run any checkpoint on a video, writing app-format detections.jsonl |
+| `fetch_eval_data.py` | Download public tennis/badminton/pickleball clips with ball labels (eval only) |
+| `evaluate_external.py` | Score a checkpoint on those clips, per source and per sport |
+| `eval_data.py`, `eval_sources.py` | Download/convert helpers and one adapter per public dataset |
+| `EVAL_DATA.md` | What each external eval source is, its license, and how its labels were converted |
 | `labeling.py`, `vantage_classes.py` | Label format, session logic, evaluation, class mapping |
 | `labels/` | Committed labels, one JSON file per video |
 | `DATA_SOURCES.md` | Attribution for downloaded datasets (written by fetch_roboflow.py) |
 
 Tests: `uv run python -m unittest discover -s ml`. Generated data lives in the
 git-ignored `ml/external/`, `ml/datasets/`, and `ml/runs/`.
+
+Beyond our own clips, `ml/fetch_eval_data.py` pulls about 83,000 labeled frames of public
+tennis, badminton, and pickleball footage for evaluation only; see [EVAL_DATA.md](EVAL_DATA.md).
 
 ## Current baseline (topcorner60fps evaluation set, 164 visible balls)
 
@@ -136,6 +143,20 @@ Smoke test lesson: fine-tuning on 150 frames of one clip (sideview) dropped held
 recall from 40% to 1.8%. A model learns the clips it sees, so varied data (courts,
 angles, lighting, ball colors) matters more than volume from one recording, and every
 model must be checked on the held-out clips before it replaces the current one.
+
+## 5. Evaluate on public clips
+
+```sh
+uv run python ml/fetch_eval_data.py --all      # once, about 5 GB on disk
+uv run python ml/evaluate_external.py --weights ml/models/pickleball-v1.pt
+uv run python ml/evaluate_external.py --weights ml/runs/pickleball-v2/weights/best.pt --ball-confidence 0.20
+```
+
+Reports raw-detector and tracker recall/precision per source and per sport on clips no model
+was trained on, at the model card's ball operating point (or `--ball-confidence` for a new
+checkpoint). Detections are cached per weights file contents and settings.
+[EVAL_DATA.md](EVAL_DATA.md) lists each source's viewpoint, license, and label caveats (several
+have no absent-frame labels, so their precision only counts wrong positions).
 
 ## Labeling plan
 
