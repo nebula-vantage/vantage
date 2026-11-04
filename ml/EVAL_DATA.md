@@ -25,8 +25,9 @@ uv run python ml/evaluate_ball.py --labels ml/external/eval/tracknet-tennis/labe
 ```
 
 `evaluate_external.py` runs the model over every clip once at the raw 0.10 threshold (cached
-under `reports/external-eval/<weights>-<hash>-<imgsz>px-conf<threshold>/`, so a retrained
-`best.pt` or a new setting never reuses old detections), applies the model's ball operating
+under `reports/external-eval/<weights>-<hash>-<code>-<imgsz>px-conf<threshold>/`, where `<code>`
+covers the detection code and library versions, so a retrained `best.pt`, a new setting, or a
+library update never reuses old detections), applies the model's ball operating
 point from its model card (0.20 for `pickleball-v1`, the threshold the app ships; override with
 `--ball-confidence`), and reports recall/precision with the same rules as `evaluate_ball.py`
 (1% of the frame diagonal), per source and per sport. To score the app's Core ML path, run
@@ -41,6 +42,9 @@ box is a nominal size because scoring compares centers. Extra per-frame fields a
 later metrics:
 `visibility` (the source's class), `event` (`hit` / `bounce`), and `interpolated` (CVAT
 frames between hand keyframes; `--keyframes-only` skips them).
+
+Pull requests are scored automatically on a small subset (`--suite ci`); see "Accuracy check on
+pull requests" in `ml/README.md`.
 
 ## Fetched sources
 

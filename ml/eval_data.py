@@ -31,6 +31,7 @@ import tempfile
 import time
 from typing import Callable
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -44,6 +45,12 @@ BALL_BOX_FRACTION = 0.008
 RANGE_CHUNK = 8 << 20
 # Errors worth retrying: network failures and responses cut short.
 TRANSIENT = (OSError, urllib.error.URLError, http.client.HTTPException)
+# Small fixed subsets, {suite: {source: frames scored per clip}}. "ci" runs on every pull request
+# (.github/workflows/eval.yml): detection is the slow part, so each clip is cut to its first N
+# frames. One or two sources per sport, all fixed or corner cameras, from hosts that allow
+# automated downloads; tnv2pic and kwyoke add absent frames, so false alarms count too.
+SUITES = {"ci": {"arnav-pickleball": 900, "tnv2pic-pickleball": 600, "ballyolo-tennis": 400,
+                 "kwyoke-badminton": 120}}
 
 
 @dataclass(frozen=True)
@@ -72,6 +79,10 @@ def source(name, *, sport, view, license, url, download_size):
 
 def open_url(url, *, headers=None, opener=None, timeout=120):
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
+    if urllib.parse.urlsplit(url).hostname == "api.github.com" and os.environ.get("GITHUB_TOKEN"):
+        # CI runners share IPs, so anonymous GitHub API calls can hit the rate limit. Unredirected:
+        # the token is never forwarded if the API redirects elsewhere.
+        request.add_unredirected_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
     return (opener or urllib.request.build_opener()).open(request, timeout=timeout)
 
 
