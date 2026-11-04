@@ -89,6 +89,8 @@ class DatasetTests(unittest.TestCase):
             self.assertEqual(samples[0][5], {"ball"})
             with self.assertRaises(SystemExit):
                 external_samples(folder, [{"dir": "ws__proj__v1", "classes": {"Pickleball": "pickle"}}])
+            with self.assertRaises(SystemExit, msg="evaluation data must never become training data"):
+                external_samples(folder, [{"dir": "eval/tracknet-tennis", "classes": {"ball": "ball"}}])
 
     def test_external_caps_and_only_with_ball(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -62,6 +62,8 @@ def external_samples(external_root, entries):
     """(split, key, source, image path, label rows(class, box px)) for external YOLO datasets."""
     samples = []
     for entry in entries:
+        if Path(entry["dir"]).parts[:1] == ("eval",):
+            raise SystemExit(f"{entry['dir']}: ml/external/eval/ is evaluation-only data (ml/EVAL_DATA.md)")
         root = Path(external_root) / entry["dir"]
         meta = yaml.safe_load((root / "data.yaml").read_text())
         names = meta["names"] if isinstance(meta["names"], list) else [meta["names"][i] for i in sorted(meta["names"])]
