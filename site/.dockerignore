@@ -1,0 +1,10 @@
+# Send only the website and its server configuration to the remote builder.
+*
+!Dockerfile
+!Caddyfile
+!index.html
+!styles.css
+!script.js
+!config.js
+!assets/
+!assets/**

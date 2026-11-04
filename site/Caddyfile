@@ -1,0 +1,7 @@
+:8080 {
+	root * /srv
+	encode zstd gzip
+	# Revalidate assets so repeat visitors receive updated signup links and styles.
+	header Cache-Control "no-cache"
+	file_server
+}
