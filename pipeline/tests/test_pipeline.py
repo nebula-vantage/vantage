@@ -203,3 +203,30 @@ class PipelineTests(unittest.TestCase):
 
     def test_odd_dimensions_have_explicit_even_encoding(self):
         self.assertEqual(encoded_size(321, 241), (322, 242))
+
+    def test_progress_callbacks_report_real_frames_without_stdout_throttling(self):
+        updates = []
+        run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector,
+                     progress_callback=lambda stage, done, total: updates.append((stage, done, total)))
+        detection = [done for stage, done, _ in updates if stage == 'Detecting']
+        rendering = [done for stage, done, _ in updates if stage == 'Rendering']
+        self.assertEqual(detection, list(range(1, 61)))
+        self.assertEqual(rendering, list(range(1, 61)))
+        self.assertIn(('Loading model', 0, 60), updates)
+        self.assertIn(('Analyzing', 0, 60), updates)
+        self.assertEqual(updates[-1], ('Finalizing', 60, 60))
+
+    def test_cancelled_progress_preserves_completed_outputs(self):
+        previous = b'previous completed analysis'
+        (self.output / 'stats.json').write_bytes(previous)
+
+        def cancel(stage, done, total):
+            if stage == 'Detecting' and done == 5:
+                raise RuntimeError('Analysis cancelled')
+
+        with self.assertRaisesRegex(RuntimeError, 'Analysis cancelled'):
+            run_pipeline(self.input, self.output, config=self.cfg,
+                         detector_factory=FakeDetector, progress_callback=cancel)
+        self.assertEqual((self.output / 'stats.json').read_bytes(), previous)
+        self.assertFalse((self.output / 'annotated.mp4').exists())
+        self.assertFalse(list(self.output.glob('.processing-*')))

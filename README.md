@@ -12,6 +12,9 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 
 ## Current status
 
+- **Desktop/web coach:** upload a video, calibrate the court, and run the analysis
+  locally for annotated playback, evidence-based reviews, practice plans, and optional AI questions. Start with
+  `uv run vantage-coach --open` ([setup and scope](pipeline/COACHING.md)).
 - **Desktop pipeline:** player and ball tracking, court calibration, estimated shot/rally
   stats, bounce calls, and a landing heatmap from one fixed-camera video.
 - **iPhone app:** runs the detector and ball tracker on-device on imported videos, with
@@ -25,6 +28,7 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 | Folder | What it is | Docs |
 | --- | --- | --- |
 | `pipeline/` | Desktop Python pipeline (the `vantage` package): detection, tracking, court calibration, stats, heatmaps. The reference implementation. | [pipeline/README.md](pipeline/README.md) |
+| `pipeline/vantage/web/` | Desktop/web coaching interface, served by `vantage-coach` | [pipeline/COACHING.md](pipeline/COACHING.md) |
 | `ml/` | Ball labeling, accuracy evaluation, dataset building, detector fine-tuning | [ml/README.md](ml/README.md) |
 | `ios/` | iPhone app (SwiftUI) and `VantageKit`, the on-device analysis package | [ios/README.md](ios/README.md) |
 | `site/` | Public landing page with links to the early access signup form | [site/README.md](site/README.md) |

@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f6f8" />
+    <title>AI Coach · Vantage</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/fonts.css" />
+    <link rel="stylesheet" href="/app.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to coaching</a>
+    <aside class="sidebar" aria-label="Workspace">
+      <a class="brand" href="#main" aria-label="Vantage home">VANTAGE</a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="navigation" aria-label="Coaching sections">
+        <a class="nav-item active" href="#main" aria-current="page"
+          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2" />
+            <path d="M4 9h16M4 15h16M12 3v18" /></svg
+          >AI Coach</a
+        >
+        <a class="nav-item" href="#review"
+          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="3" />
+            <path d="m10 8 6 4-6 4z" /></svg
+          >Review moments</a
+        >
+        <a class="nav-item" href="#practice"
+          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="4" width="14" height="17" rx="2" />
+            <path d="M9 4V2h6v2M9 12l2 2 4-4" /></svg
+          >Practice plan</a
+        >
+      </nav>
+      <div class="session-picker">
+        <label class="workspace-label" for="session-select"
+          >YOUR SESSIONS</label
+        >
+        <select id="session-select" aria-label="Choose an analyzed session">
+          <option value="">Loading sessions…</option>
+        </select>
+      </div>
+      <div class="sidebar-bottom">
+        <p class="import-note">
+          Upload your game.<br />Get a video coaching review.
+        </p>
+        <button
+          id="upload-button"
+          class="button button-primary button-wide"
+          type="button"
+        >
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6" /></svg
+          >Upload video
+        </button>
+        <button
+          id="import-button"
+          class="text-button import-existing-button"
+          type="button"
+        >
+          Import existing analysis
+        </button>
+        <input
+          id="stats-file"
+          type="file"
+          accept=".json,application/json"
+          hidden
+        />
+        <button
+          id="sample-button"
+          class="button button-secondary button-wide"
+          type="button"
+        >
+          Try sample session
+        </button>
+        <div class="sidebar-footer">
+          <span class="status-dot"></span> LOCAL WORKSPACE
+        </div>
+      </div>
+    </aside>
+    <main id="main" class="main" tabindex="-1">
+      <header class="page-header">
+        <div>
+          <div class="eyebrow">VANTAGE</div>
+          <h1>AI Coach</h1>
+          <p>Review your game. Plan your next session.</p>
+        </div>
+        <div class="export-control">
+          <label class="sr-only" for="export-format">Export format</label>
+          <select id="export-format">
+            <option value="text">Text report</option>
+            <option value="json">JSON report</option>
+          </select>
+          <button
+            id="export-button"
+            class="button button-secondary"
+            type="button"
+            disabled
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15V3m-4 4 4-4 4 4M7 10H4v11h16V10h-3" /></svg
+            >Export report
+          </button>
+        </div>
+      </header>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div id="session-errors" class="subtle-banner" hidden></div>
+      <section
+        id="analysis-banner"
+        class="analysis-banner"
+        aria-label="Video analysis status"
+        hidden
+      >
+        <div>
+          <strong id="analysis-banner-title"></strong>
+          <p id="analysis-banner-copy"></p>
+        </div>
+        <button
+          id="analysis-banner-open"
+          class="button button-secondary"
+          type="button"
+        >
+          View progress
+        </button>
+      </section>
+      <div id="loading" class="loading-state" role="status">
+        <span class="loading-ring" aria-hidden="true"></span> Opening your
+        coaching workspace…
+      </div>
+      <div id="workspace" hidden>
+        <div class="workspace-grid">
+          <div class="review-column">
+            <section class="session-bar" aria-label="Current session">
+              <div class="session-heading">
+                <p class="session-meta-line">
+                  <span class="sport-dot" aria-hidden="true"></span
+                  ><span id="session-meta"></span>
+                </p>
+                <div class="session-title-line">
+                  <h2 id="session-name">Session</h2>
+                  <span id="demo-badge" class="badge badge-muted" hidden
+                    >SAMPLE</span
+                  >
+                </div>
+              </div>
+            </section>
+            <section
+              id="playback"
+              class="video-card"
+              aria-label="Session video"
+            >
+              <button
+                id="video-button"
+                class="button video-change-button"
+                type="button"
+              >
+                + Add video
+              </button>
+              <input
+                id="video-file"
+                type="file"
+                accept="video/*,.mp4,.mov,.webm"
+                hidden
+              />
+              <div id="video-empty" class="video-empty">
+                <svg
+                  class="video-court"
+                  viewBox="0 0 680 340"
+                  preserveAspectRatio="xMidYMax meet"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M75 330 232 56h216l157 274Z"
+                    fill="#1e2c35"
+                    stroke="#405662"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M166 171h348M145 210h390M186 136h308M340 56v80M340 210v120"
+                    fill="none"
+                    stroke="#405662"
+                    stroke-width="1.5"
+                  />
+                  <path d="M159 171h362" stroke="#6e8390" stroke-width="2" />
+                </svg>
+                <div class="video-empty-action">
+                  <button
+                    id="video-attach-trigger"
+                    class="play-button"
+                    type="button"
+                    aria-label="Add matching video to review this session"
+                  >
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m9 5 11 7-11 7z" />
+                    </svg></button
+                  ><span class="video-empty-copy">Add matching video</span>
+                </div>
+                <div class="video-badges">
+                  <span id="video-duration" class="video-duration"></span
+                  ><span id="video-coverage" class="video-coverage"></span>
+                </div>
+              </div>
+              <div id="video-container" class="video-container" hidden>
+                <video
+                  id="session-video"
+                  controls
+                  preload="metadata"
+                  playsinline
+                  aria-label="Session review video"
+                ></video>
+                <p id="video-status" class="video-status" role="status"></p>
+              </div>
+            </section>
+            <p id="sample-note" class="sample-note" hidden>
+              Synthetic sample · Import your analysis for a review of your
+              session.
+            </p>
+            <div class="focus-control">
+              <span id="focus-label" class="small-label">COACHING FOCUS</span>
+              <div class="segmented" role="group" aria-labelledby="focus-label">
+                <button
+                  type="button"
+                  data-focus="consistency"
+                  aria-pressed="true"
+                >
+                  Consistency</button
+                ><button
+                  type="button"
+                  data-focus="placement"
+                  aria-pressed="false"
+                >
+                  Placement</button
+                ><button type="button" data-focus="review" aria-pressed="false">
+                  Video review
+                </button>
+              </div>
+            </div>
+            <nav class="section-tabs" aria-label="Session sections">
+              <a href="#overview" aria-current="location">Overview</a
+              ><a href="#review">Review moments</a
+              ><a href="#practice">Practice plan</a>
+            </nav>
+            <section
+              id="overview"
+              class="overview-section"
+              aria-label="Session overview"
+            >
+              <div class="small-label">SESSION · BOTH SIDES</div>
+              <div
+                id="metric-grid"
+                class="metric-grid"
+                aria-label="Session measurements"
+              ></div>
+              <section class="takeaway-card" aria-labelledby="report-headline">
+                <div class="takeaway-copy">
+                  <div class="eyebrow">
+                    <span class="accent-dot" aria-hidden="true"></span> COACHING
+                    NOTE
+                  </div>
+                  <h2 id="report-headline"></h2>
+                  <p id="report-summary"></p>
+                  <a class="takeaway-link" href="#practice"
+                    >View practice plan <span aria-hidden="true">→</span></a
+                  >
+                </div>
+              </section>
+              <section
+                class="insights-section"
+                aria-labelledby="insights-title"
+              >
+                <div class="section-heading">
+                  <h2 id="insights-title">Session insights</h2>
+                  <span class="small-label">ESTIMATED</span>
+                </div>
+                <div id="insights" class="insights-list"></div>
+              </section>
+              <section
+                class="court-section surface"
+                aria-labelledby="court-title"
+              >
+                <div class="section-heading">
+                  <h2 id="court-title">Landing spots</h2>
+                  <span class="small-label">BOTH SIDES</span>
+                </div>
+                <div class="court-layout">
+                  <div class="court-panel">
+                    <svg
+                      id="court-map"
+                      class="court-map"
+                      viewBox="-1 -1 8.1 15.41"
+                      role="img"
+                      aria-label="Estimated bounce candidates across both sides of the court"
+                    >
+                      <rect
+                        x="-1"
+                        y="-1"
+                        width="8.1"
+                        height="15.41"
+                        rx=".45"
+                        fill="#cfd8df"
+                      />
+                      <rect
+                        x="0"
+                        y="0"
+                        width="6.1"
+                        height="13.41"
+                        fill="#e7ecef"
+                        stroke="#fff"
+                        stroke-width=".09"
+                      />
+                      <path
+                        d="M0 4.575H6.1M0 8.835H6.1M3.05 0V4.575M3.05 8.835V13.41"
+                        fill="none"
+                        stroke="#fff"
+                        stroke-width=".09"
+                      />
+                      <path
+                        d="M0 6.705H6.1"
+                        stroke="#fff"
+                        stroke-width=".09"
+                        stroke-dasharray=".14 .09"
+                      />
+                      <g id="court-dots"></g>
+                    </svg>
+                    <p id="court-caption">Estimated bounce locations</p>
+                  </div>
+                  <div class="court-notes">
+                    <h3>A closer look at placement</h3>
+                    <p>
+                      Each mark is a detected bounce candidate. Use the replay
+                      to check the contact and location before drawing
+                      conclusions.
+                    </p>
+                    <div
+                      class="court-legend"
+                      aria-label="Landing marker legend"
+                    >
+                      <span
+                        ><i class="landing-dot" aria-hidden="true"></i
+                        >Inside</span
+                      ><span
+                        ><i class="landing-dot outside" aria-hidden="true"></i
+                        >Outside</span
+                      ><span
+                        ><i class="landing-dot uncertain" aria-hidden="true"></i
+                        >Close call</span
+                      >
+                    </div>
+                    <p class="court-disclaimer">
+                      Estimated locations, not verified line calls.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </section>
+            <section
+              id="review"
+              class="surface review-section"
+              aria-labelledby="review-title"
+            >
+              <div class="section-heading">
+                <h2 id="review-title">Review moments</h2>
+                <span class="small-label">VIDEO EVIDENCE</span>
+              </div>
+              <p class="section-description">
+                Revisit an exchange or check a candidate landing.
+              </p>
+              <div id="moments" class="moments-list"></div>
+            </section>
+            <section
+              id="practice"
+              class="surface practice-section"
+              aria-labelledby="practice-title"
+            >
+              <div class="section-heading">
+                <h2 id="practice-title">Practice plan</h2>
+                <span id="plan-duration" class="badge badge-muted"></span>
+              </div>
+              <p class="section-description">
+                A focused plan for your next session. Check off each drill as
+                you go.
+              </p>
+              <div id="drills" class="drills-list"></div>
+              <div class="plan-footer">
+                <span id="plan-progress" role="status"></span
+                ><span>Saved on this browser</span>
+              </div>
+            </section>
+            <section class="evidence-section" aria-labelledby="evidence-title">
+              <details>
+                <summary id="evidence-title">
+                  <span
+                    >About these estimates
+                    <span id="quality-label" class="quality-label"></span></span
+                  ><span aria-hidden="true">+</span>
+                </summary>
+                <div class="evidence-body">
+                  <p id="quality-copy"></p>
+                  <ul id="quality-warnings"></ul>
+                  <p>
+                    Session-level estimates across both sides. The analysis does
+                    not identify you, diagnose technique, or establish official
+                    points and errors.
+                  </p>
+                </div>
+              </details>
+            </section>
+          </div>
+          <aside class="coach-column" aria-label="Coach conversation">
+            <section class="coach-card">
+              <header class="coach-header">
+                <span class="coach-avatar" aria-hidden="true"
+                  ><svg class="icon" viewBox="0 0 24 24">
+                    <ellipse
+                      cx="14"
+                      cy="9"
+                      rx="6"
+                      ry="7"
+                      transform="rotate(40 14 9)"
+                    />
+                    <path
+                      d="m9 14-6 7m6-3-3-3M12 4l6 6M9 7l6 6M11 11l6-6"
+                    /></svg
+                ></span>
+                <div>
+                  <h2>Ask your coach</h2>
+                  <p id="coach-mode">
+                    <span class="status-dot"></span> Session guide · local
+                  </p>
+                </div>
+              </header>
+              <div class="coach-intro">
+                <h3>A focus for your next game.</h3>
+                <p>
+                  Ask about the session, review a moment, or find a drill to
+                  work on.
+                </p>
+              </div>
+              <div id="suggested-questions" class="suggested-questions"></div>
+              <div
+                id="chat-log"
+                class="chat-log"
+                aria-live="polite"
+                aria-relevant="additions text"
+                aria-label="Conversation"
+              ></div>
+              <p id="chat-error" class="chat-error" role="alert" hidden></p>
+              <form id="chat-form" class="chat-form">
+                <label class="sr-only" for="chat-input"
+                  >Ask about this session</label
+                >
+                <div class="composer">
+                  <textarea
+                    id="chat-input"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Ask about your session…"
+                    required
+                  ></textarea
+                  ><button
+                    id="send-button"
+                    type="submit"
+                    aria-label="Send question"
+                  >
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 19V5m-6 6 6-6 6 6" />
+                    </svg>
+                  </button>
+                </div>
+                <div id="ai-option" class="ai-option" hidden>
+                  <label
+                    ><input id="use-ai" type="checkbox" /> Use AI
+                    responses</label
+                  >
+                  <p>
+                    Sends session evidence and this conversation to OpenAI. Your
+                    video stays here.
+                  </p>
+                </div>
+                <p id="chat-footnote" class="chat-footnote">
+                  Fixed session guide · no generated AI responses.
+                </p>
+              </form>
+            </section>
+            <section class="quality-card" aria-labelledby="tracking-title">
+              <div class="quality-card-heading">
+                <span class="status-dot" aria-hidden="true"></span>
+                <h2 id="tracking-title">Tracking quality</h2>
+              </div>
+              <div class="coverage-caption">
+                <span>Ball observed</span><strong id="coverage-value"></strong>
+              </div>
+              <div class="coverage-track"><span id="coverage-bar"></span></div>
+              <p id="quality-note"></p>
+              <a class="text-button" href="#evidence-title"
+                >Understand the estimates <span aria-hidden="true">→</span></a
+              >
+            </section>
+          </aside>
+        </div>
+        <footer class="page-footer">
+          <span class="footer-brand">VANTAGE</span
+          ><span>Desktop coaching · Session-level estimates</span>
+        </footer>
+      </div>
+    </main>
+    <dialog
+      id="analysis-dialog"
+      class="analysis-dialog"
+      aria-labelledby="analysis-title"
+    >
+      <header class="analysis-dialog-header">
+        <div>
+          <div class="eyebrow">VIDEO COACHING</div>
+          <h2 id="analysis-title">Analyze your game</h2>
+        </div>
+        <button
+          id="analysis-close"
+          class="dialog-close"
+          type="button"
+          aria-label="Close analysis panel"
+        >
+          ×
+        </button>
+      </header>
+      <p class="analysis-intro">
+        Upload a fixed-camera pickleball video, mark the court, and get an
+        annotated replay with a coaching review.
+      </p>
+      <ol class="analysis-steps" aria-label="Analysis steps">
+        <li data-analysis-step="upload">1 <span>Upload</span></li>
+        <li data-analysis-step="court">2 <span>Mark court</span></li>
+        <li data-analysis-step="results">3 <span>Analyze</span></li>
+      </ol>
+      <div id="analysis-error" class="error-banner" role="alert" hidden></div>
+      <button id="analysis-retry" class="text-button" type="button" hidden>
+        Retry connection
+      </button>
+      <section id="analysis-upload-panel">
+        <div id="analysis-drop-zone" class="analysis-drop-zone">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6" />
+          </svg>
+          <h3>Bring your game into focus.</h3>
+          <p>Drop a video here, or choose a file.</p>
+          <button
+            id="analysis-choose-file"
+            class="button button-primary"
+            type="button"
+          >
+            Choose video
+          </button>
+          <input
+            id="analysis-file"
+            type="file"
+            accept=".mp4,.mov,.m4v,.webm,.avi,video/mp4,video/quicktime,video/webm,video/x-msvideo"
+            hidden
+          />
+          <p id="analysis-file-limits" class="analysis-file-limits">
+            MP4, MOV, M4V, WebM or AVI · up to 512 MB · 20 minutes
+          </p>
+        </div>
+        <div class="analysis-camera-notes">
+          <span class="status-dot" aria-hidden="true"></span>
+          <p>
+            Keep the camera fixed and all four court corners visible. Your video
+            is processed on this computer.
+          </p>
+        </div>
+      </section>
+      <section
+        id="analysis-progress-panel"
+        class="analysis-progress-panel"
+        aria-live="polite"
+        hidden
+      >
+        <div class="analysis-progress-heading">
+          <h3 id="analysis-job-stage">Preparing video</h3>
+          <span id="analysis-job-percent"></span>
+        </div>
+        <p id="analysis-job-name"></p>
+        <progress
+          id="analysis-progress"
+          max="1"
+          aria-label="Video analysis progress"
+        ></progress>
+        <p id="analysis-job-detail"></p>
+      </section>
+      <section id="analysis-calibration-panel" hidden>
+        <div class="calibration-heading">
+          <div>
+            <h3>Mark the four outer court corners</h3>
+            <p id="calibration-instruction">
+              Select the near-left corner first.
+            </p>
+          </div>
+          <div class="calibration-tools">
+            <button
+              id="calibration-undo"
+              class="button button-secondary button-small"
+              type="button"
+            >
+              Undo</button
+            ><button
+              id="calibration-reset"
+              class="button button-secondary button-small"
+              type="button"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+        <p class="calibration-order">
+          Near-left → near-right → far-right → far-left. “Near” is the end
+          closest to the camera.
+        </p>
+        <div class="calibration-frame">
+          <img
+            id="analysis-preview"
+            alt="First video frame for selecting the four court corners"
+          /><svg
+            id="calibration-overlay"
+            class="calibration-overlay"
+            role="img"
+            aria-label="Selected court corners"
+          ></svg>
+        </div>
+        <p id="calibration-video-meta" class="calibration-video-meta"></p>
+        <details class="calibration-coordinates">
+          <summary>Enter or adjust corner coordinates</summary>
+          <p>
+            Pixel coordinates are measured from the image’s top-left. This is
+            also a keyboard alternative to clicking the image.
+          </p>
+          <div class="corner-input-grid">
+            <fieldset>
+              <legend>1 · Near-left</legend>
+              <label
+                >X
+                <input
+                  id="corner-0-x"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric" /></label
+              ><label
+                >Y
+                <input
+                  id="corner-0-y"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+              /></label>
+            </fieldset>
+            <fieldset>
+              <legend>2 · Near-right</legend>
+              <label
+                >X
+                <input
+                  id="corner-1-x"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric" /></label
+              ><label
+                >Y
+                <input
+                  id="corner-1-y"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+              /></label>
+            </fieldset>
+            <fieldset>
+              <legend>3 · Far-right</legend>
+              <label
+                >X
+                <input
+                  id="corner-2-x"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric" /></label
+              ><label
+                >Y
+                <input
+                  id="corner-2-y"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+              /></label>
+            </fieldset>
+            <fieldset>
+              <legend>4 · Far-left</legend>
+              <label
+                >X
+                <input
+                  id="corner-3-x"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric" /></label
+              ><label
+                >Y
+                <input
+                  id="corner-3-y"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+              /></label>
+            </fieldset>
+          </div>
+        </details>
+        <label class="analysis-synthetic-label"
+          ><input id="analysis-synthetic" type="checkbox" /> This is a
+          synthetic/demo video</label
+        >
+        <p class="analysis-synthetic-note">
+          Use this for animations or simulated footage so results stay clearly
+          labeled.
+        </p>
+        <button
+          id="analysis-start"
+          class="button button-primary"
+          type="button"
+          disabled
+        >
+          Run analysis
+        </button>
+      </section>
+      <section id="analysis-result-panel" class="analysis-result-panel" hidden>
+        <h3 id="analysis-result-title"></h3>
+        <p id="analysis-result-copy"></p>
+        <button
+          id="analysis-view-results"
+          class="button button-primary"
+          type="button"
+          hidden
+        >
+          View coaching results</button
+        ><button
+          id="analysis-another"
+          class="button button-secondary"
+          type="button"
+        >
+          Analyze another video
+        </button>
+      </section>
+      <footer class="analysis-dialog-footer">
+        <p id="analysis-background-note">
+          Processing stays on this computer. No AI account is needed to analyze
+          a video.
+        </p>
+        <button id="analysis-cancel" class="text-button" type="button" hidden>
+          Cancel analysis
+        </button>
+      </footer>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

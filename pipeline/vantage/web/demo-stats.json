@@ -1,0 +1,655 @@
+{
+  "schema_version": 2,
+  "synthetic": true,
+  "session_name": "Demo session \u00b7 synthetic data",
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frame_count": 5400,
+    "duration_s": 180
+  },
+  "rally_count": 8,
+  "shot_count": 59,
+  "crossing_events": [
+    {
+      "frame_index": 255,
+      "time_s": 8.5
+    },
+    {
+      "frame_index": 300,
+      "time_s": 10.0
+    },
+    {
+      "frame_index": 345,
+      "time_s": 11.5
+    },
+    {
+      "frame_index": 390,
+      "time_s": 13.0
+    },
+    {
+      "frame_index": 435,
+      "time_s": 14.5
+    },
+    {
+      "frame_index": 480,
+      "time_s": 16.0
+    },
+    {
+      "frame_index": 525,
+      "time_s": 17.5
+    },
+    {
+      "frame_index": 882,
+      "time_s": 29.4
+    },
+    {
+      "frame_index": 924,
+      "time_s": 30.8
+    },
+    {
+      "frame_index": 966,
+      "time_s": 32.2
+    },
+    {
+      "frame_index": 1008,
+      "time_s": 33.6
+    },
+    {
+      "frame_index": 1364,
+      "time_s": 45.47
+    },
+    {
+      "frame_index": 1408,
+      "time_s": 46.93
+    },
+    {
+      "frame_index": 1452,
+      "time_s": 48.4
+    },
+    {
+      "frame_index": 1496,
+      "time_s": 49.87
+    },
+    {
+      "frame_index": 1540,
+      "time_s": 51.33
+    },
+    {
+      "frame_index": 1584,
+      "time_s": 52.8
+    },
+    {
+      "frame_index": 1628,
+      "time_s": 54.27
+    },
+    {
+      "frame_index": 1672,
+      "time_s": 55.73
+    },
+    {
+      "frame_index": 1716,
+      "time_s": 57.2
+    },
+    {
+      "frame_index": 1760,
+      "time_s": 58.67
+    },
+    {
+      "frame_index": 1804,
+      "time_s": 60.13
+    },
+    {
+      "frame_index": 1848,
+      "time_s": 61.6
+    },
+    {
+      "frame_index": 1892,
+      "time_s": 63.07
+    },
+    {
+      "frame_index": 1936,
+      "time_s": 64.53
+    },
+    {
+      "frame_index": 2295,
+      "time_s": 76.5
+    },
+    {
+      "frame_index": 2340,
+      "time_s": 78.0
+    },
+    {
+      "frame_index": 2385,
+      "time_s": 79.5
+    },
+    {
+      "frame_index": 2775,
+      "time_s": 92.5
+    },
+    {
+      "frame_index": 2820,
+      "time_s": 94.0
+    },
+    {
+      "frame_index": 2865,
+      "time_s": 95.5
+    },
+    {
+      "frame_index": 2910,
+      "time_s": 97.0
+    },
+    {
+      "frame_index": 2955,
+      "time_s": 98.5
+    },
+    {
+      "frame_index": 3000,
+      "time_s": 100.0
+    },
+    {
+      "frame_index": 3045,
+      "time_s": 101.5
+    },
+    {
+      "frame_index": 3090,
+      "time_s": 103.0
+    },
+    {
+      "frame_index": 3135,
+      "time_s": 104.5
+    },
+    {
+      "frame_index": 3459,
+      "time_s": 115.29
+    },
+    {
+      "frame_index": 3497,
+      "time_s": 116.57
+    },
+    {
+      "frame_index": 3536,
+      "time_s": 117.86
+    },
+    {
+      "frame_index": 3574,
+      "time_s": 119.14
+    },
+    {
+      "frame_index": 3613,
+      "time_s": 120.43
+    },
+    {
+      "frame_index": 3651,
+      "time_s": 121.71
+    },
+    {
+      "frame_index": 4093,
+      "time_s": 136.42
+    },
+    {
+      "frame_index": 4135,
+      "time_s": 137.83
+    },
+    {
+      "frame_index": 4178,
+      "time_s": 139.25
+    },
+    {
+      "frame_index": 4220,
+      "time_s": 140.67
+    },
+    {
+      "frame_index": 4262,
+      "time_s": 142.08
+    },
+    {
+      "frame_index": 4305,
+      "time_s": 143.5
+    },
+    {
+      "frame_index": 4348,
+      "time_s": 144.92
+    },
+    {
+      "frame_index": 4390,
+      "time_s": 146.33
+    },
+    {
+      "frame_index": 4432,
+      "time_s": 147.75
+    },
+    {
+      "frame_index": 4475,
+      "time_s": 149.17
+    },
+    {
+      "frame_index": 4517,
+      "time_s": 150.58
+    },
+    {
+      "frame_index": 4970,
+      "time_s": 165.67
+    },
+    {
+      "frame_index": 5020,
+      "time_s": 167.33
+    },
+    {
+      "frame_index": 5070,
+      "time_s": 169.0
+    },
+    {
+      "frame_index": 5120,
+      "time_s": 170.67
+    },
+    {
+      "frame_index": 5170,
+      "time_s": 172.33
+    }
+  ],
+  "shots_per_rally": [
+    7,
+    4,
+    14,
+    3,
+    9,
+    6,
+    11,
+    5
+  ],
+  "longest_rally": 14,
+  "avg_ball_speed_kmh": 28.4,
+  "rallies": [
+    {
+      "id": 1,
+      "start_s": 7,
+      "end_s": 19,
+      "crossing_times_s": [
+        8.5,
+        10.0,
+        11.5,
+        13.0,
+        14.5,
+        16.0,
+        17.5
+      ],
+      "shots": 7,
+      "duration_s": 12,
+      "ball_observation_coverage": 0.68,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 2,
+      "start_s": 28,
+      "end_s": 35,
+      "crossing_times_s": [
+        29.4,
+        30.8,
+        32.2,
+        33.6
+      ],
+      "shots": 4,
+      "duration_s": 7,
+      "ball_observation_coverage": 0.71,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 3,
+      "start_s": 44,
+      "end_s": 66,
+      "crossing_times_s": [
+        45.47,
+        46.93,
+        48.4,
+        49.87,
+        51.33,
+        52.8,
+        54.27,
+        55.73,
+        57.2,
+        58.67,
+        60.13,
+        61.6,
+        63.07,
+        64.53
+      ],
+      "shots": 14,
+      "duration_s": 22,
+      "ball_observation_coverage": 0.86,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 4,
+      "start_s": 75,
+      "end_s": 81,
+      "crossing_times_s": [
+        76.5,
+        78.0,
+        79.5
+      ],
+      "shots": 3,
+      "duration_s": 6,
+      "ball_observation_coverage": 0.19,
+      "quality_flags": [
+        "heuristic_rally",
+        "low_ball_coverage"
+      ]
+    },
+    {
+      "id": 5,
+      "start_s": 91,
+      "end_s": 106,
+      "crossing_times_s": [
+        92.5,
+        94.0,
+        95.5,
+        97.0,
+        98.5,
+        100.0,
+        101.5,
+        103.0,
+        104.5
+      ],
+      "shots": 9,
+      "duration_s": 15,
+      "ball_observation_coverage": 0.74,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 6,
+      "start_s": 114,
+      "end_s": 123,
+      "crossing_times_s": [
+        115.29,
+        116.57,
+        117.86,
+        119.14,
+        120.43,
+        121.71
+      ],
+      "shots": 6,
+      "duration_s": 9,
+      "ball_observation_coverage": 0.65,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 7,
+      "start_s": 135,
+      "end_s": 152,
+      "crossing_times_s": [
+        136.42,
+        137.83,
+        139.25,
+        140.67,
+        142.08,
+        143.5,
+        144.92,
+        146.33,
+        147.75,
+        149.17,
+        150.58
+      ],
+      "shots": 11,
+      "duration_s": 17,
+      "ball_observation_coverage": 0.78,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    },
+    {
+      "id": 8,
+      "start_s": 164,
+      "end_s": 174,
+      "crossing_times_s": [
+        165.67,
+        167.33,
+        169.0,
+        170.67,
+        172.33
+      ],
+      "shots": 5,
+      "duration_s": 10,
+      "ball_observation_coverage": 0.61,
+      "quality_flags": [
+        "heuristic_rally"
+      ]
+    }
+  ],
+  "in_out_calls": [
+    {
+      "frame_index": 306,
+      "time_s": 10.2,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        1.8,
+        10.8
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 522,
+      "time_s": 17.4,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        4.1,
+        2.7
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 984,
+      "time_s": 32.8,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        6.15,
+        9.1
+      ],
+      "call": "OUT",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce",
+        "near_boundary"
+      ]
+    },
+    {
+      "frame_index": 1425,
+      "time_s": 47.5,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        2.4,
+        11.7
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 1608,
+      "time_s": 53.6,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        3.6,
+        2.3
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 1836,
+      "time_s": 61.2,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        4.2,
+        10.1
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 2883,
+      "time_s": 96.1,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        1.9,
+        3.8
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 3138,
+      "time_s": 104.6,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        2.1,
+        13.8
+      ],
+      "call": "OUT",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 3576,
+      "time_s": 119.2,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        3.9,
+        9.8
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 4224,
+      "time_s": 140.8,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        2.8,
+        11.9
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 4482,
+      "time_s": 149.4,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        4.5,
+        1.8
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce"
+      ]
+    },
+    {
+      "frame_index": 5103,
+      "time_s": 170.1,
+      "pixel": [
+        960,
+        540
+      ],
+      "court": [
+        0.06,
+        9.2
+      ],
+      "call": "IN",
+      "fit_improvement": 0.7,
+      "quality_flags": [
+        "heuristic_bounce",
+        "near_boundary"
+      ]
+    }
+  ],
+  "bounce_candidate_count": 12,
+  "quality": {
+    "status": "heuristic",
+    "ball_detection_coverage": 0.66,
+    "observed_frames": 3564,
+    "interpolated_frames": 270,
+    "coasted_frames": 108,
+    "interpolation_fraction": 0.05,
+    "valid_speed_duration_s": 88.2,
+    "valid_speed_coverage": 0.49,
+    "measurement_type": "heuristic_court_projection",
+    "warnings": [
+      "Synthetic demo measurements; no real match was analyzed.",
+      "Speed is a court-plane projection, not true airborne ball speed.",
+      "Bounce calls and net-crossing counts are heuristic estimates."
+    ]
+  }
+}
