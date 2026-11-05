@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 import hashlib
 import importlib.util
 import json
+import logging
 import math
 import os
 from pathlib import Path
@@ -36,6 +37,7 @@ MAX_ACTIVE_JOBS = 8
 MAX_JOBS = 20
 ALLOWED_SUFFIXES = {".mp4", ".mov", ".m4v", ".webm", ".avi"}
 TERMINAL = {"completed", "failed", "cancelled"}
+LOGGER = logging.getLogger(__name__)
 
 
 class AnalysisCancelled(RuntimeError):
@@ -301,6 +303,10 @@ class AnalysisJobs:
                     job.public.update(status="cancelled", stage="Cancelled", progress=None, error=None)
                 self._cleanup(job)
             except Exception as exc:
+                if not isinstance(exc, UploadError) and not job.cancelled.is_set():
+                    # Keep diagnostic details on the local server, never in the
+                    # browser response, before failed staging is removed.
+                    LOGGER.exception("Analysis job %s failed during %s", identity, operation)
                 with self._lock:
                     if job.cancelled.is_set():
                         job.public.update(status="cancelled", stage="Cancelled", progress=None, error=None)
@@ -328,6 +334,14 @@ class AnalysisJobs:
         if not cv2.imwrite(str(job.directory / "preview.png"), first, [cv2.IMWRITE_PNG_COMPRESSION, 3]):
             raise UploadError("The video preview could not be created. Try another MP4.")
         job.result.mkdir(exist_ok=True)
+        scale = min(1.0, 640 / max(first.shape[:2]))
+        thumbnail = cv2.resize(first, (max(1, round(first.shape[1] * scale)),
+                                       max(1, round(first.shape[0] * scale))))
+        # A thumbnail is optional; preparation and analysis still work if encoding it fails.
+        try:
+            cv2.imwrite(str(job.result / "thumbnail.png"), thumbnail, [cv2.IMWRITE_PNG_COMPRESSION, 6])
+        except cv2.error:
+            pass
         shutil.copy2(prepared, job.result / "source.mp4")
         with self._lock:
             self._check_cancel(job)

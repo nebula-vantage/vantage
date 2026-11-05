@@ -1,8 +1,11 @@
-# Vantage Coach — desktop/web first
+# Vantage — Games and coaching in the desktop/web app
 
-Vantage Coach runs the desktop video analysis from your browser, then turns its
-results into a session review, moments to watch, a practice plan, and a conversation
-about the evidence. It runs on a local Python server; the iOS app is separate.
+Vantage opens to a Games library. Upload and analyze a video once, then open that
+game's Overview for playback and measurements or its Coaching tab for review
+moments, a practice plan, and questions about the evidence. Both tabs share the
+same selected game and video; switching tabs keeps the playback position and
+coaching conversation. The app runs on a local Python server. The iPhone app and
+public marketing site remain separate; this release does not add account syncing.
 
 ## Run it
 
@@ -10,12 +13,19 @@ From the repository root:
 
 ```sh
 uv sync --locked
-uv run vantage-coach --open
+uv run vantage-app --open
 ```
 
-Open <http://127.0.0.1:8765> if you omit `--open`. A clearly labeled synthetic sample
-lets you explore the workspace immediately. No detector download, API key, Node
-installation, or frontend build is needed for coaching.
+Open <http://127.0.0.1:8765/games> if you omit `--open`. A new library starts with an
+empty state; **Explore sample game** explicitly opens the synthetic sample. No API key,
+Node installation, or frontend build is needed for the local coaching review.
+The previous `vantage-coach` command remains an alias for this same app.
+
+Saved games have direct links at `/games/:id` and `/games/:id/coaching`. Reloading,
+browser Back/Forward, and returning to Games preserve the selected route. The
+library lists completed analyses from `--runs-dir`, with duration, tracking
+coverage, and thumbnails when available. Its date is the analysis file's timestamp,
+not the date the match was played. Loading the library does not decode the videos.
 
 To analyze your footage in the browser:
 
@@ -24,8 +34,9 @@ To analyze your footage in the browser:
 3. Mark the outer court corners in order: **near-left, near-right, far-right,
    far-left**. You can undo/reset marks or enter pixel coordinates with the keyboard.
 4. Choose **Run analysis**. Progress comes from the detector and renderer.
-5. When analysis finishes, open the new session to play the annotated video and
-   review its coaching results. No statistics JSON import is required.
+5. When analysis finishes, open the new game from Games. Its Overview plays the
+   annotated video and shows measurements; **Coaching** uses the same analysis
+   for review moments and a practice plan. No second upload or statistics import is required.
 
 The camera must remain fixed and the whole court must be visible. The current
 model and court dimensions are for pickleball. Uploads are limited to 512 MiB,
@@ -51,7 +62,7 @@ Alternatively, run the same analysis from the CLI:
 
 ```sh
 uv run vantage --input input/game.mp4 --output-dir output/game
-uv run vantage-coach --runs-dir output --open
+uv run vantage-app --runs-dir output --open
 ```
 
 `--runs-dir` accepts a completed run or a folder containing completed runs. The
@@ -65,15 +76,17 @@ and removed when the server closes. Original analysis files remain unchanged. Us
 to run another workspace on a different port. `python -m vantage.coaching_server`
 is equivalent to the installed entry point.
 
-You can also import a desktop `stats.json` in the browser and attach its matching
-video. The video stays in the browser. Use the analyzed, constant-frame-rate video
+You can also import a desktop `stats.json` from Games and attach its matching
+video. Imported games are labeled as temporary and last only for the current tab;
+reload requires importing them again. The video stays in the browser. Use the analyzed, constant-frame-rate video
 so review timestamps align. Browser-attached video must use a supported codec
 (H.264 MP4 is recommended); only server-opened runs receive the playback conversion. Importing
 statistics does not analyze a raw video.
 
 ## What is included
 
-- Video upload, browser court calibration, background analysis, progress, and cancellation.
+- A Games library with shared video upload, browser court calibration, background analysis,
+  progress, and cancellation; coaching lives inside each saved game.
 - A session review with coverage, estimated metrics, and concise evidence cards.
 - Three focuses: rally consistency, placement, and video review. Changing focus
   changes the review priorities and practice plan.
@@ -106,7 +119,7 @@ in your shell or secret manager, never in source code or browser settings.
 
 ```sh
 # With OPENAI_API_KEY and VANTAGE_COACH_MODEL already exported:
-uv run vantage-coach --open
+uv run vantage-app --open
 ```
 
 The coach panel exposes AI only when both variables are configured. Enabling AI
@@ -150,9 +163,9 @@ the video. The demo is synthetic and must never be mistaken for an analyzed matc
 | `vantage/coaching.py` | Validate pipeline stats, select evidence, build a versioned report, answer local questions |
 | `vantage/coaching_ai.py` | Optional provider adapter with bounded context and explicit fallback |
 | `vantage/coaching_jobs.py` | Local video uploads, preparation, calibrated pipeline jobs, and cancellation |
-| `vantage/coaching_server.py` | Local HTTP API, run discovery, static files, and range-aware video serving |
+| `vantage/coaching_server.py` | Shared app routes, game library, local HTTP API, and range-aware video serving |
 | `vantage/coaching_video.py` | Temporary H.264 playback copies of annotated videos |
-| `vantage/web/` | Browser interface and synthetic sample; no framework or build step |
+| `vantage/web/` | Games, Overview, and Coaching views in one browser app; no framework or build step |
 
 The pure Python engine depends only on the standard library. It accepts desktop
 statistics schemas 1 and 2 and produces coaching schema 1. Validation drops local
@@ -173,7 +186,7 @@ consumes this contract rather than embedding coaching logic in its components.
 | `GET /api/analysis/:id/preview` | Prepared first-frame calibration image |
 | `POST /api/analysis/:id/start` | Start the pipeline with `{corners, synthetic}` |
 | `POST /api/analysis/:id/cancel` | Cancel an unfinished job |
-| `GET /api/sessions` | Available completed runs and unreadable-run notices |
+| `GET /api/sessions` | Completed games with summary metadata and optional thumbnail URLs; unreadable-run notices |
 | `GET /api/sessions/:id` | One run's validated statistics and optional media URLs |
 | `GET /api/demo` | Explicitly synthetic sample |
 | `POST /api/session` | Validate `{stats, name}` for a browser import |

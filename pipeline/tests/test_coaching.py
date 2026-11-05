@@ -216,6 +216,27 @@ class ReportTests(unittest.TestCase):
         self.assertIsNone(report["metrics"][3]["value"])
         self.assertNotIn("59", report["summary"])
 
+    def test_observed_ball_without_rallies_does_not_invent_reference_exchange(self):
+        raw = fixture()
+        raw.pop("synthetic")
+        raw["quality"].update(ball_detection_coverage=.15, observed_frames=810)
+        raw.update(rallies=[], crossing_events=[], rally_count=0, shot_count=0,
+                   longest_rally=0, shots_per_rally=[])
+        # Candidate landings remain reviewable even when no exchange is supported.
+        report = build_report(raw)
+        self.assertEqual(report["quality"]["status"], "limited_evidence")
+        self.assertEqual([metric["value"] for metric in report["metrics"][:2]], [0, 0])
+        self.assertIn("no supported exchange to highlight", report["summary"])
+        self.assertIn("zero estimates do not mean no play occurred", report["summary"])
+        self.assertNotIn("repeatable rally", report["headline"])
+        self.assertNotIn("reference exchange", report["summary"])
+        self.assertFalse(any(moment["kind"] == "rally" for moment in report["moments"]))
+        self.assertTrue(any(moment["kind"] == "bounce" for moment in report["moments"]))
+        review = next(drill for drill in report["drills"] if drill["id"] == "replay-one-pattern")
+        self.assertNotIn("highlighted exchange", review["steps"][0])
+        self.assertEqual(build_report(raw, "placement")["headline"], "Turn reviewed landings into a practice target")
+        self.assertEqual(build_report(raw, "review")["headline"], "Find one useful pattern in the replay")
+
     def test_near_line_bounce_stays_uncertain(self):
         report = build_report(fixture(), "placement")
         moment = report["moments"][0]

@@ -1,5 +1,7 @@
+import json
 import unittest
 
+from vantage.coaching import build_report
 from vantage.stats import aggregate, crossing_events, event_records, speed_series, tracking_summary
 from vantage.records import BounceEvent, Detection, FrameRecord
 from helpers import record, sample, settings
@@ -70,6 +72,15 @@ class StatsTests(unittest.TestCase):
         self.assertEqual([e['type'] for e in events], ['bounce_candidate', 'net_crossing'])
         self.assertEqual(events[1]['rally_id'], 1)
         self.assertEqual([e['event_id'] for e in events], [1, 2])
+
+    def test_bounce_statistics_build_same_coaching_report_before_and_after_serialization(self):
+        samples = [sample(i, y=5+i/10) for i in range(40)]
+        records = [record(i) for i in range(40)]
+        bounce = BounceEvent(5, 5/30, (100, 100), (2, 3), 'IN', .8)
+        stats, _, _ = aggregate(records, samples, [bounce], 30, 640, 360, self.cfg)
+        report = build_report(stats)
+        self.assertEqual(report, build_report(json.loads(json.dumps(stats))))
+        self.assertTrue(any(moment['id'] == 'bounce-5' for moment in report['moments']))
 
     def test_player_track_visibility_and_ball_contiguity(self):
         records = [record(i, track_id=1 if i < 3 else 2) for i in range(5)]

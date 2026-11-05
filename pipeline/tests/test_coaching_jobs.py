@@ -19,6 +19,8 @@ from vantage.coaching import build_report
 from vantage.coaching_jobs import AnalysisJobs, MAX_UPLOAD_BYTES, UploadError, _read_video
 from vantage.config import CONFIG
 from vantage.court import load_calibration
+from vantage.records import BounceEvent, FrameRecord, TrajectorySample
+from vantage.stats import aggregate
 
 
 def fake_pipeline(source, output, *, config, progress_callback):
@@ -121,6 +123,9 @@ class AnalysisJobsTests(unittest.TestCase):
         runs = [path for path in (self.root / "runs").iterdir() if not path.name.startswith(".")]
         self.assertEqual(len(runs), 1)
         result = runs[0]
+        thumbnail = cv2.imread(str(result / "thumbnail.png"))
+        self.assertIsNotNone(thumbnail, "Completed games retain a library thumbnail after upload cleanup")
+        self.assertLessEqual(max(thumbnail.shape[:2]), 640)
         self.assertEqual(done["session_id"], hashlib.sha256(result.name.encode()).hexdigest()[:20])
         self.assertIsNone(self.jobs.preview(job["id"]))
         self.assertFalse((self.root / "runs" / ".uploads" / job["id"]).exists())
@@ -145,6 +150,31 @@ class AnalysisJobsTests(unittest.TestCase):
         self.assertFalse(self.jobs.config()["analysis_available"])
         with self.assertRaisesRegex(UploadError, "trained pickleball model"):
             self.upload()
+
+    def test_nonzero_bounce_analysis_publishes_coaching_report(self):
+        def pipeline_with_bounce(source, output, *, config, progress_callback):
+            stats = fake_pipeline(source, output, config=config, progress_callback=progress_callback)
+            video = stats["video"]
+            fps, frames = video["fps"], video["frame_count"]
+            records = [FrameRecord(i, i / fps) for i in range(frames)]
+            samples = [TrajectorySample(i, i / fps, (50 + i, 60), (2 + i / 20, 3),
+                                        "observed", 1, 1) for i in range(frames)]
+            bounce = BounceEvent(5, 5 / fps, (55, 60), (2.25, 3), "IN", .8)
+            measurements, _, _ = aggregate(records, samples, [bounce], fps,
+                                            video["width"], video["height"], config)
+            stats.update(measurements)
+            (output / "stats.json").write_text(json.dumps(stats))
+            return stats
+        self.pipeline.side_effect = pipeline_with_bounce
+        job = self.calibrated()
+        done = self.wait_for(job["id"], {"completed", "failed"})
+        self.assertEqual(done["status"], "completed", done)
+        result = next(self.jobs.root.glob("*/stats.json")).parent
+        stats = json.loads((result / "stats.json").read_text())
+        report = json.loads((result / "coaching-report.json").read_text())
+        self.assertEqual(stats["bounce_candidate_count"], 1)
+        self.assertEqual(report, build_report(stats))
+        self.assertTrue(any(moment["id"] == "bounce-5" for moment in report["moments"]))
 
     def test_invalid_video_and_oversized_duration_fail_before_pipeline(self):
         bad = self.jobs.create_upload("bad.mp4", io.BytesIO(b"invalid video"), 13)
@@ -272,9 +302,12 @@ class AnalysisJobsTests(unittest.TestCase):
         previous.mkdir(parents=True)
         (previous / "stats.json").write_text("previous result")
         self.pipeline.side_effect = RuntimeError("secret/path/to/model")
-        job = self.calibrated()
-        done = self.wait_for(job["id"], {"failed"})
+        with self.assertLogs("vantage.coaching_jobs", level="ERROR") as logs:
+            job = self.calibrated()
+            done = self.wait_for(job["id"], {"failed"})
         self.assertNotIn("secret", done["error"])
+        self.assertIn("secret/path/to/model", "\n".join(logs.output))
+        self.assertIn(job["id"], "\n".join(logs.output))
         self.assertEqual((previous / "stats.json").read_text(), "previous result")
         self.assertEqual(list(self.jobs.root.glob("*/stats.json")), [previous / "stats.json"])
 

@@ -8,6 +8,18 @@ const state = {
   report: null,
   focus: "consistency",
   sessions: [],
+  temporarySessions: new Map(),
+  gameSnapshots: new Map(),
+  chatEntries: [],
+  videoFile: null,
+  pendingResume: null,
+  route: null,
+  routeError: "",
+  libraryError: false,
+  booting: true,
+  reportGeneration: 0,
+  reportLoading: false,
+  reportError: "",
   aiAvailable: false,
   generation: 0,
   chatGeneration: 0,
@@ -66,7 +78,7 @@ async function api(path, body) {
     payload = await response.json();
   } catch {
     throw new Error(
-      "The coaching service returned an unreadable response. Try again.",
+      "Vantage returned an unreadable response. Try again.",
     );
   }
   if (!response.ok) {
@@ -79,125 +91,340 @@ async function api(path, body) {
   return payload;
 }
 
+function gamePath(id, tab = "overview") {
+  const key = id === "demo" ? "sample" : id;
+  return `/games/${encodeURIComponent(key)}${tab === "coaching" ? "/coaching" : ""}`;
+}
+
+function readRoute() {
+  const path = window.location.pathname.replace(/\/$/, "") || "/";
+  if (path === "/" || path === "/games") return { kind: "games" };
+  const match = /^\/games\/(sample|[a-f0-9]{20})(\/coaching)?$/.exec(path);
+  if (!match) return { kind: "missing" };
+  return { kind: "game", id: match[1] === "sample" ? "demo" : match[1],
+    tab: match[2] ? "coaching" : "overview" };
+}
+
+async function navigate(path, replace = false) {
+  if (window.location.pathname !== path) {
+    window.history[replace ? "replaceState" : "pushState"]({}, "", path);
+  }
+  const opened = await applyRoute();
+  $("main").focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: "instant" });
+  return opened;
+}
+
+async function applyRoute() {
+  state.route = readRoute();
+  state.routeError = "";
+  showError("");
+  if (state.route.kind === "games") {
+    $("session-video").pause();
+    renderLibrary();
+    applyAppLayout();
+    return true;
+  }
+  if (state.route.kind === "missing") {
+    ++state.generation;
+    ++state.reportGeneration;
+    ++state.chatGeneration;
+    clearVideo();
+    state.session = null;
+    state.report = null;
+    state.routeError = "This game link is not valid. Choose a game from your library.";
+    applyAppLayout();
+    loading(false);
+    return false;
+  }
+  if (state.session?.id === state.route.id) {
+    applyAppLayout();
+    return true;
+  }
+  const id = state.route.id;
+  return openSession(() => state.temporarySessions.has(id)
+    ? Promise.resolve(state.temporarySessions.get(id))
+    : api(id === "demo" ? "/api/demo" : `/api/sessions/${encodeURIComponent(id)}`));
+}
+
+function applyAppLayout() {
+  const route = state.route || { kind: "games" };
+  const home = route.kind === "games";
+  const ready = route.kind === "game" && state.session?.id === route.id && !state.routeError;
+  const coaching = ready && route.tab === "coaching";
+  $("games-page").hidden = !home;
+  $("workspace").hidden = !ready;
+  $("game-unavailable").hidden = !state.routeError;
+  $("game-unavailable-copy").textContent = state.routeError;
+  $("game-breadcrumb").hidden = home;
+  $("game-navigation").hidden = !ready;
+  $("header-upload").hidden = !home;
+  $("export-control").hidden = !ready;
+  $("export-button").disabled = !state.report || state.reportLoading;
+  $("page-title").textContent = home ? "Games" : state.routeError ? "Game unavailable" : coaching ? "Game coaching" : "Game review";
+  $("page-description").textContent = home
+    ? "Your game. A clearer picture. A next step."
+    : coaching ? "Review the evidence. Plan your next session."
+      : "Your replay, measurements, and coaching in one place.";
+  $("breadcrumb-name").textContent = ready ? state.session.name : "Game";
+  document.title = home ? "Games · Vantage" : `${ready ? state.session.name : "Game"} · ${coaching ? "Coaching · " : ""}Vantage`;
+  $("games-nav").classList.toggle("active", home);
+  if (home) $("games-nav").setAttribute("aria-current", "page");
+  else $("games-nav").removeAttribute("aria-current");
+  if (ready) {
+    $("nav-game-name").textContent = state.session.name;
+    for (const tab of ["overview", "coaching"]) {
+      for (const suffix of ["nav", "tab"]) {
+        const link = $(`${tab}-${suffix}`);
+        link.href = gamePath(state.session.id, tab);
+        link.classList.toggle("active", route.tab === tab);
+        if (route.tab === tab) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+      }
+    }
+    $("game-coach-link").href = gamePath(state.session.id, "coaching");
+    $("temporary-note").hidden = !state.session.is_temporary;
+  }
+  document.querySelectorAll("[data-game-panel]").forEach((node) => {
+    node.hidden = !ready || node.dataset.gamePanel !== route.tab ||
+      (node.hasAttribute("data-needs-report") && !state.report);
+  });
+  $("coaching-error").hidden = !coaching || (!state.reportLoading && !state.reportError);
+  $("coaching-error-title").textContent = state.reportLoading ? "Opening your coaching…" : "Coaching couldn't load.";
+  $("coaching-error-copy").textContent = state.reportLoading
+    ? "Building a review from this game's observations."
+    : `${state.reportError} Your video and measured overview are still available.`;
+  $("coaching-retry").hidden = state.reportLoading;
+}
+
+function libraryEntries() {
+  const saved = new Set(state.sessions.map((game) => game.id));
+  const temporary = [...state.temporarySessions.values()].filter((game) => !saved.has(game.id)).map((game) => ({
+    ...game, duration_s: game.stats.video.duration_s,
+    quality: { status: game.stats.quality.status, coverage: game.stats.quality.ball_detection_coverage },
+    has_video: false,
+  }));
+  return [...temporary, ...state.sessions];
+}
+
+function analyzedDate(value) {
+  const date = new Date(value);
+  if (!value || !Number.isFinite(date.getTime())) return "Saved analysis";
+  return `Analyzed ${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date)}`;
+}
+
+function renderLibrary() {
+  const games = libraryEntries();
+  $("games-count").textContent = `${games.length} ${games.length === 1 ? "game" : "games"}`;
+  $("games-empty").hidden = games.length > 0 || state.libraryError;
+  replace("games-list", games.map((game) => {
+    const card = element("a", "game-card");
+    card.href = gamePath(game.id);
+    card.dataset.route = "";
+    const cover = element("div", "game-cover");
+    cover.append(element("div", "card-court"));
+    if (typeof game.thumbnail_url === "string" && game.thumbnail_url.startsWith("/media/")) {
+      const preview = element("img", "game-thumbnail");
+      preview.src = game.thumbnail_url;
+      preview.alt = "";
+      preview.loading = "lazy";
+      preview.addEventListener("error", () => preview.remove(), { once: true });
+      cover.append(preview);
+    }
+    const labels = element("div", "game-cover-labels");
+    labels.append(element("span", "game-sport", "PICKLEBALL"));
+    if (game.is_demo) labels.append(element("span", "game-tag", "SYNTHETIC"));
+    else if (game.is_temporary) labels.append(element("span", "game-tag", "TEMPORARY IMPORT"));
+    cover.append(labels);
+    cover.append(element("span", "game-duration", typeof game.duration_s === "number" ? time(game.duration_s) : "Game analysis"));
+    const body = element("div", "game-card-body");
+    body.append(element("p", "game-date", game.is_temporary ? "Available in this browser session" : analyzedDate(game.analyzed_at)));
+    body.append(element("h3", "game-card-title", game.name || "Analyzed game"));
+    const quality = game.quality;
+    const support = element("p", "game-card-quality", quality?.status === "insufficient_evidence"
+      ? "More ball observations needed" : quality?.status === "limited_evidence"
+        ? "Limited tracking evidence" : "Analysis ready to review");
+    support.prepend(element("span", "status-dot"));
+    body.append(support);
+    const footer = element("div", "game-card-footer");
+    footer.append(element("span", "", game.has_video ? "Replay + coaching" : "Stats + coaching"));
+    footer.append(element("span", "", "Open game →"));
+    body.append(footer);
+    card.append(cover, body);
+    return card;
+  }));
+}
+
+async function refreshLibrary() {
+  try {
+    const library = await api("/api/sessions");
+    state.sessions = library.sessions || [];
+    state.libraryError = false;
+    $("session-errors").textContent = (library.errors || []).join("\n");
+    $("session-errors").hidden = !library.errors?.length;
+    renderLibrary();
+    return true;
+  } catch (error) {
+    state.libraryError = true;
+    $("session-errors").textContent = "Couldn't load your saved games. Check the connection, then refresh the library.";
+    $("session-errors").hidden = false;
+    renderLibrary();
+    return false;
+  }
+}
+
 function loading(active) {
   document.body.classList.toggle("is-loading", active);
-  $("loading").hidden = !active || Boolean(state.session);
+  $("loading").hidden = !active || Boolean(state.session) || (state.route?.kind === "games" && !state.booting);
+  $("loading-copy").textContent = state.booting ? "Opening your games…" : "Opening your game…";
   $("export-button").disabled = active || !state.report;
 }
 
+function rememberCurrentGame() {
+  if (!state.session) return;
+  state.gameSnapshots.set(state.session.id, {
+    session: state.session, report: state.report, focus: state.focus,
+    history: [...state.history],
+    // Keep the completed transcript independently of the bounded provider history.
+    // An in-flight question is retriable, so don't restore it without its answer.
+    chatEntries: state.chatBusy ? state.chatEntries.slice(0, -1) : [...state.chatEntries],
+    videoFile: state.videoFile, videoTime: $("session-video").currentTime || 0,
+  });
+}
+
 async function openSession(fetchSession) {
+  rememberCurrentGame();
   const generation = ++state.generation;
-  state.chatGeneration++;
+  ++state.reportGeneration;
+  ++state.chatGeneration;
   clearVideo();
   state.session = null;
   state.report = null;
+  state.reportLoading = false;
+  state.reportError = "";
+  state.focus = "consistency";
   resetChat();
-  $("workspace").hidden = true;
+  applyAppLayout();
   loading(true);
   showError("");
   try {
     const session = await fetchSession();
-    if (generation !== state.generation) return;
-    const report = await api("/api/report", {
-      stats: session.stats,
-      focus: state.focus,
-    });
-    if (generation !== state.generation) return;
+    if (generation !== state.generation) return false;
     state.session = session;
-    state.report = report;
-    resetChat();
+    const previous = state.gameSnapshots.get(session.id);
+    const saved = previous && JSON.stringify(previous.session.stats) === JSON.stringify(session.stats) ? previous : null;
+    if (saved) {
+      state.report = saved.report;
+      state.focus = saved.focus;
+      state.history = [...saved.history];
+      for (const entry of saved.chatEntries) addMessage(entry.role, entry.text, entry.result);
+      state.pendingResume = { id: session.id, time: saved.videoTime };
+    }
     render();
-    if (session.video_url) setVideo(session.video_url, false);
+    if (saved?.videoFile) {
+      state.videoFile = saved.videoFile;
+      setVideo(URL.createObjectURL(saved.videoFile), true);
+    } else if (session.video_url) setVideo(session.video_url, false);
+    loading(false);
+    if (!state.report) await loadReport();
+    return generation === state.generation;
   } catch (error) {
-    if (generation === state.generation)
-      showError(error.message || "Could not open this session.");
+    if (generation === state.generation && state.route?.kind === "game") {
+      state.routeError = error.status === 404
+        ? "This game isn't available. Imported analyses are temporary; import it again or choose a saved game."
+        : (error.message || "Could not open this game. Return to Games and try again.");
+      applyAppLayout();
+    }
+    return false;
   } finally {
     if (generation === state.generation) loading(false);
+  }
+}
+
+async function loadReport(focus = state.focus) {
+  if (!state.session) return false;
+  const generation = state.generation;
+  const reportGeneration = ++state.reportGeneration;
+  state.reportLoading = true;
+  state.reportError = "";
+  applyAppLayout();
+  try {
+    const report = await api("/api/report", { stats: state.session.stats, focus });
+    if (generation !== state.generation || reportGeneration !== state.reportGeneration) return false;
+    state.report = report;
+    state.focus = focus;
+    render();
+    return true;
+  } catch (error) {
+    if (generation === state.generation && reportGeneration === state.reportGeneration) {
+      state.reportError = error.message || "Please try again.";
+    }
+    return false;
+  } finally {
+    if (generation === state.generation && reportGeneration === state.reportGeneration) {
+      state.reportLoading = false;
+      applyAppLayout();
+    }
   }
 }
 
 async function setFocus(focus) {
-  if (!state.session || focus === state.focus) return;
-  const generation = ++state.generation;
-  state.chatGeneration++;
+  if (!state.session || (focus === state.focus && !state.reportLoading)) return;
+  ++state.chatGeneration;
   resetChat();
-  renderSuggestions();
-  loading(true);
-  showError("");
-  try {
-    const report = await api("/api/report", {
-      stats: state.session.stats,
-      focus,
-    });
-    if (generation !== state.generation) return;
-    state.focus = focus;
-    state.report = report;
-    resetChat();
-    render();
-  } catch (error) {
-    if (generation === state.generation)
-      showError(error.message || "Could not update your focus.");
-  } finally {
-    if (generation === state.generation) loading(false);
-  }
+  await loadReport(focus);
+}
+
+function qualityForGame() {
+  if (state.report) return state.report.quality;
+  const quality = state.session.stats.quality;
+  const coverage = quality.ball_detection_coverage;
+  const status = coverage === 0 ? "insufficient_evidence" : quality.status;
+  return { status, coverage, warnings: quality.warnings || [],
+    label: status === "insufficient_evidence" ? "Insufficient evidence" : status === "limited_evidence" ? "Limited evidence" : "Estimated observations" };
 }
 
 function render() {
   const { session, report } = state;
-  $("workspace").hidden = false;
-  $("session-name").textContent = session.name || "Analyzed session";
+  $("session-name").textContent = session.name || "Analyzed game";
   $("demo-badge").hidden = !session.is_demo;
   $("sample-note").hidden = !session.is_demo;
-  const duration = time(session.stats.video?.duration_s);
-  $("session-meta").textContent = "PICKLEBALL · ANALYZED SESSION";
-  $("video-duration").textContent = `${duration} analysis`;
-  $("video-coverage").textContent =
-    `${percent(report.quality.coverage)} of frames observed`;
-  $("report-headline").textContent = report.headline;
-  $("report-summary").textContent = report.summary;
+  $("session-meta").textContent = "PICKLEBALL · ANALYZED GAME";
+  $("video-duration").textContent = `${time(session.stats.video?.duration_s)} analysis`;
+  $("video-coverage").textContent = `${percent(qualityForGame().coverage)} of frames observed`;
   document.querySelectorAll("[data-focus]").forEach((button) => {
-    button.setAttribute(
-      "aria-pressed",
-      String(button.dataset.focus === state.focus),
-    );
+    button.setAttribute("aria-pressed", String(button.dataset.focus === state.focus));
   });
-  renderSessionSelect();
   renderMetrics();
   renderCourt();
-  renderInsights();
-  renderMoments();
-  renderDrills();
   renderQuality();
-  renderSuggestions();
+  if (report) {
+    $("report-headline").textContent = report.headline;
+    $("report-summary").textContent = report.summary;
+    renderInsights();
+    renderMoments();
+    renderDrills();
+    renderSuggestions();
+  }
   renderAIMode();
+  applyAppLayout();
 }
 
-function renderSessionSelect() {
-  const sessions = [...state.sessions];
-  if (
-    state.session &&
-    !sessions.some((session) => session.id === state.session.id)
-  ) {
-    sessions.push({ id: state.session.id, name: state.session.name });
-  }
-  const options = sessions.map((session) => {
-    const option = element("option", "", session.name);
-    option.value = session.id;
-    option.selected = session.id === state.session?.id;
-    return option;
-  });
-  if (!options.length) {
-    const option = element("option", "", "No sessions yet");
-    option.value = "";
-    options.push(option);
-  }
-  replace("session-select", options);
+function overviewMetrics() {
+  const stats = state.session.stats;
+  const supported = qualityForGame().status !== "insufficient_evidence";
+  return [
+    { label: "Estimated rallies", value: supported ? stats.rally_count : null, detail: "Grouped by ball loss or inactivity" },
+    { label: "Net crossings", value: supported ? stats.shot_count : null, detail: "Supported projected crossings" },
+    { label: "Ball observed", value: percent(stats.quality.ball_detection_coverage), detail: "Share of frames with ball evidence" },
+    { label: "Projected speed", value: supported && typeof stats.avg_ball_speed_kmh === "number" ? Math.round(stats.avg_ball_speed_kmh * 10) / 10 : null, unit: "km/h", detail: "Court-plane estimate" },
+  ];
 }
 
 function renderMetrics() {
   replace(
     "metric-grid",
-    (state.report.metrics || []).map((metric) => {
+    (state.report?.metrics || overviewMetrics()).map((metric) => {
       const card = element("div", "metric");
       card.append(element("div", "metric-label", metric.label));
       const value = element("div", "metric-value", metric.value ?? "—");
@@ -212,7 +439,7 @@ function renderMetrics() {
 }
 
 function renderCourt() {
-  const supported = state.report.quality.status !== "insufficient_evidence";
+  const supported = qualityForGame().status !== "insufficient_evidence";
   const candidates = (
     supported ? state.session.stats.in_out_calls || [] : []
   ).filter(
@@ -361,7 +588,7 @@ function renderMoments() {
 }
 
 function planKey() {
-  return `vantage.coaching.plan.v1.${state.report.session_id}.${state.focus}`;
+  return `vantage.coaching.plan.v2.${state.session.id}.${state.focus}`;
 }
 
 function renderDrills() {
@@ -436,7 +663,7 @@ function renderProgress() {
 }
 
 function renderQuality() {
-  const quality = state.report.quality;
+  const quality = qualityForGame();
   $("quality-label").textContent = quality.label;
   $("quality-copy").textContent =
     `${percent(quality.coverage)} of video frames have an observed ball. Coverage describes visibility, not the accuracy of a shot or bounce call.`;
@@ -487,6 +714,7 @@ function renderAIMode() {
 
 function resetChat() {
   state.history = [];
+  state.chatEntries = [];
   state.chatBusy = false;
   replace("chat-log", []);
   $("chat-input").value = "";
@@ -496,6 +724,7 @@ function resetChat() {
 }
 
 function addMessage(role, text, result) {
+  state.chatEntries.push({ role, text, result });
   const message = element("div", `chat-message ${role}`);
   message.append(
     element(
@@ -537,7 +766,7 @@ function addMessage(role, text, result) {
 
 async function submitQuestion(raw) {
   const question = raw.trim();
-  if (!question || !state.session || state.chatBusy) return;
+  if (!question || !state.session || !state.report || state.chatBusy) return;
   if (question.length > 2000) {
     $("chat-error").textContent = "Keep your question under 2,000 characters.";
     $("chat-error").hidden = false;
@@ -590,6 +819,7 @@ async function submitQuestion(raw) {
       return;
     pending.remove();
     userMessage.remove();
+    state.chatEntries.pop();
     $("chat-input").value = question;
     $("chat-error").textContent =
       error.message || "Could not get an answer. Please try again.";
@@ -615,6 +845,8 @@ function clearVideo() {
   video.load();
   if (state.videoURL) URL.revokeObjectURL(state.videoURL);
   state.videoURL = null;
+  state.videoFile = null;
+  state.pendingResume = null;
   state.hasVideo = false;
   state.pendingSeek = null;
   $("video-status").textContent = "";
@@ -639,7 +871,7 @@ function setVideo(url, local) {
   $("video-status").textContent = local
     ? "Local video · match it to this analysis for accurate timestamps."
     : "Session video · timestamps match the analyzed recording.";
-  renderMoments();
+  if (state.report) renderMoments();
 }
 
 function seekVideo(moment) {
@@ -749,39 +981,37 @@ function exportReport() {
   notice("Coaching report exported with your practice checklist.");
 }
 
-$("sample-button").addEventListener("click", () =>
-  openSession(() => api("/api/demo")),
-);
+$("sample-button").addEventListener("click", () => navigate("/games/sample"));
 $("import-button").addEventListener("click", () => $("stats-file").click());
 $("stats-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   event.target.value = "";
   if (!file) return;
-  openSession(async () => {
-    if (file.size > 2_000_000) {
-      throw new Error(
-        "This file is too large. Import a stats.json file smaller than 2 MB.",
-      );
-    }
+  showError("");
+  try {
+    if (file.size > 2_000_000) throw new Error("Import a stats.json file smaller than 2 MB.");
     let stats;
-    try {
-      stats = JSON.parse(await file.text());
-    } catch {
-      throw new Error(
-        "This file isn’t valid JSON. Choose stats.json from a completed Vantage analysis.",
-      );
-    }
-    return api("/api/session", {
-      stats,
-      name: file.name.replace(/\.json$/i, "") || "Imported session",
-    });
-  });
+    try { stats = JSON.parse(await file.text()); }
+    catch { throw new Error("This file isn't valid JSON. Choose stats.json from a completed Vantage analysis."); }
+    const session = await api("/api/session", { stats,
+      name: file.name.replace(/\.json$/i, "") || "Imported game" });
+    session.is_temporary = true;
+    state.temporarySessions.set(session.id, session);
+    renderLibrary();
+    await navigate(gamePath(session.id));
+    notice("Analysis imported. This game is available until you reload the page.");
+  } catch (error) { showError(error.message || "Could not import this analysis."); }
 });
-$("session-select").addEventListener("change", (event) => {
-  const id = event.target.value;
-  if (!id || id === state.session?.id) return;
-  openSession(() => api(`/api/sessions/${encodeURIComponent(id)}`));
+document.addEventListener("click", (event) => {
+  const link = event.target.closest("a[data-route]");
+  if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const url = new URL(link.href, window.location.href);
+  if (url.origin !== window.location.origin) return;
+  event.preventDefault();
+  void navigate(url.pathname);
 });
+window.addEventListener("popstate", () => { void applyRoute(); });
+$("coaching-retry").addEventListener("click", () => { void loadReport(); });
 document
   .querySelectorAll("[data-focus]")
   .forEach((button) =>
@@ -814,9 +1044,15 @@ $("video-file").addEventListener("change", (event) => {
     notice("Choose a video file, such as MP4, MOV, or WebM.");
     return;
   }
+  state.videoFile = file;
   setVideo(URL.createObjectURL(file), true);
 });
 $("session-video").addEventListener("loadedmetadata", () => {
+  if (state.pendingResume?.id === state.session?.id) {
+    const video = $("session-video");
+    if (state.pendingResume.time < video.duration) video.currentTime = state.pendingResume.time;
+    state.pendingResume = null;
+  }
   if (state.pendingSeek) seekVideo(state.pendingSeek);
   else
     $("video-status").textContent = state.videoURL
@@ -836,34 +1072,6 @@ window.addEventListener("beforeunload", () => {
   if (state.videoURL) URL.revokeObjectURL(state.videoURL);
 });
 
-// These are links to sections in the review, not tabs that hide page content.
-// Reflect the section in view while preserving native anchor/keyboard behavior.
-const sectionLinks = [...document.querySelectorAll(".section-tabs a")];
-let sectionFrame = null;
-function syncSectionNavigation() {
-  sectionFrame = null;
-  if (!state.report) return;
-  let current = "#overview";
-  for (const link of sectionLinks) {
-    const target = document.querySelector(link.getAttribute("href"));
-    if (target.getBoundingClientRect().top <= window.innerHeight * 0.35) {
-      current = link.getAttribute("href");
-    }
-  }
-  for (const link of sectionLinks) {
-    if (link.getAttribute("href") === current)
-      link.setAttribute("aria-current", "location");
-    else link.removeAttribute("aria-current");
-  }
-}
-window.addEventListener(
-  "scroll",
-  () => {
-    if (sectionFrame === null)
-      sectionFrame = requestAnimationFrame(syncSectionNavigation);
-  },
-  { passive: true },
-);
 document
   .querySelector('.quality-card a[href="#evidence-title"]')
   .addEventListener("click", () => {
@@ -1390,21 +1598,17 @@ async function openCompletedAnalysis() {
   analysis.error = "";
   renderAnalysis();
   try {
-    const library = await api("/api/sessions");
-    state.sessions = library.sessions || [];
-    renderSessionSelect();
-    await openSession(() =>
-      api(`/api/sessions/${encodeURIComponent(job.session_id)}`),
-    );
-    if (state.session?.id !== job.session_id || !state.report)
+    await refreshLibrary();
+    await navigate(gamePath(job.session_id));
+    if (state.session?.id !== job.session_id)
       throw new Error(
-        "Could not open the completed review. Please try View coaching results again.",
+        "Could not open the completed game. Please try View results again.",
       );
     $("analysis-dialog").close();
     analysis.dismissed = true;
     rememberAnalysisJob(null);
     notice(
-      "Analysis complete. Your annotated replay and coaching review are ready.",
+      "Analysis complete. Your game is saved with its replay and coaching.",
     );
     $("main").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
@@ -1415,7 +1619,10 @@ async function openCompletedAnalysis() {
   }
 }
 
-$("upload-button").addEventListener("click", openAnalysisPanel);
+for (const id of ["upload-button", "header-upload", "games-upload", "empty-upload"]) {
+  $(id).addEventListener("click", openAnalysisPanel);
+}
+$("games-refresh").addEventListener("click", () => { void refreshLibrary(); });
 $("analysis-close").addEventListener("click", () =>
   $("analysis-dialog").close(),
 );
@@ -1543,35 +1750,28 @@ $("analysis-retry").addEventListener("click", async () => {
 });
 
 async function initialize() {
-  const [config, sessions] = await Promise.allSettled([
+  if (window.location.pathname === "/") window.history.replaceState({}, "", "/games");
+  state.route = readRoute();
+  applyAppLayout();
+  loading(true);
+  const [config] = await Promise.allSettled([
     api("/api/config"),
-    api("/api/sessions"),
+    refreshLibrary(),
   ]);
   if (config.status === "fulfilled") {
     state.aiAvailable = Boolean(config.value.ai_available);
     configureAnalysis(config.value);
   } else {
     analysis.configLoaded = true;
-    analysis.configError =
-      "Could not connect to the local analyzer. Check that the app is running.";
+    analysis.configError = "Could not connect to the analyzer. Check that Vantage is running.";
     analysis.connectionError = true;
     renderAnalysis();
   }
-  void restoreAnalysisJob();
-  if (sessions.status === "fulfilled") {
-    state.sessions = sessions.value.sessions || [];
-    if (sessions.value.errors?.length) {
-      $("session-errors").textContent = sessions.value.errors.join("\n");
-      $("session-errors").hidden = false;
-    }
-  }
-  renderSessionSelect();
+  state.booting = false;
+  loading(false);
   renderAIMode();
-  if (state.generation > 0) return;
-  const first = state.sessions[0];
-  await openSession(() =>
-    api(first ? `/api/sessions/${encodeURIComponent(first.id)}` : "/api/demo"),
-  );
+  void restoreAnalysisJob();
+  await applyRoute();
 }
 
 initialize();
