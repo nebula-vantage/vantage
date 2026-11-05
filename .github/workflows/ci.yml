@@ -42,7 +42,11 @@ jobs:
       - name: Install Python dependencies
         run: uv sync --locked
 
-      - name: Run all tests (Python, signing check, VantageKit Swift)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run all tests (Python, JavaScript, signing check, VantageKit Swift)
         run: scripts/test.sh
 
       - name: Restore exported Core ML model

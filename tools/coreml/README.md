@@ -40,6 +40,9 @@ the comparison.
 
 The exporter copies the checkpoint before conversion, records its SHA-256 and
 tool versions in `manifest.json`, and disables automatic dependency installation.
+Conversion and metadata writing happen in a temporary directory beside the output;
+only a complete export is published. Failed exports leave the destination available
+for a retry. The checksum identifies the copied checkpoint used by the converter.
 The original checkpoint stays untouched. `nms=False` preserves YOLO26's NMS-free
 end-to-end output, `[1, 100, 6]`, with rows `[x1, y1, x2, y2, confidence, class]`.
 FP16 is the default; `--precision 32` provides an investigation baseline.

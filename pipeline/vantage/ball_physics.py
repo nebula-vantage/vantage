@@ -1,4 +1,5 @@
 """Conservative 2-D trajectory heuristics, not a reconstruction of 3-D flight."""
+
 import math
 
 import numpy as np
@@ -18,8 +19,9 @@ def _continuous(a: FrameRecord, b: FrameRecord, diagonal: float, config: dict) -
     return math.dist(a.ball.center, b.ball.center) <= limit
 
 
-def build_trajectory(records: list[FrameRecord], homography, width: int, height: int,
-                     config: dict) -> list[TrajectorySample | None]:
+def build_trajectory(
+    records: list[FrameRecord], homography, width: int, height: int, config: dict
+) -> list[TrajectorySample | None]:
     samples: list[TrajectorySample | None] = [None] * len(records)
     observed = [r for r in records if r.ball is not None]
     diagonal = math.hypot(width, height)
@@ -29,19 +31,32 @@ def build_trajectory(records: list[FrameRecord], homography, width: int, height:
     for record in observed:
         if previous is not None and _continuous(previous, record, diagonal, config):
             for i in range(previous.index + 1, record.index):
-                alpha = ((records[i].time_s - previous.time_s) /
-                         (record.time_s - previous.time_s))
-                pixel = tuple(float(a + alpha * (b - a)) for a, b in
-                              zip(previous.ball.center, record.ball.center))
-                samples[i] = TrajectorySample(i, records[i].time_s, pixel,
-                                               project(pixel, homography, epsilon),
-                                               "interpolated", segment, record.ball.track_id)
+                alpha = (records[i].time_s - previous.time_s) / (record.time_s - previous.time_s)
+                pixel = tuple(
+                    float(a + alpha * (b - a))
+                    for a, b in zip(previous.ball.center, record.ball.center, strict=True)
+                )
+                samples[i] = TrajectorySample(
+                    i,
+                    records[i].time_s,
+                    pixel,
+                    project(pixel, homography, epsilon),
+                    "interpolated",
+                    segment,
+                    record.ball.track_id,
+                )
         elif previous is not None:
             segment += 1
         pixel = record.ball.center
-        samples[record.index] = TrajectorySample(record.index, record.time_s, pixel,
-                                                 project(pixel, homography, epsilon),
-                                                 "observed", segment, record.ball.track_id)
+        samples[record.index] = TrajectorySample(
+            record.index,
+            record.time_s,
+            pixel,
+            project(pixel, homography, epsilon),
+            "observed",
+            segment,
+            record.ball.track_id,
+        )
         previous = record
 
     # Fit local polynomials independently within each uninterrupted segment.
@@ -54,12 +69,18 @@ def build_trajectory(records: list[FrameRecord], homography, width: int, height:
         times = np.array([s.time_s for s in group])
         pixels = np.array([s.pixel for s in group])
         for sample in group:
-            lo, hi = np.searchsorted(times, [sample.time_s - cfg["smooth_window_s"] / 2,
-                                            sample.time_s + cfg["smooth_window_s"] / 2],
-                                     side="left")
+            lo, hi = np.searchsorted(
+                times,
+                [
+                    sample.time_s - cfg["smooth_window_s"] / 2,
+                    sample.time_s + cfg["smooth_window_s"] / 2,
+                ],
+                side="left",
+            )
             if hi - lo > cfg["smooth_degree"]:
                 coefficients = np.polynomial.polynomial.polyfit(
-                    times[lo:hi] - sample.time_s, pixels[lo:hi], cfg["smooth_degree"])
+                    times[lo:hi] - sample.time_s, pixels[lo:hi], cfg["smooth_degree"]
+                )
                 sample.pixel = tuple(float(v) for v in coefficients[0])
                 sample.court = project(sample.pixel, homography, epsilon)
         # Extrapolation is display-only and may not bridge a discontinuity.
@@ -77,9 +98,15 @@ def build_trajectory(records: list[FrameRecord], homography, width: int, height:
             p = np.array(b.pixel) + velocity * elapsed
             if not (0 <= p[0] < width and 0 <= p[1] < height):
                 break
-            samples[i] = TrajectorySample(i, records[i].time_s,
-                                           tuple(float(v) for v in p), None,
-                                           "coasted", b.segment_id, b.track_id)
+            samples[i] = TrajectorySample(
+                i,
+                records[i].time_s,
+                tuple(float(v) for v in p),
+                None,
+                "coasted",
+                b.segment_id,
+                b.track_id,
+            )
     return samples
 
 
@@ -91,14 +118,19 @@ def in_out(point, config: dict) -> tuple[str, list[str]]:
     inside = -eps <= x <= w + eps and -eps <= y <= length + eps
     # Distance to the finite boundary, not its infinite extension.
     nearest_x, nearest_y = min(max(x, 0), w), min(max(y, 0), length)
-    distance = (min(x, w - x, y, length - y) if inside else
-                math.hypot(x - nearest_x, y - nearest_y))
+    distance = min(x, w - x, y, length - y) if inside else math.hypot(x - nearest_x, y - nearest_y)
     flags = ["near_boundary"] if distance <= cfg["line_tolerance_m"] else []
     return ("IN" if inside else "OUT", flags)
 
 
-def detect_bounces(records: list[FrameRecord], samples: list[TrajectorySample | None],
-                   homography, width: int, height: int, config: dict) -> list[BounceEvent]:
+def detect_bounces(
+    records: list[FrameRecord],
+    samples: list[TrajectorySample | None],
+    homography,
+    width: int,
+    height: int,
+    config: dict,
+) -> list[BounceEvent]:
     cfg = config["bounce"]
     groups: dict[int, list[TrajectorySample]] = {}
     for sample in samples:
@@ -114,15 +146,21 @@ def detect_bounces(records: list[FrameRecord], samples: list[TrajectorySample | 
             lo = np.searchsorted(times, t - cfg["fit_half_window_s"], side="left")
             hi = np.searchsorted(times, t + cfg["fit_half_window_s"], side="right")
             offsets = times[lo:hi] - t
-            if min(np.count_nonzero(offsets <= 0), np.count_nonzero(offsets >= 0)) < cfg["min_side_observations"]:
+            if (
+                min(np.count_nonzero(offsets <= 0), np.count_nonzero(offsets >= 0))
+                < cfg["min_side_observations"]
+            ):
                 continue
             values = y[lo:hi]
             # A continuous hinge fit: common contact height, distinct velocities.
-            hinge = np.column_stack([np.ones(len(offsets)), np.minimum(offsets, 0),
-                                     np.maximum(offsets, 0)])
+            hinge = np.column_stack(
+                [np.ones(len(offsets)), np.minimum(offsets, 0), np.maximum(offsets, 0)]
+            )
             fit = np.linalg.lstsq(hinge, values, rcond=None)[0]
-            if not (fit[1] >= cfg["min_vertical_velocity_heights_s"] and
-                    fit[2] <= -cfg["min_vertical_velocity_heights_s"]):
+            if not (
+                fit[1] >= cfg["min_vertical_velocity_heights_s"]
+                and fit[2] <= -cfg["min_vertical_velocity_heights_s"]
+            ):
                 continue
             line = np.column_stack([np.ones(len(offsets)), offsets])
             line_fit = np.linalg.lstsq(line, values, rcond=None)[0]
@@ -144,12 +182,23 @@ def detect_bounces(records: list[FrameRecord], samples: list[TrajectorySample | 
             # Airborne turns near the projective horizon can map tens of metres
             # beyond the court. Do not label those as supported floor contacts.
             margin = cfg["max_outside_court_m"]
-            if not (-margin <= court_point[0] <= config["court"]["width_m"] + margin
-                    and -margin <= court_point[1] <= config["court"]["length_m"] + margin):
+            if not (
+                -margin <= court_point[0] <= config["court"]["width_m"] + margin
+                and -margin <= court_point[1] <= config["court"]["length_m"] + margin
+            ):
                 continue
             call, flags = in_out(court_point, config)
-            candidates.append(BounceEvent(sample.frame_index, t, contact, court_point,
-                                           call, improvement, ["heuristic_bounce", *flags]))
+            candidates.append(
+                BounceEvent(
+                    sample.frame_index,
+                    t,
+                    contact,
+                    court_point,
+                    call,
+                    improvement,
+                    ["heuristic_bounce", *flags],
+                )
+            )
     # Keep the strongest candidate within each cooldown neighbourhood.
     accepted = []
     for candidate in sorted(candidates, key=lambda e: e.fit_improvement, reverse=True):

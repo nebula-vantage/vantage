@@ -9,12 +9,12 @@ must reproduce every selection exactly.
         reports/swift-detections/sideview.jsonl \
         ios/VantageKit/Tests/VantageKitTests/Fixtures/tracker-sideview.json
 """
+
 import argparse
 import json
 from pathlib import Path
 
 import numpy as np
-
 from vantage.ball_physics import build_trajectory
 from vantage.ball_tracker import BallTracker
 from vantage.config import CONFIG
@@ -55,27 +55,46 @@ def build_fixture(frames, name):
     records, rows = [], []
     for index, frame in enumerate(frames):
         candidates = [d for d in frame["detections"] if d["classID"] == BALL]
-        selected = tracker.select([Detection(tuple(d["box"]), d["confidence"], None, BALL)
-                                   for d in candidates], frame["timeSeconds"])
+        selected = tracker.select(
+            [Detection(tuple(d["box"]), d["confidence"], None, BALL) for d in candidates],
+            frame["timeSeconds"],
+        )
         records.append(FrameRecord(index, frame["timeSeconds"], ball=selected))
-        rows.append({"t": frame["timeSeconds"],
-                     "candidates": [[*d["box"], d["confidence"]] for d in candidates],
-                     "ball": None if selected is None else [*selected.box, selected.confidence, selected.track_id]})
+        rows.append(
+            {
+                "t": frame["timeSeconds"],
+                "candidates": [[*d["box"], d["confidence"]] for d in candidates],
+                "ball": None
+                if selected is None
+                else [*selected.box, selected.confidence, selected.track_id],
+            }
+        )
     # Identity homography: only the observed/interpolated decision and track ID are compared.
     samples = build_trajectory(records, np.eye(3), width, height, CONFIG)
-    for row, sample in zip(rows, samples):
-        row["interpolated_track"] = (sample.track_id if sample is not None and sample.source == "interpolated"
-                                     else None)
-    return {"name": name, "width": width, "height": height, "config": swift_config(),
-            "summary": {"frames": len(rows), "tracked": sum(r["ball"] is not None for r in rows),
-                        "interpolated": sum(r["interpolated_track"] is not None for r in rows),
-                        "tracks": len({r["ball"][-1] for r in rows if r["ball"]})},
-            "frames": rows}
+    for row, sample in zip(rows, samples, strict=True):
+        row["interpolated_track"] = (
+            sample.track_id if sample is not None and sample.source == "interpolated" else None
+        )
+    return {
+        "name": name,
+        "width": width,
+        "height": height,
+        "config": swift_config(),
+        "summary": {
+            "frames": len(rows),
+            "tracked": sum(r["ball"] is not None for r in rows),
+            "interpolated": sum(r["interpolated_track"] is not None for r in rows),
+            "tracks": len({r["ball"][-1] for r in rows if r["ball"]}),
+        },
+        "frames": rows,
+    }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("detections", type=Path, help="detections.jsonl from the app or vantage-analyze")
+    parser.add_argument(
+        "detections", type=Path, help="detections.jsonl from the app or vantage-analyze"
+    )
     parser.add_argument("output", type=Path, help="fixture JSON path")
     args = parser.parse_args()
     frames = [json.loads(line) for line in args.detections.read_text().splitlines() if line.strip()]

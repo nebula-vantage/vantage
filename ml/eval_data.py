@@ -16,23 +16,26 @@ These clips are never training data: they live outside ml/labels/, which build_d
 reads, and are git-ignored. Most have no stated license or are research-only (see
 ml/EVAL_DATA.md), so do not redistribute them or put them in the app bundle.
 """
-from concurrent.futures import ThreadPoolExecutor
+
 import csv
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import http.client
 import io
 import json
+import operator
 import os
-from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
 import time
-from typing import Callable
 import urllib.error
 import urllib.request
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Callable
 
 from labeling import save_labels
 
@@ -62,13 +65,16 @@ SOURCES = {}
 
 def source(name, *, sport, view, license, url, download_size):
     """Register fetch(root) as an evaluation source."""
+
     def register(fetch):
         SOURCES[name] = Source(name, sport, view, license, url, download_size, fetch)
         return fetch
+
     return register
 
 
 # ---- Downloading ----------------------------------------------------------------------------
+
 
 def open_url(url, *, headers=None, opener=None, timeout=120):
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
@@ -87,7 +93,10 @@ def download(url, path, *, size=None, opener=None, attempts=4):
     partial = path.with_name(path.name + ".part")
     for attempt in range(attempts):
         try:
-            with open_url(url, opener=opener, timeout=300) as response, partial.open("wb") as stream:
+            with (
+                open_url(url, opener=opener, timeout=300) as response,
+                partial.open("wb") as stream,
+            ):
                 shutil.copyfileobj(response, stream, 1 << 20)
                 expected = response.headers.get("Content-Length")
                 if expected is not None and stream.tell() != int(expected):
@@ -98,7 +107,9 @@ def download(url, path, *, size=None, opener=None, attempts=4):
                 raise
             time.sleep(5 * (attempt + 1))
     if size is not None and partial.stat().st_size != size:
-        raise ValueError(f"{url} is {partial.stat().st_size} bytes, expected {size}: the upstream file changed")
+        raise ValueError(
+            f"{url} is {partial.stat().st_size} bytes, expected {size}: the upstream file changed"
+        )
     partial.replace(path)
     return path
 
@@ -106,13 +117,17 @@ def download(url, path, *, size=None, opener=None, attempts=4):
 def download_many(pairs, *, workers=8, opener=None):
     """download() each (url, path) or (url, path, size), several at a time."""
     with ThreadPoolExecutor(workers) as pool:
-        return list(pool.map(lambda pair: download(*pair[:2], size=(pair[2:] or [None])[0], opener=opener),
-                              pairs))
+        return list(
+            pool.map(
+                lambda pair: download(*pair[:2], size=(pair[2:] or [None])[0], opener=opener), pairs
+            )
+        )
 
 
 def cookie_opener():
     """Opener that keeps cookies, for share links that set an access cookie before the download."""
     from http.cookiejar import CookieJar
+
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CookieJar()))
 
 
@@ -126,37 +141,62 @@ class RemoteFile(io.RawIOBase):
         self.block_start, self.block = 0, b""
         with open_url(url, headers={"Range": "bytes=0-0"}, opener=opener) as response:
             content_range = response.headers.get("Content-Range")
-            if response.status != 206 or not content_range:
+            match = re.fullmatch(r"bytes 0-0/([1-9][0-9]*)", content_range or "")
+            if response.status != 206 or match is None:
                 raise OSError(f"{url} does not support HTTP range requests")
-            self.size = int(content_range.rsplit("/", 1)[1])
+            self.size = int(match[1])
         if size is not None and self.size != size:
-            raise ValueError(f"{url} is {self.size} bytes, expected {size}: the upstream file changed")
+            raise ValueError(
+                f"{url} is {self.size} bytes, expected {size}: the upstream file changed"
+            )
 
     def readable(self):
+        self._checkClosed()
         return True
 
     def seekable(self):
+        self._checkClosed()
         return True
 
     def tell(self):
+        self._checkClosed()
         return self.position
 
     def seek(self, offset, whence=io.SEEK_SET):
-        base = {io.SEEK_SET: 0, io.SEEK_CUR: self.position, io.SEEK_END: self.size}[whence]
-        self.position = base + offset
+        self._checkClosed()
+        offset, whence = operator.index(offset), operator.index(whence)
+        bases = {io.SEEK_SET: 0, io.SEEK_CUR: self.position, io.SEEK_END: self.size}
+        if whence not in bases:
+            raise ValueError(f"Unsupported seek origin: {whence}")
+        position = bases[whence] + offset
+        if position < 0:
+            raise ValueError("Cannot seek before the start of a remote file")
+        self.position = position
         return self.position
 
     def _fetch(self, start, length):
         end = min(start + length, self.size) - 1
         for attempt in range(4):
             try:
-                with open_url(self.url, headers={"Range": f"bytes={start}-{end}"}, opener=self.opener,
-                              timeout=300) as response:
+                with open_url(
+                    self.url,
+                    headers={"Range": f"bytes={start}-{end}"},
+                    opener=self.opener,
+                    timeout=300,
+                ) as response:
                     # A 200 (whole file) or an HTML login page must never be read as archive bytes.
-                    if response.status != 206 or not response.headers.get("Content-Range", "").startswith(f"bytes {start}-"):
-                        raise OSError(f"{self.url}: asked for bytes {start}-{end}, got HTTP {response.status} "
-                                      f"{response.headers.get('Content-Range')!r}")
-                    data = response.read()
+                    if (
+                        response.status != 206
+                        or response.headers.get("Content-Range")
+                        != f"bytes {start}-{end}/{self.size}"
+                    ):
+                        raise OSError(
+                            f"{self.url}: asked for bytes {start}-{end}, got HTTP {response.status} "
+                            f"{response.headers.get('Content-Range')!r}"
+                        )
+                    # Read at most one extra byte to detect oversized responses
+                    # without buffering an unexpected whole archive.
+                    data = response.read(end - start + 2)
                 if len(data) != end - start + 1:
                     raise OSError(f"{self.url}: range {start}-{end} returned {len(data)} bytes")
                 return data
@@ -166,14 +206,18 @@ class RemoteFile(io.RawIOBase):
                 time.sleep(5 * (attempt + 1))
 
     def readinto(self, buffer):
-        if self.position >= self.size:
+        self._checkClosed()
+        if not buffer or self.position >= self.size:
             return 0
         offset = self.position - self.block_start
         if not 0 <= offset < len(self.block):
-            self.block_start, self.block = self.position, self._fetch(self.position, max(len(buffer), RANGE_CHUNK))
+            self.block_start, self.block = (
+                self.position,
+                self._fetch(self.position, max(len(buffer), RANGE_CHUNK)),
+            )
             offset = 0
         count = min(len(buffer), len(self.block) - offset)
-        buffer[:count] = self.block[offset:offset + count]
+        buffer[:count] = self.block[offset : offset + count]
         self.position += count
         return count
 
@@ -206,21 +250,29 @@ def extract(archive, names, destination):
 def read_csv(path):
     """Rows as dicts with stripped header names (some sources pad them with spaces)."""
     with Path(path).open(newline="", encoding="utf-8-sig") as stream:
-        return [{(k or "").strip(): (v or "").strip() for k, v in row.items()} for row in csv.DictReader(stream)]
+        return [
+            {(k or "").strip(): (v or "").strip() for k, v in row.items()}
+            for row in csv.DictReader(stream)
+        ]
 
 
 # ---- Video ----------------------------------------------------------------------------------
+
 
 def video_info(path):
     """(fps, decoded frame count, (width, height)). Counts frames by decoding, as predict_video.py
     and the labeling tool read them, because container frame counts can be wrong."""
     import cv2
+
     capture = cv2.VideoCapture(str(path))
     try:
         if not capture.isOpened():
             raise RuntimeError(f"Cannot open {path}")
         fps = capture.get(cv2.CAP_PROP_FPS)
-        size = (round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        size = (
+            round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
         frames = 0
         while capture.grab():
             frames += 1
@@ -232,9 +284,12 @@ def video_info(path):
 def video_size(path):
     """(width, height) from the container, without decoding."""
     import cv2
+
     capture = cv2.VideoCapture(str(path))
     try:
-        return round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        return round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), round(
+            capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        )
     finally:
         capture.release()
 
@@ -243,6 +298,7 @@ def encode_frames(images, fps, output):
     """Encode an ordered list of image files as constant-frame-rate H.264, so decoded frame i is
     images[i]. Near-lossless (CRF 12) to keep tiny balls intact."""
     from imageio_ffmpeg import get_ffmpeg_exe
+
     output = Path(output)
     if output.exists():
         return output
@@ -252,12 +308,36 @@ def encode_frames(images, fps, output):
         for i, image in enumerate(images):
             os.symlink(Path(image).resolve(), Path(temp) / f"{i:06d}{suffix}")
         staged = Path(temp) / output.name
-        command = [get_ffmpeg_exe(), "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-                   "-framerate", f"{fps:g}", "-i", str(Path(temp) / f"%06d{suffix}"),
-                   "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-preset", "veryfast",
-                   "-crf", "12", "-pix_fmt", "yuv420p", "-fps_mode", "cfr", "-movflags", "+faststart",
-                   str(staged)]
-        result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        command = [
+            get_ffmpeg_exe(),
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-framerate",
+            f"{fps:g}",
+            "-i",
+            str(Path(temp) / f"%06d{suffix}"),
+            "-vf",
+            "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "12",
+            "-pix_fmt",
+            "yuv420p",
+            "-fps_mode",
+            "cfr",
+            "-movflags",
+            "+faststart",
+            str(staged),
+        ]
+        result = subprocess.run(
+            command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True
+        )
         if result.returncode:
             raise RuntimeError(f"ffmpeg failed for {output}: {result.stderr[-1500:].strip()}")
         staged.replace(output)
@@ -268,7 +348,9 @@ def link_video(video, output):
     """Hard-link (or copy) a source video into clips/ unchanged, so frame indices stay as labeled.
     Replaces an existing clip that no longer matches the download (e.g. after a re-download)."""
     output = Path(output)
-    if output.exists() and (os.path.samefile(video, output) or output.stat().st_size == Path(video).stat().st_size):
+    if output.exists() and (
+        os.path.samefile(video, output) or output.stat().st_size == Path(video).stat().st_size
+    ):
         return output
     output.parent.mkdir(parents=True, exist_ok=True)
     staged = output.with_name(f".{output.name}.{os.getpid()}.part")
@@ -281,6 +363,7 @@ def link_video(video, output):
 
 
 # ---- Labels ---------------------------------------------------------------------------------
+
 
 def ball_box(x, y, size):
     half = BALL_BOX_FRACTION * max(size) / 2
@@ -298,14 +381,18 @@ def write_clip(root, name, video, points, *, notes=""):
     if not points:
         raise ValueError(f"{name}: no labeled frames")
     if max(points) >= frame_count:
-        raise ValueError(f"{name}: labels reach frame {max(points)} but the video decodes {frame_count} frames")
+        raise ValueError(
+            f"{name}: labels reach frame {max(points)} but the video decodes {frame_count} frames"
+        )
     labels = {}
     for frame, value in sorted(points.items()):
         value = value if isinstance(value, dict) else {"ball": value}
         point = value["ball"]
-        label = {"time_s": round(frame / fps, 6),
-                 "ball": None if point is None else ball_box(point[0], point[1], size),
-                 "origin": "external" if point is not None else "absent"}
+        label = {
+            "time_s": round(frame / fps, 6),
+            "ball": None if point is None else ball_box(point[0], point[1], size),
+            "origin": "external" if point is not None else "absent",
+        }
         label.update({k: v for k, v in value.items() if k != "ball" and v is not None})
         labels[frame] = label
     path = Path(root) / "labels" / f"{name}.json"
@@ -313,10 +400,18 @@ def write_clip(root, name, video, points, *, notes=""):
     video = Path(video).absolute().relative_to(ROOT)
     save_labels(path, labels, video=video, video_size=size, detections=None)
     visible = sum(v["ball"] is not None for v in labels.values())
-    return {"clip": name, "video": str(video), "labels": str(path.absolute().relative_to(ROOT)),
-            "fps": round(fps, 3), "size": list(size),
-            "frames": frame_count, "labeled": len(labels), "visible": visible,
-            "events": sum("event" in v for v in labels.values()), **({"notes": notes} if notes else {})}
+    return {
+        "clip": name,
+        "video": str(video),
+        "labels": str(path.absolute().relative_to(ROOT)),
+        "fps": round(fps, 3),
+        "size": list(size),
+        "frames": frame_count,
+        "labeled": len(labels),
+        "visible": visible,
+        "events": sum("event" in v for v in labels.values()),
+        **({"notes": notes} if notes else {}),
+    }
 
 
 def fetch_source(name):
@@ -324,9 +419,15 @@ def fetch_source(name):
     spec = SOURCES[name]
     root = EVAL / name
     clips = spec.fetch(root)
-    record = {"source": name, "sport": spec.sport, "view": spec.view, "license": spec.license,
-              "url": spec.url, "retrieved": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-              "clips": clips}
+    record = {
+        "source": name,
+        "sport": spec.sport,
+        "view": spec.view,
+        "license": spec.license,
+        "url": spec.url,
+        "retrieved": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "clips": clips,
+    }
     (root / "source.json").write_text(json.dumps(record, indent=1) + "\n")
     return clips
 

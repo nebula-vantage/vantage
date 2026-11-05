@@ -1,16 +1,17 @@
 """HTTP contracts for one Games app sharing saved analyses and coaching."""
-from datetime import datetime, timezone
+
 import hashlib
-from http.client import HTTPConnection
 import json
 import os
-from pathlib import Path
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timezone
+from http.client import HTTPConnection
+from pathlib import Path
 from unittest.mock import Mock, patch
 
-from vantage.coaching_server import CoachingServer, WEB_ROOT
+from vantage.coaching_server import WEB_ROOT, CoachingServer
 
 
 class AppIntegrationTests(unittest.TestCase):
@@ -47,7 +48,11 @@ class AppIntegrationTests(unittest.TestCase):
             connection.request(method, path, headers=headers or {})
             response = connection.getresponse()
             raw = response.read()
-            body = json.loads(raw) if raw and "application/json" in response.getheader("Content-Type", "") else raw
+            body = (
+                json.loads(raw)
+                if raw and "application/json" in response.getheader("Content-Type", "")
+                else raw
+            )
             return response.status, body, dict(response.getheaders())
         finally:
             connection.close()
@@ -62,8 +67,13 @@ class AppIntegrationTests(unittest.TestCase):
     def test_game_and_coaching_deep_links_reload_the_same_app(self):
         status, shell, headers = self.request("GET", "/")
         self.assertEqual(status, 200)
-        routes = ("/games", f"/games/{self.sid}", f"/games/{self.sid}/coaching",
-                  "/games/sample", "/games/sample/coaching")
+        routes = (
+            "/games",
+            f"/games/{self.sid}",
+            f"/games/{self.sid}/coaching",
+            "/games/sample",
+            "/games/sample/coaching",
+        )
         for route in routes:
             with self.subTest(route=route):
                 status, body, route_headers = self.request("GET", route)
@@ -76,10 +86,17 @@ class AppIntegrationTests(unittest.TestCase):
                 self.assertEqual(int(head_headers["Content-Length"]), len(shell))
 
     def test_app_routes_do_not_turn_unknown_or_traversal_paths_into_the_shell(self):
-        for route in ("/unknown", "/games/not-a-session", "/games/" + "a" * 19,
-                      "/games/" + "a" * 21, "/games/" + "A" * 20,
-                      f"/games/{self.sid}/private", "/games/sample/source.mp4",
-                      "/games/../../pyproject.toml", "/games/%2e%2e/pyproject.toml"):
+        for route in (
+            "/unknown",
+            "/games/not-a-session",
+            "/games/" + "a" * 19,
+            "/games/" + "a" * 21,
+            "/games/" + "A" * 20,
+            f"/games/{self.sid}/private",
+            "/games/sample/source.mp4",
+            "/games/../../pyproject.toml",
+            "/games/%2e%2e/pyproject.toml",
+        ):
             with self.subTest(route=route):
                 self.assertEqual(self.request("GET", route)[0], 404)
                 self.assertEqual(self.request("HEAD", route)[0], 404)
@@ -94,10 +111,13 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertEqual(game["duration_s"], self.stats["video"]["duration_s"])
         self.assertEqual(game["rally_count"], self.stats["rally_count"])
         self.assertEqual(game["shot_count"], self.stats["shot_count"])
-        self.assertEqual(game["quality"], {
-            "status": self.stats["quality"]["status"],
-            "coverage": self.stats["quality"]["ball_detection_coverage"],
-        })
+        self.assertEqual(
+            game["quality"],
+            {
+                "status": self.stats["quality"]["status"],
+                "coverage": self.stats["quality"]["ball_detection_coverage"],
+            },
+        )
         parsed = datetime.fromisoformat(game["analyzed_at"].replace("Z", "+00:00"))
         self.assertEqual(parsed, analyzed_at)
         self.assertEqual(parsed.utcoffset().total_seconds(), 0)
@@ -107,12 +127,24 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertEqual(session["stats"]["shot_count"], game["shot_count"])
 
     def test_insufficient_evidence_is_missing_counts_in_the_games_list(self):
-        self.stats.update(rally_count=0, shot_count=0, longest_rally=0,
-                          bounce_candidate_count=0, rallies=[], crossing_events=[],
-                          shots_per_rally=[], in_out_calls=[], avg_ball_speed_kmh=None)
-        self.stats["quality"].update(status="heuristic", ball_detection_coverage=0,
-                                     observed_frames=0, valid_speed_duration_s=0,
-                                     valid_speed_coverage=0)
+        self.stats.update(
+            rally_count=0,
+            shot_count=0,
+            longest_rally=0,
+            bounce_candidate_count=0,
+            rallies=[],
+            crossing_events=[],
+            shots_per_rally=[],
+            in_out_calls=[],
+            avg_ball_speed_kmh=None,
+        )
+        self.stats["quality"].update(
+            status="heuristic",
+            ball_detection_coverage=0,
+            observed_frames=0,
+            valid_speed_duration_s=0,
+            valid_speed_coverage=0,
+        )
         self.write_stats()
         game = self.listed_game()
         self.assertEqual(game["quality"], {"status": "insufficient_evidence", "coverage": 0})
@@ -127,9 +159,13 @@ class AppIntegrationTests(unittest.TestCase):
         (self.run / "annotated.mp4").write_bytes(b"deliberately not a decodable video")
         thumbnail = b"\x89PNG\r\n\x1a\nsaved-thumbnail"
         (self.run / "thumbnail.png").write_bytes(thumbnail)
-        with patch.object(self.server.playback, "get", side_effect=AssertionError("No list-time conversion")), \
-                patch("cv2.VideoCapture", side_effect=AssertionError("No list-time video probing")), \
-                patch("subprocess.run", side_effect=AssertionError("No list-time subprocess")):
+        with (
+            patch.object(
+                self.server.playback, "get", side_effect=AssertionError("No list-time conversion")
+            ),
+            patch("cv2.VideoCapture", side_effect=AssertionError("No list-time video probing")),
+            patch("subprocess.run", side_effect=AssertionError("No list-time subprocess")),
+        ):
             game = self.listed_game()
         self.assertTrue(game["has_video"])
         self.assertEqual(game["thumbnail_url"], f"/media/{self.sid}/thumbnail.png")
@@ -163,15 +199,25 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertFalse(game["has_video"])
         self.assertIsNone(game["thumbnail_url"])
         linked_sid = hashlib.sha256(b"linked").hexdigest()[:20]
-        for path in (f"/media/{self.sid}/thumbnail.png", f"/media/{self.sid}/annotated.mp4",
-                     f"/media/{linked_sid}/thumbnail.png", f"/api/sessions/{linked_sid}"):
+        for path in (
+            f"/media/{self.sid}/thumbnail.png",
+            f"/media/{self.sid}/annotated.mp4",
+            f"/media/{linked_sid}/thumbnail.png",
+            f"/api/sessions/{linked_sid}",
+        ):
             with self.subTest(path=path):
                 self.assertEqual(self.request("GET", path)[0], 404)
 
     def test_new_app_media_does_not_expose_source_video_or_arbitrary_files(self):
         (self.run / "source.mp4").write_bytes(b"private uploaded source")
         (self.run / "private.txt").write_text("private data")
-        for name in ("source.mp4", "private.txt", "stats.json", "../private.txt", "%2e%2e/private.txt"):
+        for name in (
+            "source.mp4",
+            "private.txt",
+            "stats.json",
+            "../private.txt",
+            "%2e%2e/private.txt",
+        ):
             with self.subTest(name=name):
                 self.assertEqual(self.request("GET", f"/media/{self.sid}/{name}")[0], 404)
         game = self.listed_game()

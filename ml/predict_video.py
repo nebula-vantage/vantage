@@ -8,35 +8,47 @@ labeling tool, and the app's player all work with any model. Uses PyTorch (deskt
 rectangular letterboxing); confirm a final model on-device via Core ML export and
 vantage-analyze, whose square letterboxing yields somewhat different candidates.
 """
+
 import argparse
 import json
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 import cv2
-
 from vantage_classes import canonical_map
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--weights", type=Path, required=True)
     parser.add_argument("--video", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--imgsz", type=int, default=1280)
-    parser.add_argument("--confidence", type=float, default=0.10, help="same raw threshold as the app")
+    parser.add_argument(
+        "--confidence", type=float, default=0.10, help="same raw threshold as the app"
+    )
     parser.add_argument("--device", default="mps")
     parser.add_argument("--max-frames", type=int, default=0)
     args = parser.parse_args()
 
-    count = predict_video(load_model(args.weights), args.video, args.output, imgsz=args.imgsz,
-                          confidence=args.confidence, device=args.device, max_frames=args.max_frames)
+    count = predict_video(
+        load_model(args.weights),
+        args.video,
+        args.output,
+        imgsz=args.imgsz,
+        confidence=args.confidence,
+        device=args.device,
+        max_frames=args.max_frames,
+    )
     print(f"Wrote {count} frames to {args.output}")
 
 
 def load_model(weights):
     from ultralytics import YOLO
+
     model = YOLO(str(weights))
     if 32 not in canonical_map(model.names).values():
         raise SystemExit(f"Model has no ball class: {model.names}")
@@ -57,14 +69,33 @@ def predict_video(model, video, output, *, imgsz=1280, confidence=0.10, device="
             if not ok or (max_frames and count >= max_frames):
                 break
             start = time.perf_counter()
-            result = model.predict(image, imgsz=imgsz, conf=confidence, device=device, max_det=100, verbose=False)[0]
+            result = model.predict(
+                image, imgsz=imgsz, conf=confidence, device=device, max_det=100, verbose=False
+            )[0]
             elapsed = (time.perf_counter() - start) * 1000
-            detections = [{"classID": mapping[int(c)], "confidence": float(s), "box": [float(v) for v in b]}
-                          for b, c, s in zip(result.boxes.xyxy.tolist(), result.boxes.cls.tolist(),
-                                             result.boxes.conf.tolist()) if int(c) in mapping]
+            detections = [
+                {"classID": mapping[int(c)], "confidence": float(s), "box": [float(v) for v in b]}
+                for b, c, s in zip(
+                    result.boxes.xyxy.tolist(),
+                    result.boxes.cls.tolist(),
+                    result.boxes.conf.tolist(),
+                    strict=True,
+                )
+                if int(c) in mapping
+            ]
             h, w = image.shape[:2]
-            stream.write(json.dumps({"timeSeconds": count / fps, "width": w, "height": h,
-                                     "inferenceMilliseconds": elapsed, "detections": detections}) + "\n")
+            stream.write(
+                json.dumps(
+                    {
+                        "timeSeconds": count / fps,
+                        "width": w,
+                        "height": h,
+                        "inferenceMilliseconds": elapsed,
+                        "detections": detections,
+                    }
+                )
+                + "\n"
+            )
             count += 1
             if count % 200 == 0:
                 print(f"{count} frames", file=sys.stderr)

@@ -14,16 +14,19 @@ SOURCE.json, and appends attribution to ml/DATA_SOURCES.md (committed). Licenses
 forbid commercial use or derivatives, or are missing, are refused unless --allow-license
 is given explicitly, because a model trained on them may ship in the app.
 """
+
 import argparse
-from datetime import datetime, timezone
-import io
 import json
 import os
-from pathlib import Path
+import re
+import shutil
+import tempfile
 import time
 import urllib.parse
 import urllib.request
 import zipfile
+from datetime import datetime, timezone
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 API = "https://api.roboflow.com"
@@ -56,8 +59,14 @@ def license_problem(name):
 
 def parse_id(dataset_id):
     parts = dataset_id.strip("/").split("/")
-    if len(parts) != 3 or not parts[2].isdigit():
-        raise ValueError("Dataset ID must be WORKSPACE/PROJECT/VERSION, e.g. acme/pickleball-ball/2")
+    if (
+        len(parts) != 3
+        or not all(re.fullmatch(r"[A-Za-z0-9_-]+", part) for part in parts[:2])
+        or not re.fullmatch(r"[0-9]+", parts[2])
+    ):
+        raise ValueError(
+            "Dataset ID must be WORKSPACE/PROJECT/VERSION, e.g. acme/pickleball-ball/2"
+        )
     return parts[0], parts[1], int(parts[2])
 
 
@@ -81,21 +90,56 @@ def export_link(workspace, project, version, api_key, fmt, wait_s=300):
 
 
 def append_attribution(entry):
-    header = ("# External training data\n\nDatasets downloaded with `ml/fetch_roboflow.py`. "
-              "Keep this file: CC BY licenses require attribution.\n\n"
-              "| Dataset | License | Images | Classes | Retrieved |\n| --- | --- | ---: | --- | --- |\n")
+    header = (
+        "# External training data\n\nDatasets downloaded with `ml/fetch_roboflow.py`. "
+        "Keep this file: CC BY licenses require attribution.\n\n"
+        "| Dataset | License | Images | Classes | Retrieved |\n| --- | --- | ---: | --- | --- |\n"
+    )
     text = SOURCES.read_text() if SOURCES.exists() else header
-    row = (f"| [{entry['id']}]({entry['url']}) | {entry['license']} | {entry['images']} | "
-           f"{', '.join(entry['classes'])} | {entry['retrieved'][:10]} |\n")
+    row = (
+        f"| [{entry['id']}]({entry['url']}) | {entry['license']} | {entry['images']} | "
+        f"{', '.join(entry['classes'])} | {entry['retrieved'][:10]} |\n"
+    )
     if f"[{entry['id']}]" not in text:
         SOURCES.write_text(text + row)
 
 
+def download_dataset(link, destination, entry):
+    """Stream and stage a complete export; failed attempts leave no final directory."""
+    destination = Path(destination)
+    if destination.exists():
+        raise FileExistsError(f"{destination} already exists; delete it to re-download.")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".roboflow-", dir=destination.parent) as temporary:
+        staged = Path(temporary) / "dataset"
+        staged.mkdir()
+        archive_path = Path(temporary) / "export.zip"
+        with (
+            urllib.request.urlopen(link, timeout=600) as response,
+            archive_path.open("wb") as stream,
+        ):
+            shutil.copyfileobj(response, stream, 1024 * 1024)
+        with zipfile.ZipFile(archive_path) as archive:
+            for member in archive.infolist():
+                path = PurePosixPath(member.filename)
+                if path.is_absolute() or ".." in path.parts or "\\" in member.filename:
+                    raise ValueError(f"Unsafe archive member name: {member.filename}")
+            archive.extractall(staged)
+        (staged / "SOURCE.json").write_text(json.dumps(entry, indent=2) + "\n")
+        staged.rename(destination)
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("dataset", help="WORKSPACE/PROJECT/VERSION")
-    parser.add_argument("--format", default="yolov8", help="Roboflow export format (default yolov8)")
-    parser.add_argument("--allow-license", help="explicitly accept this license string after reviewing it")
+    parser.add_argument(
+        "--format", default="yolov8", help="Roboflow export format (default yolov8)"
+    )
+    parser.add_argument(
+        "--allow-license", help="explicitly accept this license string after reviewing it"
+    )
     parser.add_argument("--info", action="store_true", help="print project metadata and exit")
     args = parser.parse_args()
     key = api_key()
@@ -106,28 +150,42 @@ def main():
     info = get_json(f"{API}/{workspace}/{project}", key).get("project", {})
     license_name = info.get("license")
     classes = sorted((info.get("classes") or {}).keys())
-    print(json.dumps({"name": info.get("name"), "license": license_name, "images": info.get("images"),
-                      "classes": info.get("classes"), "type": info.get("type")}, indent=2))
+    print(
+        json.dumps(
+            {
+                "name": info.get("name"),
+                "license": license_name,
+                "images": info.get("images"),
+                "classes": info.get("classes"),
+                "type": info.get("type"),
+            },
+            indent=2,
+        )
+    )
     if args.info:
         return
     problem = license_problem(license_name)
     if problem and args.allow_license != license_name:
-        raise SystemExit(f"Refusing {args.dataset}: {problem}. Review it and pass "
-                         f"--allow-license '{license_name}' only if this use is permitted.")
+        raise SystemExit(
+            f"Refusing {args.dataset}: {problem}. Review it and pass "
+            f"--allow-license '{license_name}' only if this use is permitted."
+        )
 
     destination = EXTERNAL / f"{workspace}__{project}__v{version}"
     if destination.exists():
         raise SystemExit(f"{destination} already exists; delete it to re-download.")
     link = export_link(workspace, project, version, key, args.format)
     print("Downloading export...")
-    with urllib.request.urlopen(link, timeout=600) as response:
-        archive = zipfile.ZipFile(io.BytesIO(response.read()))
-    destination.mkdir(parents=True)
-    archive.extractall(destination)
-    entry = {"id": args.dataset, "url": f"https://universe.roboflow.com/{workspace}/{project}/dataset/{version}",
-             "license": license_name, "images": info.get("images"), "classes": classes,
-             "format": args.format, "retrieved": datetime.now(timezone.utc).isoformat()}
-    (destination / "SOURCE.json").write_text(json.dumps(entry, indent=2) + "\n")
+    entry = {
+        "id": args.dataset,
+        "url": f"https://universe.roboflow.com/{workspace}/{project}/dataset/{version}",
+        "license": license_name,
+        "images": info.get("images"),
+        "classes": classes,
+        "format": args.format,
+        "retrieved": datetime.now(timezone.utc).isoformat(),
+    }
+    download_dataset(link, destination, entry)
     append_attribution(entry)
     print(f"Saved {destination} and recorded attribution in {SOURCES.relative_to(ROOT)}")
 

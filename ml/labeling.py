@@ -12,18 +12,20 @@ ambiguous) and are excluded from evaluation. `origin` records how the label was 
 suggestion (accepted tracker output), candidate (clicked a raw detection), manual
 (clicked elsewhere), or absent.
 """
-from dataclasses import dataclass, field
+
 import json
 import math
 import os
-from pathlib import Path
 import tempfile
+from dataclasses import dataclass, field
+from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 from vantage.ball_tracker import BallTracker
 from vantage.config import CONFIG
 from vantage.records import Detection
-from vantage_classes import CANONICAL  # noqa: E402
+from vantage_classes import CANONICAL
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # detections.jsonl always uses canonical IDs, whatever model produced it.
 BALL = CANONICAL["ball"]
@@ -53,15 +55,20 @@ def tracked_balls(frames, config=CONFIG):
     tracker = BallTracker(config, frames[0]["width"], frames[0]["height"])
     boxes = []
     for frame in frames:
-        selected = tracker.select([Detection(tuple(box), conf, None, BALL)
-                                   for box, conf in ball_candidates(frame)], frame["timeSeconds"])
+        selected = tracker.select(
+            [Detection(tuple(box), conf, None, BALL) for box, conf in ball_candidates(frame)],
+            frame["timeSeconds"],
+        )
         boxes.append(None if selected is None else list(selected.box))
     return boxes
 
 
 def best_raw_balls(frames):
     """Highest-confidence raw candidate per frame: the detector alone, no tracking."""
-    return [max(ball_candidates(f), key=lambda c: c[1])[0] if ball_candidates(f) else None for f in frames]
+    return [
+        max(ball_candidates(f), key=lambda c: c[1])[0] if ball_candidates(f) else None
+        for f in frames
+    ]
 
 
 def load_labels(path):
@@ -78,9 +85,13 @@ def save_labels(path, labels, *, video, video_size, detections):
     """Atomic write so an interrupted session never corrupts existing labels."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = {"schema": SCHEMA, "video": str(video), "video_size": list(video_size),
-            "detections": None if detections is None else str(detections),
-            "frames": {str(k): labels[k] for k in sorted(labels)}}
+    data = {
+        "schema": SCHEMA,
+        "video": str(video),
+        "video_size": list(video_size),
+        "detections": None if detections is None else str(detections),
+        "frames": {str(k): labels[k] for k in sorted(labels)},
+    }
     with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, suffix=".tmp") as stream:
         json.dump(data, stream, indent=1)
         stream.write("\n")
@@ -89,12 +100,16 @@ def save_labels(path, labels, *, video, video_size, detections):
 
 def label_centers(labels):
     """{"frame": [x, y] | null} format used by tools/coreml/crop_experiment.py --labels."""
-    return {str(k): (None if v["ball"] is None else list(center(v["ball"]))) for k, v in sorted(labels.items())}
+    return {
+        str(k): (None if v["ball"] is None else list(center(v["ball"])))
+        for k, v in sorted(labels.items())
+    }
 
 
 @dataclass
 class LabelSession:
     """Navigation and editing over sampled frames. Positions are indexes into `order`."""
+
     order: list[int]
     times: list[float]
     candidates: list[list]  # per video frame: [(box, confidence), ...]
@@ -112,7 +127,9 @@ class LabelSession:
         return self.labels.get(self.frame)
 
     def first_unlabeled(self):
-        self.position = next((i for i, f in enumerate(self.order) if f not in self.labels), len(self.order) - 1)
+        self.position = next(
+            (i for i, f in enumerate(self.order) if f not in self.labels), len(self.order) - 1
+        )
 
     def move(self, step):
         self.position = min(max(self.position + step, 0), len(self.order) - 1)
@@ -140,7 +157,9 @@ class LabelSession:
     def click(self, x, y, snap_radius):
         """Label at a source-pixel point: snap to the nearest raw candidate within
         snap_radius, else a manual box of the most recent labeled size."""
-        nearest = min(self.candidates[self.frame], key=lambda c: math.dist(center(c[0]), (x, y)), default=None)
+        nearest = min(
+            self.candidates[self.frame], key=lambda c: math.dist(center(c[0]), (x, y)), default=None
+        )
         if nearest is not None and math.dist(center(nearest[0]), (x, y)) <= snap_radius:
             self._set([float(v) for v in nearest[0]], "candidate")
             return
@@ -168,8 +187,12 @@ class LabelSession:
 
     def counts(self):
         visible = sum(v["ball"] is not None for v in self.labels.values())
-        return {"labeled": len(self.labels), "ball": visible, "absent": len(self.labels) - visible,
-                "suggestions_accepted": sum(v["origin"] == "suggestion" for v in self.labels.values())}
+        return {
+            "labeled": len(self.labels),
+            "ball": visible,
+            "absent": len(self.labels) - visible,
+            "suggestions_accepted": sum(v["origin"] == "suggestion" for v in self.labels.values()),
+        }
 
 
 def evaluate(predictions, labels, radius):
@@ -184,8 +207,11 @@ def evaluate(predictions, labels, radius):
         if frame >= len(predictions):
             continue
         truth, predicted = label["ball"], predictions[frame]
-        correct = (truth is not None and predicted is not None
-                   and math.dist(center(truth), center(predicted)) <= radius)
+        correct = (
+            truth is not None
+            and predicted is not None
+            and math.dist(center(truth), center(predicted)) <= radius
+        )
         totals["labeled"] += 1
         totals["visible"] += truth is not None
         totals["correct"] += correct

@@ -12,9 +12,13 @@ CANONICAL = {"player": 0, "ball": 32, "paddle": 38}
 
 # Model / dataset class names accepted for each Vantage class (case-insensitive).
 ALIASES = {
-    "person": "player", "player": "player",
-    "sports ball": "ball", "ball": "ball", "pickleball": "ball",
-    "tennis racket": "paddle", "paddle": "paddle",
+    "person": "player",
+    "player": "player",
+    "sports ball": "ball",
+    "ball": "ball",
+    "pickleball": "ball",
+    "tennis racket": "paddle",
+    "paddle": "paddle",
 }
 
 

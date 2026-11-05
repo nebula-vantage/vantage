@@ -110,6 +110,9 @@ struct GamesListView: View {
             if let notice = importer.notice {
                 NoticeCard(message: notice) { importer.notice = nil }
             }
+            if let notice = store.notice {
+                NoticeCard(message: notice) { store.notice = nil }
+            }
             if let pending = importer.pending {
                 PendingGameRow(pending: pending) { importer.cancel() }
             }

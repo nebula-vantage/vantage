@@ -1,23 +1,27 @@
 """Vantage desktop/web app: one games library, analysis flow, and in-game coach."""
+
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
-from pathlib import Path
 import re
 import sys
 import tempfile
-from urllib.parse import parse_qs, urlsplit
 import webbrowser
+from contextlib import ExitStack
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
+from vantage.coach_engines import EngineError
+from vantage.coach_evidence import EvidenceError
 from vantage.coaching import build_report, validate_stats
 from vantage.coaching_ai import answer_question, configuration
 from vantage.coaching_jobs import AnalysisJobs
 from vantage.coaching_video import PlaybackCache
-
+from vantage.video_coach import CoachService, SessionUnavailable
 
 WEB_ROOT = Path(__file__).with_name("web")
 MAX_BODY = 2 * 1024 * 1024
@@ -27,8 +31,12 @@ STATIC_FILES = {
     "/app.css": ("app.css", "text/css; charset=utf-8"),
     "/fonts.css": ("fonts.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/api.js": ("api.js", "text/javascript; charset=utf-8"),
     "/favicon.svg": ("favicon.svg", "image/svg+xml"),
-    "/fonts/bricolage-grotesque-variable.woff2": ("fonts/bricolage-grotesque-variable.woff2", "font/woff2"),
+    "/fonts/bricolage-grotesque-variable.woff2": (
+        "fonts/bricolage-grotesque-variable.woff2",
+        "font/woff2",
+    ),
     "/fonts/ibm-plex-sans-variable.woff2": ("fonts/ibm-plex-sans-variable.woff2", "font/woff2"),
     "/fonts/ibm-plex-mono-regular.woff2": ("fonts/ibm-plex-mono-regular.woff2", "font/woff2"),
     "/fonts/ibm-plex-mono-medium.woff2": ("fonts/ibm-plex-mono-medium.woff2", "font/woff2"),
@@ -38,6 +46,7 @@ STATIC_FILES = {
 def decode_json(raw: bytes):
     def reject_constant(value):
         raise ValueError("JSON numbers must be finite.")
+
     try:
         return json.loads(raw, parse_constant=reject_constant)
     except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
@@ -65,7 +74,9 @@ class SessionLibrary:
         if not self.root.is_dir():
             return {}
         candidates = [self.root]
-        candidates.extend(sorted(p for p in self.root.iterdir() if p.is_dir() and not p.name.startswith(".")))
+        candidates.extend(
+            sorted(p for p in self.root.iterdir() if p.is_dir() and not p.name.startswith("."))
+        )
         return {
             hashlib.sha256(str(p.relative_to(self.root)).encode()).hexdigest()[:20]: p
             for p in candidates
@@ -81,20 +92,32 @@ class SessionLibrary:
                 quality = stats["quality"]
                 supported = quality["status"] != "insufficient_evidence"
                 # List cards use saved metadata only: never decode or transcode every video.
-                has_video = any(self._media_file(directory, name) for name in ("annotated.mp4", "prepared.mp4"))
+                has_video = any(
+                    self._media_file(directory, name) for name in ("annotated.mp4", "prepared.mp4")
+                )
                 thumbnail = self._media_file(directory, "thumbnail.png")
-                sessions.append({
-                    "id": session_id, "name": stats.get("session_name") or directory.name,
-                    "is_demo": stats.get("synthetic", False),
-                    "duration_s": stats["video"]["duration_s"],
-                    # This is the analysis file's timestamp, not when the match was played.
-                    "analyzed_at": datetime.fromtimestamp(stats_path.stat().st_mtime, timezone.utc).isoformat(),
-                    "quality": {"status": quality["status"], "coverage": quality["ball_detection_coverage"]},
-                    "rally_count": stats["rally_count"] if supported else None,
-                    "shot_count": stats["shot_count"] if supported else None,
-                    "has_video": has_video,
-                    "thumbnail_url": f"/media/{session_id}/thumbnail.png" if thumbnail else None,
-                })
+                sessions.append(
+                    {
+                        "id": session_id,
+                        "name": stats.get("session_name") or directory.name,
+                        "is_demo": stats.get("synthetic", False),
+                        "duration_s": stats["video"]["duration_s"],
+                        # This is the analysis file's timestamp, not when the match was played.
+                        "analyzed_at": datetime.fromtimestamp(
+                            stats_path.stat().st_mtime, timezone.utc
+                        ).isoformat(),
+                        "quality": {
+                            "status": quality["status"],
+                            "coverage": quality["ball_detection_coverage"],
+                        },
+                        "rally_count": stats["rally_count"] if supported else None,
+                        "shot_count": stats["shot_count"] if supported else None,
+                        "has_video": has_video,
+                        "thumbnail_url": f"/media/{session_id}/thumbnail.png"
+                        if thumbnail
+                        else None,
+                    }
+                )
             except (OSError, ValueError):
                 errors.append(f"Could not load {directory.name}: check its stats.json export.")
         sessions.sort(key=lambda session: (session["analyzed_at"], session["id"]), reverse=True)
@@ -116,32 +139,49 @@ class SessionLibrary:
         directory = self.directories().get(session_id)
         if directory is None:
             return None
-        video = next((name for name in ("annotated.mp4", "prepared.mp4") if self.media(session_id, name)), None)
+        video = next(
+            (name for name in ("annotated.mp4", "prepared.mp4") if self.media(session_id, name)),
+            None,
+        )
         if video == "annotated.mp4":
             video = "playback.mp4"
         heatmap = self.media(session_id, "landing_heatmap.png")
         stats = read_stats(directory / "stats.json")
-        return {"id": session_id, "name": stats.get("session_name") or directory.name, "is_demo": stats.get("synthetic", False),
-                "stats": stats, "video_url": f"/media/{session_id}/{video}" if video else None,
-                "heatmap_url": f"/media/{session_id}/landing_heatmap.png" if heatmap else None}
+        return {
+            "id": session_id,
+            "name": stats.get("session_name") or directory.name,
+            "is_demo": stats.get("synthetic", False),
+            "stats": stats,
+            "video_url": f"/media/{session_id}/{video}" if video else None,
+            "heatmap_url": f"/media/{session_id}/landing_heatmap.png" if heatmap else None,
+        }
 
 
 class CoachingServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, address, runs_dir: Path):
+        self._resources = ExitStack()
         self.library = SessionLibrary(runs_dir)
-        super().__init__(address, CoachingHandler)
-        self.playback_dir = tempfile.TemporaryDirectory(prefix="vantage-coach-")
-        self.playback = PlaybackCache(Path(self.playback_dir.name))
-        self.jobs = AnalysisJobs(self.library.root)
+        try:
+            super().__init__(address, CoachingHandler)
+            self.playback_dir = tempfile.TemporaryDirectory(prefix="vantage-coach-")
+            self._resources.callback(self.playback_dir.cleanup)
+            self.playback = PlaybackCache(Path(self.playback_dir.name))
+            self.jobs = AnalysisJobs(self.library.root)
+            self._resources.callback(self.jobs.close)
+            self.coach = CoachService(self.library)
+            self._resources.callback(self.coach.close)
+        except BaseException:
+            self.server_close()
+            raise
 
     def server_close(self):
-        if hasattr(self, "jobs"):
-            self.jobs.close()
-        super().server_close()
-        if hasattr(self, "playback_dir"):
-            self.playback_dir.cleanup()
+        # Release every acquired resource, even if startup or another cleanup fails.
+        try:
+            self._resources.close()
+        finally:
+            super().server_close()
 
 
 class CoachingHandler(BaseHTTPRequestHandler):
@@ -159,9 +199,12 @@ class CoachingHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; "
-                         "img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; "
-                         "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self'; "
+            "img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; "
+            "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+        )
         super().end_headers()
 
     def _local_request(self):
@@ -171,8 +214,9 @@ class CoachingHandler(BaseHTTPRequestHandler):
             self._json({"error": "Open this workspace using its localhost address."}, 403)
             return False
         origin = self.headers.get("Origin")
-        if ((origin and origin not in {f"http://{host}" for host in allowed_hosts}) or
-                self.headers.get("Sec-Fetch-Site") == "cross-site"):
+        if (
+            origin and origin not in {f"http://{host}" for host in allowed_hosts}
+        ) or self.headers.get("Sec-Fetch-Site") == "cross-site":
             self._json({"error": "Cross-origin requests are not allowed."}, 403)
             return False
         return True
@@ -247,7 +291,15 @@ class CoachingHandler(BaseHTTPRequestHandler):
             if APP_ROUTE.fullmatch(path):
                 return self._file(WEB_ROOT / "index.html", "text/html; charset=utf-8")
             if path == "/api/config":
-                return self._json({**configuration(), **self.server.jobs.config()})
+                return self._json(
+                    {
+                        **configuration(),
+                        **self.server.jobs.config(),
+                        "coach": self.server.coach.config(),
+                    }
+                )
+            if path.startswith("/api/coach/") and len(path.split("/")) == 4:
+                return self._coach(path.split("/"))
             if path.startswith("/api/analysis/"):
                 parts = path.split("/")
                 if len(parts) == 4:
@@ -258,34 +310,55 @@ class CoachingHandler(BaseHTTPRequestHandler):
                     preview = self.server.jobs.preview(parts[3])
                     if preview:
                         return self._file(preview, "image/png")
-                return self._json({"error": "This analysis is unavailable. Upload the video again."}, 404)
+                return self._json(
+                    {"error": "This analysis is unavailable. Upload the video again."}, 404
+                )
             if path == "/api/sessions":
                 return self._json(self.server.library.list_sessions())
             if path == "/api/demo":
                 stats = read_stats(WEB_ROOT / "demo-stats.json")
-                return self._json({"id": "demo", "name": "Demo session", "is_demo": True,
-                                   "stats": stats, "video_url": None, "heatmap_url": None})
+                return self._json(
+                    {
+                        "id": "demo",
+                        "name": "Demo session",
+                        "is_demo": True,
+                        "stats": stats,
+                        "video_url": None,
+                        "heatmap_url": None,
+                    }
+                )
             if path.startswith("/api/sessions/"):
                 session = self.server.library.session(path.removeprefix("/api/sessions/"))
                 if session:
                     return self._json(session)
             if path.startswith("/media/"):
                 parts = path.split("/")
-                if len(parts) == 4:
+                if len(parts) == 5 and parts[3] == "coach":
+                    frame = self.server.coach.frame_path(parts[2], parts[4])
+                    if frame:
+                        return self._file(frame, "image/jpeg")
+                elif len(parts) == 4:
                     if parts[3] == "playback.mp4":
                         original = self.server.library.media(parts[2], "annotated.mp4")
                         media = self.server.playback.get(original) if original else None
                     else:
                         media = self.server.library.media(parts[2], parts[3])
                     if media:
-                        return self._file(media, "image/png" if media.suffix == ".png" else "video/mp4", ranges=True)
+                        return self._file(
+                            media,
+                            "image/png" if media.suffix == ".png" else "video/mp4",
+                            ranges=True,
+                        )
             self._json({"error": "This session or file is unavailable."}, 404)
         except (BrokenPipeError, ConnectionResetError):
             pass
         except (OSError, ValueError):
             self._json({"error": "Unable to load this session. Check its stats.json export."}, 400)
         except RuntimeError:
-            self._json({"error": "Unable to prepare the video. Attach a matching H.264 MP4 to continue."}, 503)
+            self._json(
+                {"error": "Unable to prepare the video. Attach a matching H.264 MP4 to continue."},
+                503,
+            )
 
     def do_POST(self):
         if not self._local_request():
@@ -294,9 +367,21 @@ class CoachingHandler(BaseHTTPRequestHandler):
         if path == "/api/analysis":
             return self._upload_video()
         parts = path.split("/")
-        job_action = (len(parts) == 5 and parts[1:3] == ["api", "analysis"]
-                      and parts[4] in ("start", "cancel"))
-        if path not in ("/api/session", "/api/report", "/api/chat") and not job_action:
+        job_action = (
+            len(parts) == 5
+            and parts[1:3] == ["api", "analysis"]
+            and parts[4] in ("start", "cancel")
+        )
+        coach_action = (
+            len(parts) == 5
+            and parts[1:3] == ["api", "coach"]
+            and parts[4] in ("analyze", "cancel", "chat")
+        )
+        if (
+            path not in ("/api/session", "/api/report", "/api/chat")
+            and not job_action
+            and not coach_action
+        ):
             return self._json({"error": "Unknown endpoint."}, 404)
         if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
             return self._json({"error": "Send application/json."}, 415)
@@ -307,12 +392,21 @@ class CoachingHandler(BaseHTTPRequestHandler):
             body = decode_json(self.rfile.read(length))
             if not isinstance(body, dict):
                 raise ValueError("Request must be a JSON object.")
+            if coach_action:
+                return self._coach(parts, body)
             if job_action:
                 if self.server.jobs.get(parts[3]) is None:
-                    return self._json({"error": "This analysis is unavailable. Upload the video again."}, 404)
+                    return self._json(
+                        {"error": "This analysis is unavailable. Upload the video again."}, 404
+                    )
                 if parts[4] == "cancel":
                     return self._json(self.server.jobs.cancel(parts[3]))
-                return self._json(self.server.jobs.start(parts[3], body.get("corners"), body.get("synthetic", False)), 202)
+                return self._json(
+                    self.server.jobs.start(
+                        parts[3], body.get("corners"), body.get("synthetic", False)
+                    ),
+                    202,
+                )
             stats = validate_stats(body.get("stats"))
             focus = body.get("focus", "consistency")
             if focus not in ("consistency", "placement", "review"):
@@ -322,22 +416,80 @@ class CoachingHandler(BaseHTTPRequestHandler):
                 if not isinstance(name, str) or not name.strip() or len(name) > 200:
                     raise ValueError("Session name must be between 1 and 200 characters.")
                 session_id = build_report(stats, focus)["session_id"]
-                return self._json({"id": session_id, "name": name.strip(), "is_demo": stats.get("synthetic", False),
-                                   "stats": stats, "video_url": None, "heatmap_url": None})
+                return self._json(
+                    {
+                        "id": session_id,
+                        "name": name.strip(),
+                        "is_demo": stats.get("synthetic", False),
+                        "stats": stats,
+                        "video_url": None,
+                        "heatmap_url": None,
+                    }
+                )
             report = build_report(stats, focus)
             if path == "/api/report":
                 return self._json(report)
             use_ai = body.get("use_ai", False)
             if not isinstance(use_ai, bool):
                 raise ValueError("use_ai must be true or false.")
-            return self._json(answer_question(report, body.get("message"), body.get("history", []), use_ai))
+            return self._json(
+                answer_question(report, body.get("message"), body.get("history", []), use_ai)
+            )
         except (BrokenPipeError, ConnectionResetError):
             pass
         except (ValueError, RecursionError) as exc:
-            self._json({"error": str(exc) if isinstance(exc, ValueError) else "JSON nesting is too deep."}, 400)
+            self._json(
+                {"error": str(exc) if isinstance(exc, ValueError) else "JSON nesting is too deep."},
+                400,
+            )
         except Exception:
             # Keep imported data, local paths and provider credentials out of errors.
             self._json({"error": "Coaching is temporarily unavailable. Please try again."}, 500)
+
+    def _coach(self, parts, body=None):
+        """GET /api/coach/<sid> and POST /api/coach/<sid>/<action>, with deliberate, safe errors."""
+        coach, session_id = self.server.coach, parts[3]
+        try:
+            if body is None:
+                return self._json(coach.status(session_id))
+            if parts[4] == "analyze":
+                return self._json(
+                    coach.analyze(
+                        session_id,
+                        engine=body.get("engine"),
+                        player=body.get("player"),
+                        force=body.get("force", False),
+                    ),
+                    202,
+                )
+            if parts[4] == "cancel":
+                return self._json(coach.cancel(session_id))
+            return self._json(
+                coach.chat(
+                    session_id,
+                    engine=body.get("engine"),
+                    message=body.get("message"),
+                    history=body.get("history"),
+                    at_s=body.get("at_s"),
+                    player=body.get("player"),
+                )
+            )
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except SessionUnavailable:
+            # Demo and imported games have no saved run on this server.
+            self._json({"error": "This game isn't available for AI coaching."}, 404)
+        except EvidenceError as exc:
+            self._json({"error": str(exc)}, 422)
+        except ValueError as exc:
+            self._json({"error": str(exc)}, 400)
+        except EngineError as exc:
+            self._json({"error": str(exc)}, 503)
+        except Exception:
+            # Keep local paths, prompts and provider output out of errors.
+            self._json(
+                {"error": "Your AI coach is temporarily unavailable. Please try again."}, 500
+            )
 
     def _upload_video(self):
         if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/octet-stream":
@@ -348,7 +500,10 @@ class CoachingHandler(BaseHTTPRequestHandler):
             if not 0 < length <= config["max_upload_bytes"]:
                 return self._json({"error": "Choose a video between 1 byte and 512 MB."}, 413)
             if not config["analysis_available"]:
-                return self._json({"error": config.get("analysis_error", "Video analysis is not configured.")}, 503)
+                return self._json(
+                    {"error": config.get("analysis_error", "Video analysis is not configured.")},
+                    503,
+                )
             query = parse_qs(urlsplit(self.path).query, max_num_fields=3)
             name = query.get("name", [""])[0]
             job = self.server.jobs.create_upload(name, self.rfile, length)
@@ -358,15 +513,24 @@ class CoachingHandler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self._json({"error": str(exc)}, 400)
         except (OSError, TimeoutError):
-            self._json({"error": "The upload could not be saved. Check free disk space and try again."}, 400)
+            self._json(
+                {"error": "The upload could not be saved. Check free disk space and try again."},
+                400,
+            )
         except Exception:
             self._json({"error": "Could not start video analysis. Please try again."}, 500)
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Open Vantage's desktop/web app: Games, analysis, and coaching.")
-    parser.add_argument("--runs-dir", type=Path, default=Path("output"),
-                        help="Completed run directory or directory of runs (default: output).")
+    parser = argparse.ArgumentParser(
+        description="Open Vantage's desktop/web app: Games, analysis, and coaching."
+    )
+    parser.add_argument(
+        "--runs-dir",
+        type=Path,
+        default=Path("output"),
+        help="Completed run directory or directory of runs (default: output).",
+    )
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--open", action="store_true", help="Open Vantage in your default browser.")
     args = parser.parse_args(argv)
@@ -378,10 +542,13 @@ def main(argv=None):
         print(f"Could not start Vantage: {exc}. Try a different --port.", file=sys.stderr)
         return 1
     url = f"http://127.0.0.1:{server.server_port}/games"
-    print(f"Vantage: {url}\nReading completed games from {args.runs_dir.resolve()}\nPress Ctrl+C to stop.", flush=True)
-    if args.open:
-        webbrowser.open(url)
+    print(
+        f"Vantage: {url}\nReading completed games from {args.runs_dir.resolve()}\nPress Ctrl+C to stop.",
+        flush=True,
+    )
     try:
+        if args.open:
+            webbrowser.open(url)
         server.serve_forever()
     except KeyboardInterrupt:
         pass

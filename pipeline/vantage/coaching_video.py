@@ -4,15 +4,15 @@ The desktop pipeline's OpenCV MPEG-4 Part 2 output is not supported by major web
 browsers. A cached H.264 copy preserves its timeline and overlays while leaving
 the analyzed run untouched. The server owns the cache directory's lifetime.
 """
+
 import hashlib
 import json
-from pathlib import Path
 import subprocess
 import tempfile
 import threading
+from pathlib import Path
 
 from vantage.tracking_cache import source_signature
-
 
 CONVERSION_TIMEOUT_S = 300
 
@@ -45,23 +45,58 @@ class PlaybackCache:
             with tempfile.TemporaryDirectory(prefix=".playback-", dir=self.cache_dir) as temporary:
                 staged = Path(temporary) / "playback.mp4"
                 command = [
-                    get_ffmpeg_exe(), "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-                    "-i", str(source), "-map", "0:v:0", "-an", "-map_metadata", "-1",
-                    "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
-                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-                    "-pix_fmt", "yuv420p", "-fps_mode", "passthrough",
-                    "-movflags", "+faststart", str(staged),
+                    get_ffmpeg_exe(),
+                    "-nostdin",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-i",
+                    str(source),
+                    "-map",
+                    "0:v:0",
+                    "-an",
+                    "-map_metadata",
+                    "-1",
+                    "-vf",
+                    "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "veryfast",
+                    "-crf",
+                    "20",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-fps_mode",
+                    "passthrough",
+                    "-movflags",
+                    "+faststart",
+                    str(staged),
                 ]
                 try:
-                    result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                            timeout=CONVERSION_TIMEOUT_S, check=False)
+                    result = subprocess.run(
+                        command,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=CONVERSION_TIMEOUT_S,
+                        check=False,
+                    )
                 except subprocess.TimeoutExpired as exc:
-                    raise RuntimeError("Preparing browser playback took too long. Try a shorter video.") from exc
+                    raise RuntimeError(
+                        "Preparing browser playback took too long. Try a shorter video."
+                    ) from exc
                 except OSError as exc:
-                    raise RuntimeError("Could not start the browser video converter. Check the Python installation.") from exc
+                    raise RuntimeError(
+                        "Could not start the browser video converter. Check the Python installation."
+                    ) from exc
                 if result.returncode or not staged.is_file() or staged.stat().st_size == 0:
-                    raise RuntimeError("Could not prepare browser playback. Check that the session video is complete.")
+                    raise RuntimeError(
+                        "Could not prepare browser playback. Check that the session video is complete."
+                    )
                 if source_signature(source) != signature:
-                    raise RuntimeError("The session video changed while preparing playback. Reload the session.")
+                    raise RuntimeError(
+                        "The session video changed while preparing playback. Reload the session."
+                    )
                 staged.replace(destination)
             return destination

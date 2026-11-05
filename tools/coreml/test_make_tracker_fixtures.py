@@ -4,9 +4,16 @@ from make_tracker_fixtures import build_fixture, swift_config
 
 
 def frame(t, balls):
-    return {"timeSeconds": t, "width": 640, "height": 360, "inferenceMilliseconds": 1,
-            "detections": [{"classID": 32, "confidence": 0.5, "box": [x - 2, 98, x + 2, 102]} for x in balls]
-            + [{"classID": 0, "confidence": 0.9, "box": [10, 10, 50, 200]}]}
+    return {
+        "timeSeconds": t,
+        "width": 640,
+        "height": 360,
+        "inferenceMilliseconds": 1,
+        "detections": [
+            {"classID": 32, "confidence": 0.5, "box": [x - 2, 98, x + 2, 102]} for x in balls
+        ]
+        + [{"classID": 0, "confidence": 0.9, "box": [10, 10, 50, 200]}],
+    }
 
 
 class MakeTrackerFixturesTests(unittest.TestCase):
@@ -17,9 +24,13 @@ class MakeTrackerFixturesTests(unittest.TestCase):
         rows = fixture["frames"]
         self.assertIsNone(rows[0]["ball"])  # acquisition needs two moving observations
         self.assertEqual(rows[1]["ball"], [108, 98, 112, 102, 0.5, 1])
-        self.assertEqual([r["interpolated_track"] for r in rows], [None, None, None, 1, 1, None, None, None])
+        self.assertEqual(
+            [r["interpolated_track"] for r in rows], [None, None, None, 1, 1, None, None, None]
+        )
         self.assertEqual(rows[2]["candidates"], [[118, 98, 122, 102, 0.5]])  # players excluded
-        self.assertEqual(fixture["summary"], {"frames": 8, "tracked": 5, "interpolated": 2, "tracks": 1})
+        self.assertEqual(
+            fixture["summary"], {"frames": 8, "tracked": 5, "interpolated": 2, "tracks": 1}
+        )
 
     def test_config_uses_swift_property_names(self):
         config = swift_config()

@@ -96,8 +96,13 @@ private struct PickedVideo: Transferable {
             let folder = URL.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let copy = folder.appending(path: received.file.lastPathComponent)
-            try FileManager.default.copyItem(at: received.file, to: copy)
-            return PickedVideo(url: copy)
+            do {
+                try FileManager.default.copyItem(at: received.file, to: copy)
+                return PickedVideo(url: copy)
+            } catch {
+                try? FileManager.default.removeItem(at: folder)
+                throw error
+            }
         }
     }
 }

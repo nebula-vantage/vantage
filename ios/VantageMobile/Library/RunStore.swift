@@ -10,6 +10,7 @@ import VantageKit
 @MainActor @Observable
 final class RunStore {
     private(set) var runs: [AnalysisRun] = []
+    var notice: String?
     private var statsByRun: [UUID: GameStats] = [:]
     let root: URL
 
@@ -22,17 +23,47 @@ final class RunStore {
     }
 
     func reload() {
-        let folders = (try? FileManager.default.contentsOfDirectory(
-            at: root, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+        let folders: [URL]
+        do {
+            folders = try FileManager.default.contentsOfDirectory(
+                at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                options: [.skipsHiddenFiles])
+        } catch {
+            notice = "Your games could not be read. Try opening Vantage again."
+            Self.log.error("Could not list runs: \(String(describing: error), privacy: .public)")
+            return
+        }
         var loaded: [AnalysisRun] = []
         for folder in folders {
+            guard let folderID = UUID(uuidString: folder.lastPathComponent),
+                  let values = try? folder.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
+                  values.isDirectory == true, values.isSymbolicLink != true else { continue }
             let metadata = folder.appending(path: AnalysisRun.metadataFileName)
-            if let data = try? Data(contentsOf: metadata),
-               let run = try? Self.decoder.decode(AnalysisRun.self, from: data) {
+            var hasCompletionMarker = false
+            do {
+                // Attributes inspect the marker itself, including a dangling symlink.
+                // Failure to read an existing marker must not classify a run as incomplete.
+                _ = try FileManager.default.attributesOfItem(atPath: metadata.path(percentEncoded: false))
+                hasCompletionMarker = true
+                let data = try Data(contentsOf: metadata)
+                let run = try Self.decoder.decode(AnalysisRun.self, from: data)
+                guard run.id == folderID else {
+                    notice = "Some saved games could not be read. Their files have been kept."
+                    Self.log.error("Run identity does not match folder \(folderID.uuidString, privacy: .public)")
+                    continue
+                }
                 loaded.append(run)
-            } else {
-                // Incomplete run (app killed mid-analysis): never show a partial result.
-                try? FileManager.default.removeItem(at: folder)
+            } catch CocoaError.fileReadNoSuchFile where !hasCompletionMarker {
+                // Only a missing completion marker identifies an interrupted analysis.
+                // A corrupt or temporarily unreadable marker must never erase a game.
+                do {
+                    try FileManager.default.removeItem(at: folder)
+                } catch {
+                    Self.log.error("Could not remove incomplete run: \(String(describing: error), privacy: .public)")
+                }
+            } catch {
+                notice = "Some saved games could not be read. Their files have been kept."
+                Self.log.error("Unreadable run \(folderID.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
             }
         }
         runs = loaded.sorted { $0.createdAt > $1.createdAt }
@@ -62,7 +93,15 @@ final class RunStore {
     }
 
     func delete(_ run: AnalysisRun) {
-        try? FileManager.default.removeItem(at: folder(for: run.id))
+        do {
+            try FileManager.default.removeItem(at: folder(for: run.id))
+        } catch CocoaError.fileNoSuchFile {
+            // Already absent on disk: removing the stale list entry is safe.
+        } catch {
+            notice = "This game could not be deleted. Please try again."
+            Self.log.error("Could not delete run: \(String(describing: error), privacy: .public)")
+            return
+        }
         runs.removeAll { $0.id == run.id }
         statsByRun[run.id] = nil
     }

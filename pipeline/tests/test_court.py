@@ -1,11 +1,10 @@
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
-
-from vantage.court import compute_homography, load_calibration, project, save_calibration
 from helpers import settings
+from vantage.court import compute_homography, load_calibration, project, save_calibration
 
 
 class CourtTests(unittest.TestCase):
@@ -21,8 +20,11 @@ class CourtTests(unittest.TestCase):
         np.testing.assert_allclose(project(project(net, np.linalg.inv(h)), h), net, atol=1e-5)
 
     def test_invalid_corners(self):
-        for corners in ([[0, 0]] * 4, [[0, 0], [319, 239], [319, 0], [0, 239]],
-                        [[0, 0], [999, 0], [30, 30], [0, 30]]):
+        for corners in (
+            [[0, 0]] * 4,
+            [[0, 0], [319, 239], [319, 0], [0, 239]],
+            [[0, 0], [999, 0], [30, 30], [0, 30]],
+        ):
             with self.assertRaises(ValueError):
                 compute_homography(corners, 320, 240, self.cfg)
 
@@ -33,9 +35,9 @@ class CourtTests(unittest.TestCase):
             save_calibration(path, h, self.corners, 320, 240)
             np.testing.assert_allclose(load_calibration(path, 320, 240, self.cfg), h)
             self.assertIsNone(load_calibration(path, 640, 480, self.cfg))
-            np.save(path / 'homography.npy', np.eye(3))
+            np.save(path / "homography.npy", np.eye(3))
             self.assertIsNone(load_calibration(path, 320, 240, self.cfg))
-            (path / 'calibration.json').write_text('invalid')
+            (path / "calibration.json").write_text("invalid")
             self.assertIsNone(load_calibration(path, 320, 240, self.cfg))
 
     def test_horizon_returns_none(self):
