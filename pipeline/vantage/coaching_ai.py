@@ -4,6 +4,7 @@ The report remains the source of measurements. This adapter sends no video, raw
 tracking records, source paths, or credentials in the prompt, and never replaces
 the local report when the provider is unavailable.
 """
+
 import json
 import os
 import re
@@ -12,7 +13,6 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from vantage.coaching import local_answer
-
 
 API_URL = "https://api.openai.com/v1/responses"
 TIMEOUT_S = 25
@@ -80,12 +80,16 @@ def _conversation(message, history):
     if history is None:
         history = []
     if not isinstance(history, list) or len(history) > MAX_HISTORY_MESSAGES:
-        raise ValueError(f"Conversation history must contain at most {MAX_HISTORY_MESSAGES} messages.")
+        raise ValueError(
+            f"Conversation history must contain at most {MAX_HISTORY_MESSAGES} messages."
+        )
     cleaned = []
     for item in history:
         if not isinstance(item, dict) or item.get("role") not in ("user", "assistant"):
             raise ValueError("Conversation roles must be user or assistant.")
-        cleaned.append({"role": item["role"], "content": _message(item.get("content"), "History message")})
+        cleaned.append(
+            {"role": item["role"], "content": _message(item.get("content"), "History message")}
+        )
     return message, cleaned
 
 
@@ -96,7 +100,9 @@ def _select(mapping, fields):
 def _context(report):
     """Allowlist nested report fields so future metadata is not sent by accident."""
     result = _select(report, ("schema_version", "focus", "headline", "summary"))
-    result["quality"] = _select(report.get("quality", {}), ("status", "coverage", "label", "warnings"))
+    result["quality"] = _select(
+        report.get("quality", {}), ("status", "coverage", "label", "warnings")
+    )
     result["metrics"] = [
         _select(item, ("label", "value", "unit", "detail"))
         for item in report.get("metrics", [])[:8]
@@ -104,8 +110,9 @@ def _context(report):
     result["insights"] = []
     for item in report.get("insights", [])[:6]:
         insight = _select(item, ("id", "title", "body", "moment_id"))
-        insight["evidence"] = [_select(evidence, ("label", "value"))
-                               for evidence in item.get("evidence", [])[:8]]
+        insight["evidence"] = [
+            _select(evidence, ("label", "value")) for evidence in item.get("evidence", [])[:8]
+        ]
         result["insights"].append(insight)
     result["moments"] = [
         _select(item, ("id", "title", "reason", "start_s", "end_s", "rally_id", "coverage", "kind"))
@@ -150,8 +157,11 @@ def _decode_response(response, valid_ids):
     ids = answer["evidence_ids"]
     if not isinstance(content, str) or not content.strip() or len(content) > MAX_ANSWER_CHARS:
         raise ValueError("Provider answer is empty or too long.")
-    if (not isinstance(ids, list) or len(ids) > 12
-            or any(not isinstance(item, str) or item not in valid_ids for item in ids)):
+    if (
+        not isinstance(ids, list)
+        or len(ids) > 12
+        or any(not isinstance(item, str) or item not in valid_ids for item in ids)
+    ):
         raise ValueError("Provider answer refers to unavailable evidence.")
     return {"answer": content.strip(), "source": "openai", "evidence_ids": list(dict.fromkeys(ids))}
 
@@ -170,15 +180,24 @@ def answer_question(report, message, history=None, use_ai=False):
         return local_answer(report, message, history)
     credentials = _credentials()
     if credentials is None:
-        return {**local_answer(report, message, history),
-                "warning": "AI chat is not configured. This answer uses the local session guide."}
+        return {
+            **local_answer(report, message, history),
+            "warning": "AI chat is not configured. This answer uses the local session guide.",
+        }
     key, model = credentials
     try:
         context = _context(report)
-        valid_ids = {item["id"] for group in ("insights", "moments")
-                     for item in context[group] if isinstance(item.get("id"), str)}
-        data = json.dumps({"session_report": context, "conversation": history,
-                           "question": message}, allow_nan=False, ensure_ascii=False)
+        valid_ids = {
+            item["id"]
+            for group in ("insights", "moments")
+            for item in context[group]
+            if isinstance(item.get("id"), str)
+        }
+        data = json.dumps(
+            {"session_report": context, "conversation": history, "question": message},
+            allow_nan=False,
+            ensure_ascii=False,
+        )
         if len(data.encode("utf-8")) > 64 * 1024:
             raise ValueError("Coaching context is too large.")
         body = {
@@ -187,19 +206,29 @@ def answer_question(report, message, history=None, use_ai=False):
             "input": [{"role": "user", "content": data}],
             "store": False,
             "max_output_tokens": 1600,
-            "text": {"format": {
-                "type": "json_schema", "name": "coaching_answer", "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {"answer": {"type": "string"},
-                                   "evidence_ids": {"type": "array", "items": {"type": "string"}}},
-                    "required": ["answer", "evidence_ids"], "additionalProperties": False,
-                },
-            }},
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "coaching_answer",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "answer": {"type": "string"},
+                            "evidence_ids": {"type": "array", "items": {"type": "string"}},
+                        },
+                        "required": ["answer", "evidence_ids"],
+                        "additionalProperties": False,
+                    },
+                }
+            },
         }
-        request = Request(API_URL, data=json.dumps(body, allow_nan=False).encode("utf-8"),
-                          headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
-                          method="POST")
+        request = Request(
+            API_URL,
+            data=json.dumps(body, allow_nan=False).encode("utf-8"),
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
+            method="POST",
+        )
         with urlopen(request, timeout=TIMEOUT_S) as stream:
             raw = stream.read(MAX_RESPONSE_BYTES + 1)
         if len(raw) > MAX_RESPONSE_BYTES:
@@ -207,12 +236,27 @@ def answer_question(report, message, history=None, use_ai=False):
         answer = _decode_response(json.loads(raw), valid_ids)
         status = context["quality"].get("status")
         if status == "insufficient_evidence":
-            answer["answer"] = ("There is not enough ball evidence to assess this session. "
-                                "Treat practice ideas as general guidance.\n\n" + answer["answer"])
+            answer["answer"] = (
+                "There is not enough ball evidence to assess this session. "
+                "Treat practice ideas as general guidance.\n\n" + answer["answer"]
+            )
         elif status == "limited_evidence":
-            answer["answer"] = ("Ball tracking is limited in this session; review the video before "
-                                "drawing performance conclusions.\n\n" + answer["answer"])
+            answer["answer"] = (
+                "Ball tracking is limited in this session; review the video before "
+                "drawing performance conclusions.\n\n" + answer["answer"]
+            )
         return answer
-    except (HTTPError, URLError, HTTPException, OSError, ValueError, TypeError, KeyError, RecursionError):
-        return {**local_answer(report, message, history),
-                "warning": "AI chat could not return a grounded answer. This answer uses the local session guide; you can try again."}
+    except (
+        HTTPError,
+        URLError,
+        HTTPException,
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+        RecursionError,
+    ):
+        return {
+            **local_answer(report, message, history),
+            "warning": "AI chat could not return a grounded answer. This answer uses the local session guide; you can try again.",
+        }

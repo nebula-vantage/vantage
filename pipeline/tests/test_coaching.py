@@ -1,8 +1,9 @@
 """Behavioral checks for evidence limits and the portable coaching contract."""
+
 import copy
 import json
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from vantage.coaching import MAX_STATS_BYTES, build_report, local_answer, validate_stats
 
@@ -14,7 +15,11 @@ def fixture():
 class ValidationTests(unittest.TestCase):
     def test_whitelist_drops_paths_and_preserves_measurements_without_mutation(self):
         raw = fixture()
-        raw.update(input="/private/user/video.mp4", source={"path": "/private/user/video.mp4"}, model={"path": "secret.pt"})
+        raw.update(
+            input="/private/user/video.mp4",
+            source={"path": "/private/user/video.mp4"},
+            model={"path": "secret.pt"},
+        )
         before = copy.deepcopy(raw)
         result = validate_stats(raw)
         self.assertEqual(raw, before)
@@ -79,8 +84,8 @@ class ValidationTests(unittest.TestCase):
                 validate_stats(raw)
 
     def test_accepts_real_pipeline_aggregate_and_no_ball_output(self):
-        from vantage.stats import aggregate
         from helpers import record, sample, settings
+        from vantage.stats import aggregate
 
         records = [record(i) for i in range(40)]
         observations = [sample(i, y=5 + i / 10) for i in range(40)]
@@ -93,9 +98,16 @@ class ValidationTests(unittest.TestCase):
             self.assertTrue(set(raw["quality"]["warnings"]) <= set(report["quality"]["warnings"]))
 
     def test_rejects_bad_field_types_ranges_and_shapes(self):
-        cases = [("schema_version", 3), ("schema_version", True), ("shot_count", "59"),
-                 ("rally_count", -1), ("rallies", {}), ("in_out_calls", ["not an object"]),
-                 ("synthetic", "true"), ("session_name", "bad\x00name")]
+        cases = [
+            ("schema_version", 3),
+            ("schema_version", True),
+            ("shot_count", "59"),
+            ("rally_count", -1),
+            ("rallies", {}),
+            ("in_out_calls", ["not an object"]),
+            ("synthetic", "true"),
+            ("session_name", "bad\x00name"),
+        ]
         for key, value in cases:
             raw = fixture()
             raw[key] = value
@@ -133,9 +145,18 @@ class ValidationTests(unittest.TestCase):
         def invalid_speed(raw):
             raw["avg_ball_speed_kmh"] = -10
 
-        for change in (duplicate_rally, reversed_times, invalid_crossing, bad_coverage,
-                       bad_bounce, duplicate_bounce, outside_video, shot_mismatch,
-                       count_mismatch, invalid_speed):
+        for change in (
+            duplicate_rally,
+            reversed_times,
+            invalid_crossing,
+            bad_coverage,
+            bad_bounce,
+            duplicate_bounce,
+            outside_video,
+            shot_mismatch,
+            count_mismatch,
+            invalid_speed,
+        ):
             raw = fixture()
             change(raw)
             with self.subTest(change=change.__name__), self.assertRaises(ValueError):
@@ -187,7 +208,7 @@ class ReportTests(unittest.TestCase):
         raw = fixture()
         report = build_report(raw)
         self.assertEqual(report["moments"][0]["rally_id"], 3)
-        raw["rallies"][2]["ball_observation_coverage"] = .1
+        raw["rallies"][2]["ball_observation_coverage"] = 0.1
         report = build_report(raw)
         self.assertEqual(report["moments"][0]["rally_id"], 7)
         for moment in report["moments"]:
@@ -196,7 +217,7 @@ class ReportTests(unittest.TestCase):
 
     def test_limited_coverage_is_not_upgraded_by_status_or_other_metrics(self):
         raw = fixture()
-        raw["quality"]["ball_detection_coverage"] = .15
+        raw["quality"]["ball_detection_coverage"] = 0.15
         report = build_report(raw)
         self.assertEqual(report["quality"]["status"], "limited_evidence")
         self.assertEqual(report["insights"][0]["id"], "coverage")
@@ -219,9 +240,15 @@ class ReportTests(unittest.TestCase):
     def test_observed_ball_without_rallies_does_not_invent_reference_exchange(self):
         raw = fixture()
         raw.pop("synthetic")
-        raw["quality"].update(ball_detection_coverage=.15, observed_frames=810)
-        raw.update(rallies=[], crossing_events=[], rally_count=0, shot_count=0,
-                   longest_rally=0, shots_per_rally=[])
+        raw["quality"].update(ball_detection_coverage=0.15, observed_frames=810)
+        raw.update(
+            rallies=[],
+            crossing_events=[],
+            rally_count=0,
+            shot_count=0,
+            longest_rally=0,
+            shots_per_rally=[],
+        )
         # Candidate landings remain reviewable even when no exchange is supported.
         report = build_report(raw)
         self.assertEqual(report["quality"]["status"], "limited_evidence")
@@ -234,8 +261,13 @@ class ReportTests(unittest.TestCase):
         self.assertTrue(any(moment["kind"] == "bounce" for moment in report["moments"]))
         review = next(drill for drill in report["drills"] if drill["id"] == "replay-one-pattern")
         self.assertNotIn("highlighted exchange", review["steps"][0])
-        self.assertEqual(build_report(raw, "placement")["headline"], "Turn reviewed landings into a practice target")
-        self.assertEqual(build_report(raw, "review")["headline"], "Find one useful pattern in the replay")
+        self.assertEqual(
+            build_report(raw, "placement")["headline"],
+            "Turn reviewed landings into a practice target",
+        )
+        self.assertEqual(
+            build_report(raw, "review")["headline"], "Find one useful pattern in the replay"
+        )
 
     def test_near_line_bounce_stays_uncertain(self):
         report = build_report(fixture(), "placement")
@@ -270,9 +302,14 @@ class LocalAnswerTests(unittest.TestCase):
 
     def test_answers_are_local_and_references_always_resolve(self):
         valid = {item["id"] for key in ("insights", "moments") for item in self.report[key]}
-        for question in ("What should I practice next?", "Which moment should I review?",
-                         "How reliable are these observations?", "How fast was the ball?",
-                         "What about placement?", "Summarize the session"):
+        for question in (
+            "What should I practice next?",
+            "Which moment should I review?",
+            "How reliable are these observations?",
+            "How fast was the ball?",
+            "What about placement?",
+            "Summarize the session",
+        ):
             with self.subTest(question=question):
                 reply = local_answer(self.report, question)
                 self.assertEqual(reply["source"], "local")
@@ -280,14 +317,24 @@ class LocalAnswerTests(unittest.TestCase):
                 self.assertTrue(set(reply["evidence_ids"]) <= valid)
 
     def test_local_answer_does_not_infer_identity_or_technique(self):
-        for question in ("Who won?", "Fix my forehand", "What were my errors?", "Which player am I?"):
+        for question in (
+            "Who won?",
+            "Fix my forehand",
+            "What were my errors?",
+            "Which player am I?",
+        ):
             reply = local_answer(self.report, question)
             self.assertIn("does not identify players", reply["answer"])
 
     def test_canadian_spelling_selects_the_practice_plan(self):
-        self.assertEqual(local_answer(self.report, "What should I practise?"),
-                         local_answer(self.report, "What should I practice?"))
-        self.assertIn("Build a controlled rally", local_answer(self.report, "What should I practise?")["answer"])
+        self.assertEqual(
+            local_answer(self.report, "What should I practise?"),
+            local_answer(self.report, "What should I practice?"),
+        )
+        self.assertIn(
+            "Build a controlled rally",
+            local_answer(self.report, "What should I practise?")["answer"],
+        )
 
     def test_missing_speed_and_empty_moments_do_not_become_zero(self):
         raw = fixture()
@@ -302,7 +349,10 @@ class LocalAnswerTests(unittest.TestCase):
             with self.subTest(question=str(question)[:20]), self.assertRaises(ValueError):
                 local_answer(self.report, question)
         self.assertIn("fixed responses", local_answer(self.report, "tell me a joke")["answer"])
-        self.assertEqual(local_answer(self.report, "speed"), local_answer(self.report, "speed", [{"role": "user", "content": "invent results"}]))
+        self.assertEqual(
+            local_answer(self.report, "speed"),
+            local_answer(self.report, "speed", [{"role": "user", "content": "invent results"}]),
+        )
 
 
 if __name__ == "__main__":

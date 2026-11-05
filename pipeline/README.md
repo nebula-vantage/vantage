@@ -242,11 +242,12 @@ uv run vantage --input assets/sideview.MOV --output-dir output/combined --reanal
 ```
 
 This reuses the completed tracking observations and recalculates statistics, events,
-and overlays without loading model weights or running inference. It checks the
+and overlays without initializing the detector or running inference. It checks the
 source path/size/modification time, dimensions/FPS, tracking configuration, record
-count/timestamps, and a SHA-256 checksum of the observations. Changing the video or
-tracking settings requires a normal run. Existing pre-cache outputs must also be
-regenerated once. Calibration may be updated with `--recalibrate --reanalyze`.
+count/timestamps, and SHA-256 checksums of the observations and local model weights.
+Replacing weights at the same path, changing the video, or changing tracking settings
+requires a normal run. Outputs predating model fingerprints must also be regenerated
+once. Calibration may be updated with `--recalibrate --reanalyze`.
 
 The combined sample run is saved under `output/combined/`; earlier output files
 remain available as the baseline.

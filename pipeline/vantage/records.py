@@ -1,4 +1,5 @@
 """Small shared records; every position uses native video pixel coordinates."""
+
 from dataclasses import asdict, dataclass, field
 
 Point = tuple[float, float]

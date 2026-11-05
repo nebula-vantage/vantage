@@ -13,8 +13,11 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 ## Current status
 
 - **Desktop/web app:** a Games library with video upload and analysis, annotated playback,
-  and a Coaching tab inside each game for reviews, practice plans, and optional AI questions.
-  Start with `uv run vantage-app --open` ([setup and scope](pipeline/COACHING.md)).
+  and a Coaching tab inside each game for reviews, practice plans, and questions. Saved games
+  also get an AI video coach that studies still frames of key moments plus the measurements,
+  writes a review, and answers follow-ups. It runs through your local Claude Code or Codex
+  sign-in, or an `ANTHROPIC_API_KEY`, and sends those stills and measurements to that
+  provider. Start with `uv run vantage-app --open` ([setup, privacy, and scope](pipeline/COACHING.md)).
 - **Desktop pipeline:** player and ball tracking, court calibration, estimated shot/rally
   stats, bounce calls, and a landing heatmap from one fixed-camera video.
 - **iPhone app:** runs the detector and ball tracker on-device on imported videos, with
@@ -76,3 +79,11 @@ scripts/test.sh
 Runs the pipeline, `ml/`, and `tools/coreml/` Python suites, plus VantageKit's Swift tests
 on macOS with Xcode. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same on
 every pull request and also builds the iOS app.
+
+Node.js 24 or newer is required for the browser transport tests and JavaScript syntax
+checks included in this command. No npm packages or frontend build step are needed.
+
+The command also checks Python lint and formatting with the locked Ruff version.
+Before submitting Python changes, run `uv run ruff check . --fix` and
+`uv run ruff format .`, then rerun `scripts/test.sh`. Lint rules cover invalid syntax,
+undefined names, unused imports, import ordering, and common correctness mistakes.

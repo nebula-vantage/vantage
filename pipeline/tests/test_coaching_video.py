@@ -1,15 +1,14 @@
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import os
-from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from unittest.mock import patch
 
 import cv2
 import numpy as np
-
 from vantage.coaching_video import PlaybackCache
 
 
@@ -65,7 +64,10 @@ class PlaybackCacheTests(unittest.TestCase):
 
     def test_reuses_cached_revision_and_converts_when_source_changes(self):
         old_output = self.cache.get(self.source)
-        with patch("vantage.coaching_video.subprocess.run", side_effect=AssertionError("Unexpected re-encode")):
+        with patch(
+            "vantage.coaching_video.subprocess.run",
+            side_effect=AssertionError("Unexpected re-encode"),
+        ):
             self.assertEqual(self.cache.get(self.source), old_output)
         self.make_video(frames=24, fps=24)
         new_output = self.cache.get(self.source)
@@ -84,14 +86,19 @@ class PlaybackCacheTests(unittest.TestCase):
 
     def test_conversion_error_and_timeout_leave_no_output_and_preserve_source(self):
         before = self.fingerprint()
-        for problem in (subprocess.CompletedProcess([], 1), subprocess.TimeoutExpired("ffmpeg", 300),
-                        OSError("not installed")):
+        for problem in (
+            subprocess.CompletedProcess([], 1),
+            subprocess.TimeoutExpired("ffmpeg", 300),
+            OSError("not installed"),
+        ):
             with self.subTest(problem=type(problem).__name__):
-                def fail(command, **kwargs):
+
+                def fail(command, problem=problem, **kwargs):
                     Path(command[-1]).write_bytes(b"unfinished")
                     if isinstance(problem, Exception):
                         raise problem
                     return problem
+
                 with patch("vantage.coaching_video.subprocess.run", side_effect=fail):
                     with self.assertRaises(RuntimeError):
                         self.cache.get(self.source)
@@ -101,10 +108,12 @@ class PlaybackCacheTests(unittest.TestCase):
     def test_source_change_during_conversion_is_not_published(self):
         original_run = subprocess.run
         before = self.source.stat()
+
         def change_source(command, **kwargs):
             result = original_run(command, **kwargs)
             os.utime(self.source, ns=(before.st_atime_ns, before.st_mtime_ns + 1_000_000))
             return result
+
         with patch("vantage.coaching_video.subprocess.run", side_effect=change_source):
             with self.assertRaisesRegex(RuntimeError, "changed"):
                 self.cache.get(self.source)

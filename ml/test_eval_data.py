@@ -1,16 +1,15 @@
 import http.client
 import io
 import os
-from pathlib import Path
 import tempfile
 import unittest
-from unittest import mock
 import zipfile
+from pathlib import Path
+from unittest import mock
 
 import cv2
-import numpy as np
-
 import eval_data
+import numpy as np
 from labeling import load_labels
 
 
@@ -22,10 +21,14 @@ class FakeResponse(io.BytesIO):
 
 def range_server(blob, requests):
     """open_url stand-in that serves byte ranges of blob and records each request."""
+
     def open_url(url, *, headers=None, opener=None, timeout=120):
         start, end = map(int, headers["Range"].removeprefix("bytes=").split("-"))
         requests.append((start, end))
-        return FakeResponse(blob[start:end + 1], 206, {"Content-Range": f"bytes {start}-{end}/{len(blob)}"})
+        return FakeResponse(
+            blob[start : end + 1], 206, {"Content-Range": f"bytes {start}-{end}/{len(blob)}"}
+        )
+
     return open_url
 
 
@@ -61,8 +64,10 @@ class DownloadTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), b"0123456789")
 
     def test_download_many_passes_size_pins(self):
-        with tempfile.TemporaryDirectory() as temp, \
-                mock.patch.object(eval_data, "open_url", self.serve(b"0123456789", 10)):
+        with (
+            tempfile.TemporaryDirectory() as temp,
+            mock.patch.object(eval_data, "open_url", self.serve(b"0123456789", 10)),
+        ):
             with self.assertRaises(ValueError):
                 eval_data.download_many([("https://example.test/a", Path(temp) / "a", 11)])
 
@@ -86,7 +91,9 @@ class RemoteZipTests(unittest.TestCase):
         blob, requests = buffer.getvalue(), []
         with mock.patch.object(eval_data, "open_url", range_server(blob, requests)):
             archive = eval_data.remote_zip("https://example.test/data.zip")
-            self.assertEqual(archive.read("Dataset/game1/Label.csv"), b"file name,visibility\n0000.jpg,1\n")
+            self.assertEqual(
+                archive.read("Dataset/game1/Label.csv"), b"file name,visibility\n0000.jpg,1\n"
+            )
         fetched = sum(end - start + 1 for start, end in requests)
         self.assertLess(fetched, len(blob) - 1_000_000, "should not download the unread member")
 
@@ -96,6 +103,7 @@ class RemoteZipTests(unittest.TestCase):
             if headers["Range"] == "bytes=0-0":
                 return FakeResponse(b"P", 206, {"Content-Range": "bytes 0-0/1000"})
             return FakeResponse(b"<html>sign in</html>", 200, {})
+
         with mock.patch.object(eval_data, "open_url", open_url):
             remote = eval_data.RemoteFile("https://example.test/data.zip")
             with self.assertRaises(OSError):
@@ -113,11 +121,16 @@ class RemoteZipTests(unittest.TestCase):
             answer = next(answers)
             if answer == "wrong offset":
                 # Right length, wrong bytes: only the Content-Range check can catch it.
-                return FakeResponse(blob[1:] + b"x", 206, {"Content-Range": f"bytes 1-{len(blob)}/{len(blob)}"})
-            response = FakeResponse(blob[start:end + 1], 206, {"Content-Range": f"bytes {start}-{end}/{len(blob)}"})
+                return FakeResponse(
+                    blob[1:] + b"x", 206, {"Content-Range": f"bytes 1-{len(blob)}/{len(blob)}"}
+                )
+            response = FakeResponse(
+                blob[start : end + 1], 206, {"Content-Range": f"bytes {start}-{end}/{len(blob)}"}
+            )
             if answer == "cut off":
                 response.read = mock.Mock(side_effect=http.client.IncompleteRead(b"partial"))
             return response
+
         with mock.patch.object(eval_data, "open_url", open_url):
             remote = eval_data.RemoteFile("https://example.test/data.bin")
             self.assertEqual(remote.read(len(blob)), blob)
@@ -130,6 +143,83 @@ class RemoteZipTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 eval_data.extract(archive, ["../escape.txt"], temp)
 
+    @mock.patch.object(eval_data.time, "sleep")
+    def test_range_must_match_requested_end_and_original_archive_size(self, _sleep):
+        for header in ("bytes 0-8/10", "bytes 0-9/11", "bytes 0-9/*"):
+            with self.subTest(header=header):
+                responses = [FakeResponse(b"x", 206, {"Content-Range": "bytes 0-0/10"})]
+                responses += [
+                    FakeResponse(b"0123456789", 206, {"Content-Range": header}) for _ in range(4)
+                ]
+                with mock.patch.object(eval_data, "open_url", side_effect=responses) as network:
+                    with eval_data.RemoteFile("https://example.test/archive") as remote:
+                        with self.assertRaises(OSError):
+                            remote.read(10)
+                        self.assertEqual(remote.tell(), 0)
+                self.assertEqual(network.call_count, 5)
+
+    def test_probe_rejects_malformed_or_empty_archive_ranges(self):
+        for header in ("bytes 1-1/10", "bytes 0-9/10", "bytes 0-0/0", "bytes 0-0/*", "invalid"):
+            with self.subTest(header=header):
+                with mock.patch.object(
+                    eval_data,
+                    "open_url",
+                    return_value=FakeResponse(b"x", 206, {"Content-Range": header}),
+                ):
+                    with self.assertRaises(OSError):
+                        eval_data.RemoteFile("https://example.test/archive")
+
+    @mock.patch.object(eval_data.time, "sleep")
+    def test_oversized_range_responses_are_bounded_and_rejected(self, _sleep):
+        probe = FakeResponse(b"x", 206, {"Content-Range": "bytes 0-0/10"})
+        responses = [
+            FakeResponse(b"x" * 1000, 206, {"Content-Range": "bytes 0-9/10"}) for _ in range(4)
+        ]
+        for response in responses:
+            response.read = mock.Mock(wraps=response.read)
+        with mock.patch.object(eval_data, "open_url", side_effect=[probe, *responses]):
+            with eval_data.RemoteFile("https://example.test/archive") as remote:
+                with self.assertRaises(OSError):
+                    remote.read(10)
+        for response in responses:
+            response.read.assert_called_once_with(11)
+
+    def test_seeks_validate_arguments_without_moving_on_error(self):
+        with mock.patch.object(eval_data, "open_url", range_server(b"0123456789", [])):
+            with eval_data.RemoteFile("https://example.test/archive") as remote:
+                self.assertEqual(remote.seek(3), 3)
+                for offset, whence, error in (
+                    (-1, io.SEEK_SET, ValueError),
+                    (-4, io.SEEK_CUR, ValueError),
+                    (0, 9, ValueError),
+                    (1.5, io.SEEK_SET, TypeError),
+                ):
+                    with self.subTest(offset=offset, whence=whence), self.assertRaises(error):
+                        remote.seek(offset, whence)
+                    self.assertEqual(remote.tell(), 3)
+                self.assertEqual(remote.seek(-2, io.SEEK_END), 8)
+                self.assertEqual(remote.read(2), b"89")
+                self.assertEqual(remote.seek(20), 20)
+                self.assertEqual(remote.read(1), b"")
+
+    def test_zero_length_reads_and_closed_operations_do_not_fetch(self):
+        requests = []
+        with mock.patch.object(eval_data, "open_url", range_server(b"0123456789", requests)):
+            remote = eval_data.RemoteFile("https://example.test/archive")
+            self.assertEqual(remote.readinto(bytearray()), 0)
+            self.assertEqual(remote.tell(), 0)
+            remote.close()
+            for operation in (
+                remote.tell,
+                remote.readable,
+                remote.seekable,
+                lambda: remote.seek(0),
+                lambda: remote.readinto(bytearray(1)),
+            ):
+                with self.subTest(operation=operation), self.assertRaises(ValueError):
+                    operation()
+        self.assertEqual(requests, [(0, 0)])
+
 
 class WriteClipTests(unittest.TestCase):
     def test_points_become_schema_1_labels_with_extras(self):
@@ -138,19 +228,34 @@ class WriteClipTests(unittest.TestCase):
             video = root / "clips" / "c.mp4"
             video.parent.mkdir()
             write_video(video, 10)
-            record = eval_data.write_clip(root, "c", video, {
-                0: (32, 24),
-                3: None,
-                6: {"ball": (10, 20), "visibility": "occluded", "event": "bounce", "interpolated": None}})
+            record = eval_data.write_clip(
+                root,
+                "c",
+                video,
+                {
+                    0: (32, 24),
+                    3: None,
+                    6: {
+                        "ball": (10, 20),
+                        "visibility": "occluded",
+                        "event": "bounce",
+                        "interpolated": None,
+                    },
+                },
+            )
             labels = load_labels(root / "labels" / "c.json")
         half = eval_data.BALL_BOX_FRACTION * 64 / 2
-        self.assertEqual(labels[0]["ball"], [round(32 - half, 1), round(24 - half, 1),
-                                             round(32 + half, 1), round(24 + half, 1)])
+        self.assertEqual(
+            labels[0]["ball"],
+            [round(32 - half, 1), round(24 - half, 1), round(32 + half, 1), round(24 + half, 1)],
+        )
         self.assertEqual(labels[3], {"time_s": 0.1, "ball": None, "origin": "absent"})
         self.assertEqual((labels[6]["visibility"], labels[6]["event"]), ("occluded", "bounce"))
         self.assertNotIn("interpolated", labels[6], "None extras are dropped")
-        self.assertEqual({k: record[k] for k in ("frames", "labeled", "visible", "events")},
-                         {"frames": 10, "labeled": 3, "visible": 2, "events": 1})
+        self.assertEqual(
+            {k: record[k] for k in ("frames", "labeled", "visible", "events")},
+            {"frames": 10, "labeled": 3, "visible": 2, "events": 1},
+        )
 
     def test_paths_stay_inside_the_checkout_when_ml_external_is_a_symlink(self):
         with tempfile.TemporaryDirectory() as checkout, tempfile.TemporaryDirectory() as shared:
@@ -193,15 +298,25 @@ class EncodeFramesTests(unittest.TestCase):
 class OperatingPointTests(unittest.TestCase):
     def test_weak_balls_are_dropped_but_players_kept(self):
         from evaluate_external import drop_weak_balls
-        frames = [{"detections": [{"classID": 32, "confidence": 0.15, "box": [0, 0, 1, 1]},
-                                  {"classID": 32, "confidence": 0.25, "box": [5, 5, 6, 6]},
-                                  {"classID": 0, "confidence": 0.12, "box": [0, 0, 9, 9]}]}]
+
+        frames = [
+            {
+                "detections": [
+                    {"classID": 32, "confidence": 0.15, "box": [0, 0, 1, 1]},
+                    {"classID": 32, "confidence": 0.25, "box": [5, 5, 6, 6]},
+                    {"classID": 0, "confidence": 0.12, "box": [0, 0, 9, 9]},
+                ]
+            }
+        ]
         kept = drop_weak_balls(frames, 0.20)[0]["detections"]
         self.assertEqual([(d["classID"], d["confidence"]) for d in kept], [(32, 0.25), (0, 0.12)])
 
     def test_operating_point_comes_from_the_model_card(self):
         from evaluate_external import card_ball_confidence
-        self.assertEqual(card_ball_confidence(eval_data.ROOT / "ml" / "models" / "pickleball-v1.pt"), 0.2)
+
+        self.assertEqual(
+            card_ball_confidence(eval_data.ROOT / "ml" / "models" / "pickleball-v1.pt"), 0.2
+        )
         self.assertIsNone(card_ball_confidence(Path("yolo26n.pt")))
 
 

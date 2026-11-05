@@ -13,6 +13,7 @@ dependencies = [
     # ByteTrack's assignment solver; explicit so offline runs never auto-install it.
     "lap>=0.5.12,<0.6",
     "imageio-ffmpeg>=0.6,<0.7",
+    "anthropic>=1,<2",
 ]
 
 [project.scripts]
@@ -31,9 +32,12 @@ coreml = [
     "coremltools==9.0",
     "numpy==2.3.5",
 ]
+dev = [
+    "ruff>=0.14,<1",
+]
 
 [tool.uv]
-default-groups = ["ml", "coreml"]
+default-groups = ["ml", "coreml", "dev"]
 
 [build-system]
 requires = ["hatchling"]
@@ -41,3 +45,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pipeline/vantage"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["output", "artifacts", "reports", "input", "build"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]

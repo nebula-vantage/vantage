@@ -17,9 +17,15 @@ run() {
 }
 
 # --locked fails instead of silently rewriting uv.lock when pyproject.toml changed without it.
+run "Python lint" uv run --locked ruff check .
+run "Python formatting" uv run --locked ruff format --check .
 run "pipeline (python)" uv run --locked python -m unittest discover -s pipeline/tests
 run "ml (python)" uv run --locked python -m unittest discover -s ml
 run "tools/coreml (python)" uv run --locked python -m unittest discover -s tools/coreml
+run "browser transport (JavaScript)" node --test pipeline/tests/web/*.test.cjs
+for script in pipeline/vantage/web/*.js site/*.js; do
+    run "JavaScript syntax: $script" node --check "$script"
+done
 
 # Signing lives in ios/Config/Local.xcconfig. A team or bundle ID in the shared project file
 # (e.g. from Xcode's Signing & Capabilities tab) would override everyone's local settings.
@@ -41,8 +47,13 @@ if [ "$(uname)" = "Darwin" ]; then
     if [ "$have" != "$want" ]; then
         echo "warning: this repo uses Xcode $want (.xcode-version) but you have Xcode ${have:-none}." >&2
     fi
-    run "ios/VantageKit (swift test)" bash -c \
-        'cd ios/VantageKit && swift test --scratch-path "$HOME/Library/Caches/VantageKit-build"'
+    if [ -z "$have" ]; then
+        echo "error: Swift tests require full Xcode, including XCTest. Install Xcode $want and select it with DEVELOPER_DIR or xcode-select." >&2
+        status=1
+    else
+        run "ios/VantageKit (swift test)" bash -c \
+            'cd ios/VantageKit && swift test --scratch-path "$HOME/Library/Caches/VantageKit-build"'
+    fi
 else
     echo "== ios/VantageKit (swift test): skipped, needs macOS with Xcode"
 fi

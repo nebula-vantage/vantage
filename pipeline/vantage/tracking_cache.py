@@ -1,7 +1,10 @@
 """Validated reuse of completed tracking runs while iterating on statistics."""
+
 import hashlib
 import json
 import math
+from copy import deepcopy
+from pathlib import Path
 
 from vantage.records import Detection, FrameRecord
 
@@ -12,7 +15,15 @@ def source_signature(path):
 
 
 def tracking_settings(config):
-    return {key: config[key] for key in ("model", "detection", "tracker", "ball_tracker")}
+    settings = deepcopy(
+        {key: config[key] for key in ("model", "detection", "tracker", "ball_tracker")}
+    )
+    # A path alone cannot identify weights: training/export can replace the file
+    # without changing its name, size, or timestamp. Custom detector adapters may
+    # not use a local weights file, in which case configuration remains their key.
+    model = Path(config["model"]["path"])
+    settings["model_sha256"] = file_digest(model) if model.is_file() else None
+    return settings
 
 
 def file_digest(path):
@@ -23,33 +34,53 @@ def file_digest(path):
     return digest.hexdigest()
 
 
-def load_cached_tracks(output_dir, source, config, fps, width, height):
+def load_cached_tracks(output_dir, source, config, fps, width, height, *, tracking=None):
     try:
         metadata = json.loads((output_dir / "stats.json").read_text())
         path = output_dir / "tracks.jsonl"
         video = metadata["video"]
-        if (metadata.get("source") != source
-                or metadata.get("tracking") != tracking_settings(config)
-                or metadata.get("tracks_sha256") != file_digest(path)
-                or (video["width"], video["height"]) != (width, height)
-                or not math.isclose(video["fps"], fps, rel_tol=1e-9)):
+        if (
+            metadata.get("source") != source
+            or metadata.get("tracking")
+            != (tracking_settings(config) if tracking is None else tracking)
+            or metadata.get("tracks_sha256") != file_digest(path)
+            or (video["width"], video["height"]) != (width, height)
+            or not math.isclose(video["fps"], fps, rel_tol=1e-9)
+        ):
             raise ValueError("Video, tracking settings, or cached observations have changed.")
 
         def detection(data):
-            return None if data is None else Detection(tuple(data["box"]), data["confidence"],
-                                                       data["track_id"], data["class_id"])
+            return (
+                None
+                if data is None
+                else Detection(
+                    tuple(data["box"]), data["confidence"], data["track_id"], data["class_id"]
+                )
+            )
 
         records = []
         with path.open() as stream:
             for index, line in enumerate(stream):
                 row = json.loads(line)
-                if row["index"] != index or not math.isclose(row["time_s"], index / fps, abs_tol=1e-9):
-                    raise ValueError("Cached observations have inconsistent timestamps or frame indices.")
-                records.append(FrameRecord(index, row["time_s"],
-                                           [detection(d) for d in row["players"]], detection(row["ball"]),
-                                           [detection(d) for d in row["paddles"]]))
+                if row["index"] != index or not math.isclose(
+                    row["time_s"], index / fps, abs_tol=1e-9
+                ):
+                    raise ValueError(
+                        "Cached observations have inconsistent timestamps or frame indices."
+                    )
+                records.append(
+                    FrameRecord(
+                        index,
+                        row["time_s"],
+                        [detection(d) for d in row["players"]],
+                        detection(row["ball"]),
+                        [detection(d) for d in row["paddles"]],
+                    )
+                )
         if not records or len(records) != video["frame_count"]:
             raise ValueError("Cached observation count does not match the completed run.")
         return records
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        raise ValueError(f"Cannot reanalyze this tracking cache: {exc} Run again without --reanalyze.") from exc
+        raise ValueError(
+            f"Cannot reanalyze this tracking cache: {exc} Run again without --reanalyze."
+        ) from exc

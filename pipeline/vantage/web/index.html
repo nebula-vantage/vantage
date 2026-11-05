@@ -8,6 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/fonts.css" />
     <link rel="stylesheet" href="/app.css" />
+    <script src="/api.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -205,6 +206,63 @@
               Synthetic footage · Not a recorded match.
             </p>
             <p id="temporary-note" class="subtle-banner" hidden>Imported analysis · Available until you reload this page. Attach its matching video to review moments.</p>
+            <section id="ai-coach" class="ai-coach" data-game-panel="coaching" aria-label="AI video coach">
+              <div class="eyebrow ai-coach-eyebrow">
+                <span class="accent-dot" aria-hidden="true"></span> AI VIDEO COACH
+              </div>
+              <div id="ai-coach-note" class="ai-coach-note" hidden>
+                <div class="ai-coach-note-text">
+                  <h2 id="ai-coach-note-title"></h2>
+                  <p id="ai-coach-note-copy"></p>
+                </div>
+                <div class="ai-coach-note-actions">
+                  <button id="ai-coach-retry" class="button button-secondary button-small" type="button" hidden>Try again</button>
+                  <button id="ai-coach-upload" class="button button-secondary button-small" type="button" hidden>Upload video</button>
+                </div>
+              </div>
+              <p id="ai-coach-failure" class="ai-coach-failure" role="status" hidden></p>
+              <form id="ai-coach-start" class="ai-coach-start" hidden>
+                <h2 id="ai-coach-start-title" class="ai-coach-title">Get a coach’s eye on this game</h2>
+                <p id="ai-coach-start-copy" class="ai-coach-lede"></p>
+                <div class="ai-coach-fields">
+                  <div class="ai-field">
+                    <label for="ai-coach-player">Which player are you? <span>Optional</span></label>
+                    <input
+                      id="ai-coach-player"
+                      type="text"
+                      maxlength="200"
+                      autocomplete="off"
+                      spellcheck="false"
+                      placeholder="e.g. near side, white shirt"
+                    />
+                  </div>
+                  <div id="ai-coach-engine-field" class="ai-field" hidden>
+                    <label for="ai-coach-engine-select">Coach</label>
+                    <select id="ai-coach-engine-select"></select>
+                  </div>
+                </div>
+                <div class="ai-coach-actions">
+                  <button id="ai-coach-analyze" class="button button-primary" type="submit">Analyze my game</button
+                  ><button id="ai-coach-keep" class="button button-secondary" type="button" hidden>Keep this review</button>
+                  <p id="ai-coach-privacy" class="ai-coach-privacy"></p>
+                </div>
+              </form>
+              <div id="ai-coach-running" class="ai-coach-running" hidden>
+                <span class="loading-ring" aria-hidden="true"></span>
+                <div class="ai-coach-running-copy">
+                  <h2 id="ai-coach-running-title" tabindex="-1">Your coach is reviewing this game</h2>
+                  <p id="ai-coach-stage" role="status"></p>
+                  <p class="ai-coach-running-note">Reviews usually take one to three minutes. Keep watching while you wait.</p>
+                  <p id="ai-coach-reconnect" class="ai-coach-reconnect" hidden></p>
+                </div>
+                <div class="ai-coach-running-side">
+                  <span id="ai-coach-elapsed" class="ai-coach-elapsed"></span>
+                  <button id="ai-coach-cancel" class="button button-secondary button-small" type="button">Cancel</button>
+                </div>
+                <span class="ai-progress" aria-hidden="true"></span>
+              </div>
+              <div id="ai-coach-review" class="ai-review" hidden></div>
+            </section>
             <section id="coaching-error" class="surface coaching-status" hidden>
               <h2 id="coaching-error-title">Opening your coaching…</h2>
               <p id="coaching-error-copy"></p>
@@ -404,12 +462,12 @@
           <aside class="coach-column" aria-label="Game guidance">
             <section class="game-coach-card surface" data-game-panel="overview">
               <span class="small-label"><span class="status-dot" aria-hidden="true"></span> YOUR NEXT STEP</span>
-              <h2>Make this game count.</h2>
-              <p>Review the moments behind the numbers and take a focused plan into your next session.</p>
+              <h2 id="game-coach-title">Make this game count.</h2>
+              <p id="game-coach-copy">Review the moments behind the numbers and take a focused plan into your next session.</p>
               <a id="game-coach-link" class="button button-primary button-wide" href="/games" data-route>Open game coaching <span aria-hidden="true">→</span></a>
               <span class="coaching-context">Built from this game's analysis.</span>
             </section>
-            <section class="coach-card" data-game-panel="coaching" data-needs-report>
+            <section id="coach-card" class="coach-card" data-game-panel="coaching" data-needs-report>
               <header class="coach-header">
                 <span class="coach-avatar" aria-hidden="true"
                   ><svg class="icon" viewBox="0 0 24 24">
@@ -432,8 +490,8 @@
                 </div>
               </header>
               <div class="coach-intro">
-                <h3>A focus for your next game.</h3>
-                <p>
+                <h3 id="coach-intro-title">A focus for your next game.</h3>
+                <p id="coach-intro-copy">
                   Ask about the session, review a moment, or find a drill to
                   work on.
                 </p>
@@ -467,6 +525,16 @@
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M12 19V5m-6 6 6-6 6 6" />
                     </svg>
+                  </button>
+                </div>
+                <div id="coach-moment-option" class="ai-moment-option" hidden>
+                  <label
+                    ><input id="coach-include-moment" type="checkbox" checked />
+                    <span>Include the current video moment
+                      <span id="coach-moment-time" class="ai-moment-time"></span></span
+                  ></label>
+                  <button id="coach-ask-moment" class="button button-secondary button-small" type="button" disabled>
+                    Ask about this moment
                   </button>
                 </div>
                 <div id="ai-option" class="ai-option" hidden>

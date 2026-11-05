@@ -1,19 +1,19 @@
 import contextlib
 import io
 import json
-from pathlib import Path
+import os
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import cv2
 import numpy as np
-
+from helpers import settings
 from vantage.court import compute_homography, save_calibration
 from vantage.main import main, run_pipeline
 from vantage.records import Detection, FrameRecord
-from helpers import settings
-from vantage.visualize import encoded_size, render_video, verify_video
+from vantage.visualize import encoded_size, verify_video
 
 
 class FakeDetector:
@@ -22,9 +22,12 @@ class FakeDetector:
 
     def process(self, frame, index, time_s):
         y = 170 - abs(index - 30) * 2
-        return FrameRecord(index, time_s,
-                           players=[Detection((20, 80, 60, 180), 0.9, 7, 0)],
-                           ball=Detection((158, y-2, 162, y+2), 0.9, 1, 32))
+        return FrameRecord(
+            index,
+            time_s,
+            players=[Detection((20, 80, 60, 180), 0.9, 7, 0)],
+            ball=Detection((158, y - 2, 162, y + 2), 0.9, 1, 32),
+        )
 
 
 class EmptyDetector(FakeDetector):
@@ -37,11 +40,11 @@ class PipelineTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.input = self.root / 'sample.mp4'
-        self.output = self.root / 'output'
+        self.input = self.root / "sample.mp4"
+        self.output = self.root / "output"
         self.cfg = settings()
-        self.cfg['runtime']['progress_every_s'] = float('inf')
-        writer = cv2.VideoWriter(str(self.input), cv2.VideoWriter_fourcc(*'mp4v'), 30, (320, 240))
+        self.cfg["runtime"]["progress_every_s"] = float("inf")
+        writer = cv2.VideoWriter(str(self.input), cv2.VideoWriter_fourcc(*"mp4v"), 30, (320, 240))
         self.assertTrue(writer.isOpened())
         for _ in range(60):
             writer.write(np.full((240, 320, 3), 40, dtype=np.uint8))
@@ -51,115 +54,221 @@ class PipelineTests(unittest.TestCase):
         save_calibration(self.output, h, corners, 320, 240)
 
     def test_synthetic_end_to_end(self):
-        result = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        self.assertEqual(len(result['in_out_calls']), 1)
-        self.assertIsNotNone(result['avg_ball_speed_kmh'])
-        self.assertEqual(json.loads((self.output/'stats.json').read_text()), json.loads(json.dumps(result)))
-        self.assertEqual(len((self.output/'tracks.jsonl').read_text().splitlines()), 60)
-        verify_video(self.output/'annotated.mp4', 60, (320, 240), 30)
-        cap = cv2.VideoCapture(str(self.output/'annotated.mp4'))
+        result = run_pipeline(
+            self.input, self.output, config=self.cfg, detector_factory=FakeDetector
+        )
+        self.assertEqual(len(result["in_out_calls"]), 1)
+        self.assertIsNotNone(result["avg_ball_speed_kmh"])
+        self.assertEqual(
+            json.loads((self.output / "stats.json").read_text()), json.loads(json.dumps(result))
+        )
+        self.assertEqual(len((self.output / "tracks.jsonl").read_text().splitlines()), 60)
+        verify_video(self.output / "annotated.mp4", 60, (320, 240), 30)
+        cap = cv2.VideoCapture(str(self.output / "annotated.mp4"))
         ok, frame = cap.read()
         cap.release()
         self.assertTrue(ok)
         self.assertGreater(np.std(frame), 1)
-        events = [json.loads(line) for line in (self.output/'events.jsonl').read_text().splitlines()]
-        self.assertEqual(len(events), result['shot_count'] + result['bounce_candidate_count'])
-        self.assertTrue(any(event['type'] == 'bounce_candidate' for event in events))
-        self.assertIsNotNone(cv2.imread(str(self.output/'landing_heatmap.png')))
-        self.assertEqual(result['landing_heatmap']['included_candidates'], 1)
+        events = [
+            json.loads(line) for line in (self.output / "events.jsonl").read_text().splitlines()
+        ]
+        self.assertEqual(len(events), result["shot_count"] + result["bounce_candidate_count"])
+        self.assertTrue(any(event["type"] == "bounce_candidate" for event in events))
+        self.assertIsNotNone(cv2.imread(str(self.output / "landing_heatmap.png")))
+        self.assertEqual(result["landing_heatmap"]["included_candidates"], 1)
 
     def test_mov_input_is_converted_once_and_reused(self):
-        mov = self.root / 'phone.mov'
+        mov = self.root / "phone.mov"
         mov.write_bytes(self.input.read_bytes())
         result = run_pipeline(mov, self.output, config=self.cfg, detector_factory=FakeDetector)
-        prepared = self.output / 'prepared.mp4'
-        self.assertEqual(result['input'], str(prepared))
-        self.assertEqual(result['original_input'], str(mov))
-        self.assertEqual(result['video']['frame_count'], 60)
+        prepared = self.output / "prepared.mp4"
+        self.assertEqual(result["input"], str(prepared))
+        self.assertEqual(result["original_input"], str(mov))
+        self.assertEqual(result["video"]["frame_count"], 60)
         converted_at = prepared.stat().st_mtime_ns
         run_pipeline(mov, self.output, config=self.cfg, reanalyze=True)
         self.assertEqual(prepared.stat().st_mtime_ns, converted_at)
 
     def test_reanalyze_reuses_tracks_but_recomputes_stats(self):
-        before = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        original_tracks = (self.output/'tracks.jsonl').read_bytes()
-        self.cfg['bounce']['min_side_observations'] = 100
-        with patch('vantage.detector.Detector', side_effect=AssertionError('Inference must be skipped')) as factory:
+        before = run_pipeline(
+            self.input, self.output, config=self.cfg, detector_factory=FakeDetector
+        )
+        original_tracks = (self.output / "tracks.jsonl").read_bytes()
+        self.cfg["bounce"]["min_side_observations"] = 100
+        with patch(
+            "vantage.detector.Detector", side_effect=AssertionError("Inference must be skipped")
+        ) as factory:
             after = run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
         factory.assert_not_called()
-        self.assertEqual(before['bounce_candidate_count'], 1)
-        self.assertEqual(after['bounce_candidate_count'], 0)
-        self.assertEqual(after['landing_heatmap']['included_candidates'], 0)
-        self.assertEqual(original_tracks, (self.output/'tracks.jsonl').read_bytes())
-        self.assertEqual(before['tracks_sha256'], after['tracks_sha256'])
-        verify_video(self.output/'annotated.mp4', 60, (320, 240), 30)
+        self.assertEqual(before["bounce_candidate_count"], 1)
+        self.assertEqual(after["bounce_candidate_count"], 0)
+        self.assertEqual(after["landing_heatmap"]["included_candidates"], 0)
+        self.assertEqual(original_tracks, (self.output / "tracks.jsonl").read_bytes())
+        self.assertEqual(before["tracks_sha256"], after["tracks_sha256"])
+        verify_video(self.output / "annotated.mp4", 60, (320, 240), 30)
 
     def test_reanalyze_rejects_changed_tracking_settings(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        previous = (self.output/'stats.json').read_bytes()
-        self.cfg['detection']['ball_confidence'] = .5
-        with self.assertRaisesRegex(ValueError, 'without --reanalyze'):
+        previous = (self.output / "stats.json").read_bytes()
+        self.cfg["detection"]["ball_confidence"] = 0.5
+        with self.assertRaisesRegex(ValueError, "without --reanalyze"):
             run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
-        self.assertEqual(previous, (self.output/'stats.json').read_bytes())
+        self.assertEqual(previous, (self.output / "stats.json").read_bytes())
+
+    def test_reanalyze_rejects_replaced_weights_even_with_same_size_and_timestamp(self):
+        weights = self.root / "model.pt"
+        weights.write_bytes(b"original weights")
+        self.cfg["model"]["path"] = str(weights)
+        result = run_pipeline(
+            self.input, self.output, config=self.cfg, detector_factory=FakeDetector
+        )
+        self.assertIsNotNone(result["tracking"]["model_sha256"])
+        previous = (self.output / "stats.json").read_bytes()
+        info = weights.stat()
+        weights.write_bytes(b"modified weights")
+        os.utime(weights, ns=(info.st_atime_ns, info.st_mtime_ns))
+        with self.assertRaisesRegex(ValueError, "without --reanalyze"):
+            run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
+        self.assertEqual(previous, (self.output / "stats.json").read_bytes())
+
+    def test_weights_changed_during_processing_preserve_completed_outputs(self):
+        weights = self.root / "model.pt"
+        weights.write_bytes(b"original weights")
+        self.cfg["model"]["path"] = str(weights)
+        run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
+        previous = {
+            path.name: path.read_bytes() for path in self.output.iterdir() if path.is_file()
+        }
+
+        def change_weights(stage, count, total):
+            if stage == "Finalizing":
+                weights.write_bytes(b"modified weights")
+
+        with self.assertRaisesRegex(RuntimeError, "Model weights or tracking settings changed"):
+            run_pipeline(
+                self.input,
+                self.output,
+                config=self.cfg,
+                detector_factory=FakeDetector,
+                progress_callback=change_weights,
+            )
+        self.assertEqual(
+            previous,
+            {path.name: path.read_bytes() for path in self.output.iterdir() if path.is_file()},
+        )
+
+    def test_weights_changed_while_loading_are_rejected(self):
+        weights = self.root / "model.pt"
+        weights.write_bytes(b"original weights")
+        self.cfg["model"]["path"] = str(weights)
+
+        def changed_detector(*args):
+            weights.write_bytes(b"modified weights")
+            return FakeDetector(*args)
+
+        with self.assertRaisesRegex(RuntimeError, "changed while loading"):
+            run_pipeline(
+                self.input, self.output, config=self.cfg, detector_factory=changed_detector
+            )
+        self.assertFalse((self.output / "stats.json").exists())
+
+    def test_newly_downloaded_weights_are_recorded_and_reusable(self):
+        weights = self.root / "model.pt"
+        self.cfg["model"]["path"] = str(weights)
+
+        def downloading_detector(*args):
+            weights.write_bytes(b"downloaded weights")
+            return FakeDetector(*args)
+
+        result = run_pipeline(
+            self.input, self.output, config=self.cfg, detector_factory=downloading_detector
+        )
+        self.assertIsNotNone(result["tracking"]["model_sha256"])
+        replay = run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
+        self.assertEqual(result["tracking"], replay["tracking"])
 
     def test_reanalyze_rejects_modified_video_and_tracks(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        tracks = self.output/'tracks.jsonl'
+        tracks = self.output / "tracks.jsonl"
         original = tracks.read_bytes()
         tracks.write_bytes(original[:-20])
-        with self.assertRaisesRegex(ValueError, 'cached observations have changed'):
+        with self.assertRaisesRegex(ValueError, "cached observations have changed"):
             run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
         tracks.write_bytes(original)
-        with self.input.open('ab') as stream:
-            stream.write(b'changed')
-        with self.assertRaisesRegex(ValueError, 'Video, tracking settings'):
+        with self.input.open("ab") as stream:
+            stream.write(b"changed")
+        with self.assertRaisesRegex(ValueError, "Video, tracking settings"):
             run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
 
     def test_reanalyze_failure_preserves_completed_artifacts(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        previous = {name: (self.output/name).read_bytes() for name in
-                    ('stats.json', 'tracks.jsonl', 'annotated.mp4', 'events.jsonl', 'landing_heatmap.png')}
-        with patch('vantage.visualize.render_video', side_effect=RuntimeError('encoder failure')):
-            with self.assertRaisesRegex(RuntimeError, 'encoder failure'):
+        previous = {
+            name: (self.output / name).read_bytes()
+            for name in (
+                "stats.json",
+                "tracks.jsonl",
+                "annotated.mp4",
+                "events.jsonl",
+                "landing_heatmap.png",
+            )
+        }
+        with patch("vantage.visualize.render_video", side_effect=RuntimeError("encoder failure")):
+            with self.assertRaisesRegex(RuntimeError, "encoder failure"):
                 run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
-        self.assertEqual(previous, {name: (self.output/name).read_bytes() for name in previous})
+        self.assertEqual(previous, {name: (self.output / name).read_bytes() for name in previous})
 
     def test_heatmap_failure_preserves_completed_outputs(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
-        previous = {name: (self.output/name).read_bytes() for name in
-                    ('stats.json', 'tracks.jsonl', 'annotated.mp4', 'events.jsonl', 'landing_heatmap.png')}
-        with patch('vantage.heatmap.render_landing_heatmap', side_effect=RuntimeError('PNG failure')):
-            with self.assertRaisesRegex(RuntimeError, 'PNG failure'):
+        previous = {
+            name: (self.output / name).read_bytes()
+            for name in (
+                "stats.json",
+                "tracks.jsonl",
+                "annotated.mp4",
+                "events.jsonl",
+                "landing_heatmap.png",
+            )
+        }
+        with patch(
+            "vantage.heatmap.render_landing_heatmap", side_effect=RuntimeError("PNG failure")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "PNG failure"):
                 run_pipeline(self.input, self.output, config=self.cfg, reanalyze=True)
-        self.assertEqual(previous, {name: (self.output/name).read_bytes() for name in previous})
+        self.assertEqual(previous, {name: (self.output / name).read_bytes() for name in previous})
 
     def test_no_ball_end_to_end(self):
-        result = run_pipeline(self.input, self.output, config=self.cfg, detector_factory=EmptyDetector)
-        self.assertIsNone(result['avg_ball_speed_kmh'])
-        verify_video(self.output/'annotated.mp4', 60, (320, 240), 30)
+        result = run_pipeline(
+            self.input, self.output, config=self.cfg, detector_factory=EmptyDetector
+        )
+        self.assertIsNone(result["avg_ball_speed_kmh"])
+        verify_video(self.output / "annotated.mp4", 60, (320, 240), 30)
 
     def test_failed_run_keeps_previous_outputs(self):
-        (self.output/'stats.json').write_text('previous')
-        with patch('vantage.visualize.render_video', side_effect=RuntimeError('encoder failure')):
-            with self.assertRaisesRegex(RuntimeError, 'encoder failure'):
-                run_pipeline(self.input, self.output, config=self.cfg, detector_factory=EmptyDetector)
-        self.assertEqual((self.output/'stats.json').read_text(), 'previous')
-        self.assertFalse(list(self.output.glob('.processing-*')))
+        (self.output / "stats.json").write_text("previous")
+        with patch("vantage.visualize.render_video", side_effect=RuntimeError("encoder failure")):
+            with self.assertRaisesRegex(RuntimeError, "encoder failure"):
+                run_pipeline(
+                    self.input, self.output, config=self.cfg, detector_factory=EmptyDetector
+                )
+        self.assertEqual((self.output / "stats.json").read_text(), "previous")
+        self.assertFalse(list(self.output.glob(".processing-*")))
 
     def test_missing_input_error_and_stdout_is_empty(self):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = main(['--input', str(self.root/'missing.mp4')])
+            code = main(["--input", str(self.root / "missing.mp4")])
         self.assertEqual(code, 1)
-        self.assertEqual(out.getvalue(), '')
-        self.assertIn('Place your video there or pass --input', err.getvalue())
+        self.assertEqual(out.getvalue(), "")
+        self.assertIn("Place your video there or pass --input", err.getvalue())
 
     def test_cli_stdout_is_only_matching_json(self):
         out = io.StringIO()
-        with patch('vantage.detector.Detector', EmptyDetector), contextlib.redirect_stdout(out):
-            code = main(['--input', str(self.input), '--output-dir', str(self.output)])
+        with patch("vantage.detector.Detector", EmptyDetector), contextlib.redirect_stdout(out):
+            code = main(["--input", str(self.input), "--output-dir", str(self.output)])
         self.assertEqual(code, 0)
-        self.assertEqual(json.loads(out.getvalue()), json.loads((self.output/'stats.json').read_text()))
+        self.assertEqual(
+            json.loads(out.getvalue()), json.loads((self.output / "stats.json").read_text())
+        )
 
     def test_coordinates_are_emitted_before_the_next_frame_is_processed(self):
         out = io.StringIO()
@@ -168,36 +277,57 @@ class PipelineTests(unittest.TestCase):
             def process(detector, frame, index, time_s):
                 messages = [json.loads(line) for line in out.getvalue().splitlines()]
                 if index:
-                    self.assertEqual(messages[-1]['frame_index'], index-1)
+                    self.assertEqual(messages[-1]["frame_index"], index - 1)
                 else:
-                    self.assertEqual(messages[-1]['type'], 'stream_start')
+                    self.assertEqual(messages[-1]["type"], "stream_start")
                 return super().process(frame, index, time_s)
 
-        result = run_pipeline(self.input, self.output, config=self.cfg,
-                              detector_factory=CheckingDetector, stream_output=out)
+        result = run_pipeline(
+            self.input,
+            self.output,
+            config=self.cfg,
+            detector_factory=CheckingDetector,
+            stream_output=out,
+        )
         messages = [json.loads(line) for line in out.getvalue().splitlines()]
         self.assertEqual(len(messages), 61)
-        self.assertEqual(messages[-1]['players'][0]['track_id'], 7)
-        self.assertIn('motion', result)
+        self.assertEqual(messages[-1]["players"][0]["track_id"], 7)
+        self.assertIn("motion", result)
 
     def test_cli_stream_replays_validated_cache_as_json_lines(self):
         run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector)
         out, err = io.StringIO(), io.StringIO()
-        with patch('vantage.detector.Detector', side_effect=AssertionError('No inference')), \
-                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = main(['--input', str(self.input), '--output-dir', str(self.output), '--reanalyze', '--stream'])
+        with (
+            patch("vantage.detector.Detector", side_effect=AssertionError("No inference")),
+            contextlib.redirect_stdout(out),
+            contextlib.redirect_stderr(err),
+        ):
+            code = main(
+                [
+                    "--input",
+                    str(self.input),
+                    "--output-dir",
+                    str(self.output),
+                    "--reanalyze",
+                    "--stream",
+                ]
+            )
         self.assertEqual(code, 0)
         messages = [json.loads(line) for line in out.getvalue().splitlines()]
-        self.assertEqual([m['type'] for m in messages], ['stream_start'] + ['frame']*60 + ['summary'])
-        self.assertEqual(messages[-1]['stats'], json.loads((self.output/'stats.json').read_text()))
-        self.assertIn('Reusing 60 validated', err.getvalue())
+        self.assertEqual(
+            [m["type"] for m in messages], ["stream_start"] + ["frame"] * 60 + ["summary"]
+        )
+        self.assertEqual(
+            messages[-1]["stats"], json.loads((self.output / "stats.json").read_text())
+        )
+        self.assertIn("Reusing 60 validated", err.getvalue())
 
     def test_cannot_overwrite_input(self):
-        with self.assertRaisesRegex(ValueError, 'Input cannot'):
+        with self.assertRaisesRegex(ValueError, "Input cannot"):
             self._overwrite()
 
     def _overwrite(self):
-        path = self.root / 'annotated.mp4'
+        path = self.root / "annotated.mp4"
         path.write_bytes(self.input.read_bytes())
         run_pipeline(path, self.root, config=self.cfg, detector_factory=EmptyDetector)
 
@@ -206,27 +336,37 @@ class PipelineTests(unittest.TestCase):
 
     def test_progress_callbacks_report_real_frames_without_stdout_throttling(self):
         updates = []
-        run_pipeline(self.input, self.output, config=self.cfg, detector_factory=FakeDetector,
-                     progress_callback=lambda stage, done, total: updates.append((stage, done, total)))
-        detection = [done for stage, done, _ in updates if stage == 'Detecting']
-        rendering = [done for stage, done, _ in updates if stage == 'Rendering']
+        run_pipeline(
+            self.input,
+            self.output,
+            config=self.cfg,
+            detector_factory=FakeDetector,
+            progress_callback=lambda stage, done, total: updates.append((stage, done, total)),
+        )
+        detection = [done for stage, done, _ in updates if stage == "Detecting"]
+        rendering = [done for stage, done, _ in updates if stage == "Rendering"]
         self.assertEqual(detection, list(range(1, 61)))
         self.assertEqual(rendering, list(range(1, 61)))
-        self.assertIn(('Loading model', 0, 60), updates)
-        self.assertIn(('Analyzing', 0, 60), updates)
-        self.assertEqual(updates[-1], ('Finalizing', 60, 60))
+        self.assertIn(("Loading model", 0, 60), updates)
+        self.assertIn(("Analyzing", 0, 60), updates)
+        self.assertEqual(updates[-1], ("Finalizing", 60, 60))
 
     def test_cancelled_progress_preserves_completed_outputs(self):
-        previous = b'previous completed analysis'
-        (self.output / 'stats.json').write_bytes(previous)
+        previous = b"previous completed analysis"
+        (self.output / "stats.json").write_bytes(previous)
 
         def cancel(stage, done, total):
-            if stage == 'Detecting' and done == 5:
-                raise RuntimeError('Analysis cancelled')
+            if stage == "Detecting" and done == 5:
+                raise RuntimeError("Analysis cancelled")
 
-        with self.assertRaisesRegex(RuntimeError, 'Analysis cancelled'):
-            run_pipeline(self.input, self.output, config=self.cfg,
-                         detector_factory=FakeDetector, progress_callback=cancel)
-        self.assertEqual((self.output / 'stats.json').read_bytes(), previous)
-        self.assertFalse((self.output / 'annotated.mp4').exists())
-        self.assertFalse(list(self.output.glob('.processing-*')))
+        with self.assertRaisesRegex(RuntimeError, "Analysis cancelled"):
+            run_pipeline(
+                self.input,
+                self.output,
+                config=self.cfg,
+                detector_factory=FakeDetector,
+                progress_callback=cancel,
+            )
+        self.assertEqual((self.output / "stats.json").read_bytes(), previous)
+        self.assertFalse((self.output / "annotated.mp4").exists())
+        self.assertFalse(list(self.output.glob(".processing-*")))

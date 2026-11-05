@@ -111,6 +111,11 @@ diagonal (`--radius-diagonals`). `--export-centers` writes the
 
 ## 4. Fine-tune
 
+Roboflow exports are streamed to disk and extracted in a temporary directory beside
+the destination. The final dataset directory appears only after extraction and
+`SOURCE.json` succeed. Failed downloads can be retried without deleting a partial
+dataset; allow disk space for both the compressed export and extracted files.
+
 ```sh
 # a. Public data (free key: roboflow.com -> Settings -> API Keys). Store it once, privately,
 #    outside the repo (or export ROBOFLOW_API_KEY for the session):

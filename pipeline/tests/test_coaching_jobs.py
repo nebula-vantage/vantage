@@ -1,22 +1,22 @@
 """Real upload/prepare/calibration boundaries with a replaceable inference worker."""
-from copy import deepcopy
+
 import hashlib
 import io
 import json
 import os
-from pathlib import Path
 import shutil
 import tempfile
 import threading
 import time
 import unittest
+from copy import deepcopy
+from pathlib import Path
 from unittest.mock import patch
 
 import cv2
 import numpy as np
-
 from vantage.coaching import build_report
-from vantage.coaching_jobs import AnalysisJobs, MAX_UPLOAD_BYTES, UploadError, _read_video
+from vantage.coaching_jobs import MAX_UPLOAD_BYTES, AnalysisJobs, UploadError, _read_video
 from vantage.config import CONFIG
 from vantage.court import load_calibration
 from vantage.records import BounceEvent, FrameRecord, TrajectorySample
@@ -39,18 +39,37 @@ def fake_pipeline(source, output, *, config, progress_callback):
     progress_callback("Rendering", frames, frames)
     stats = {
         "schema_version": 2,
-        "video": {"width": width, "height": height, "fps": fps,
-                  "frame_count": frames, "duration_s": frames / fps},
-        "quality": {"status": "insufficient_evidence", "ball_detection_coverage": 0,
-                    "observed_frames": 0, "warnings": []},
-        "rallies": [], "crossing_events": [], "in_out_calls": [],
-        "rally_count": 0, "shot_count": 0, "longest_rally": 0,
-        "bounce_candidate_count": 0, "avg_ball_speed_kmh": None,
-        "source": {"path": str(source), "size_bytes": source.stat().st_size,
-                   "mtime_ns": source.stat().st_mtime_ns},
+        "video": {
+            "width": width,
+            "height": height,
+            "fps": fps,
+            "frame_count": frames,
+            "duration_s": frames / fps,
+        },
+        "quality": {
+            "status": "insufficient_evidence",
+            "ball_detection_coverage": 0,
+            "observed_frames": 0,
+            "warnings": [],
+        },
+        "rallies": [],
+        "crossing_events": [],
+        "in_out_calls": [],
+        "rally_count": 0,
+        "shot_count": 0,
+        "longest_rally": 0,
+        "bounce_candidate_count": 0,
+        "avg_ball_speed_kmh": None,
+        "source": {
+            "path": str(source),
+            "size_bytes": source.stat().st_size,
+            "mtime_ns": source.stat().st_mtime_ns,
+        },
     }
     (output / "stats.json").write_text(json.dumps(stats))
-    (output / "tracks.jsonl").write_text("".join(json.dumps({"index": i, "time_s": i / fps}) + "\n" for i in range(frames)))
+    (output / "tracks.jsonl").write_text(
+        "".join(json.dumps({"index": i, "time_s": i / fps}) + "\n" for i in range(frames))
+    )
     (output / "events.jsonl").write_text("")
     shutil.copy2(source, output / "annotated.mp4")
     cv2.imwrite(str(output / "landing_heatmap.png"), np.zeros((30, 30, 3), np.uint8))
@@ -76,7 +95,9 @@ class AnalysisJobsTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {"VANTAGE_MODEL_PATH": str(self.model)})
         self.env.start()
         self.addCleanup(self.env.stop)
-        self.config_patch = patch("vantage.coaching_jobs._pipeline_config", return_value=deepcopy(CONFIG))
+        self.config_patch = patch(
+            "vantage.coaching_jobs._pipeline_config", return_value=deepcopy(CONFIG)
+        )
         self.config_patch.start()
         self.addCleanup(self.config_patch.stop)
         self.pipeline_patch = patch("vantage.coaching_jobs.run_pipeline", side_effect=fake_pipeline)
@@ -98,7 +119,7 @@ class AnalysisJobsTests(unittest.TestCase):
             result = self.jobs.get(identity)
             if result["status"] in statuses:
                 return result
-            time.sleep(.02)
+            time.sleep(0.02)
         self.fail(f"Job did not reach {statuses}: {self.jobs.get(identity)}")
 
     def calibrated(self, name="Weekend match.mp4"):
@@ -124,7 +145,9 @@ class AnalysisJobsTests(unittest.TestCase):
         self.assertEqual(len(runs), 1)
         result = runs[0]
         thumbnail = cv2.imread(str(result / "thumbnail.png"))
-        self.assertIsNotNone(thumbnail, "Completed games retain a library thumbnail after upload cleanup")
+        self.assertIsNotNone(
+            thumbnail, "Completed games retain a library thumbnail after upload cleanup"
+        )
         self.assertLessEqual(max(thumbnail.shape[:2]), 640)
         self.assertEqual(done["session_id"], hashlib.sha256(result.name.encode()).hexdigest()[:20])
         self.assertIsNone(self.jobs.preview(job["id"]))
@@ -135,12 +158,19 @@ class AnalysisJobsTests(unittest.TestCase):
         self.assertIn("synthetic illustrative footage", stats["quality"]["warnings"][0])
         self.assertTrue(Path(stats["input"]).is_file())
         self.assertEqual(stats["source"]["path"], stats["input"])
-        self.assertEqual(json.loads((result / "coaching-report.json").read_text()), build_report(stats))
+        self.assertEqual(
+            json.loads((result / "coaching-report.json").read_text()), build_report(stats)
+        )
         self.assertEqual(self.jobs.cancel(job["id"])["status"], "completed")
 
     def test_rejects_invalid_extensions_sizes_missing_model_and_truncated_upload(self):
-        for name, length in (("movie.exe", 5), ("movie.mp4", 0), ("movie.mp4", MAX_UPLOAD_BYTES + 1),
-                             ("movie.mp4", True), ("bad\x00name.mp4", 5)):
+        for name, length in (
+            ("movie.exe", 5),
+            ("movie.mp4", 0),
+            ("movie.mp4", MAX_UPLOAD_BYTES + 1),
+            ("movie.mp4", True),
+            ("bad\x00name.mp4", 5),
+        ):
             with self.subTest(name=name, length=length), self.assertRaises(UploadError):
                 self.jobs.create_upload(name, io.BytesIO(b"abc"), length)
         with self.assertRaisesRegex(UploadError, "interrupted"):
@@ -153,18 +183,24 @@ class AnalysisJobsTests(unittest.TestCase):
 
     def test_nonzero_bounce_analysis_publishes_coaching_report(self):
         def pipeline_with_bounce(source, output, *, config, progress_callback):
-            stats = fake_pipeline(source, output, config=config, progress_callback=progress_callback)
+            stats = fake_pipeline(
+                source, output, config=config, progress_callback=progress_callback
+            )
             video = stats["video"]
             fps, frames = video["fps"], video["frame_count"]
             records = [FrameRecord(i, i / fps) for i in range(frames)]
-            samples = [TrajectorySample(i, i / fps, (50 + i, 60), (2 + i / 20, 3),
-                                        "observed", 1, 1) for i in range(frames)]
-            bounce = BounceEvent(5, 5 / fps, (55, 60), (2.25, 3), "IN", .8)
-            measurements, _, _ = aggregate(records, samples, [bounce], fps,
-                                            video["width"], video["height"], config)
+            samples = [
+                TrajectorySample(i, i / fps, (50 + i, 60), (2 + i / 20, 3), "observed", 1, 1)
+                for i in range(frames)
+            ]
+            bounce = BounceEvent(5, 5 / fps, (55, 60), (2.25, 3), "IN", 0.8)
+            measurements, _, _ = aggregate(
+                records, samples, [bounce], fps, video["width"], video["height"], config
+            )
             stats.update(measurements)
             (output / "stats.json").write_text(json.dumps(stats))
             return stats
+
         self.pipeline.side_effect = pipeline_with_bounce
         job = self.calibrated()
         done = self.wait_for(job["id"], {"completed", "failed"})
@@ -180,7 +216,10 @@ class AnalysisJobsTests(unittest.TestCase):
         bad = self.jobs.create_upload("bad.mp4", io.BytesIO(b"invalid video"), 13)
         done = self.wait_for(bad["id"], {"failed"})
         self.assertIn("could not be opened", done["error"])
-        with patch("vantage.coaching_jobs._read_video", side_effect=UploadError("Choose a clip of 20 minutes or less.")):
+        with patch(
+            "vantage.coaching_jobs._read_video",
+            side_effect=UploadError("Choose a clip of 20 minutes or less."),
+        ):
             job = self.upload()
             done = self.wait_for(job["id"], {"failed"})
         self.assertIn("20 minutes", done["error"])
@@ -194,8 +233,12 @@ class AnalysisJobsTests(unittest.TestCase):
             {"fps": 0, "frames": 30, "width": 1920, "height": 1080},
         ]
         for values in cases:
-            metadata = {cv2.CAP_PROP_FPS: values["fps"], cv2.CAP_PROP_FRAME_COUNT: values["frames"],
-                        cv2.CAP_PROP_FRAME_WIDTH: values["width"], cv2.CAP_PROP_FRAME_HEIGHT: values["height"]}
+            metadata = {
+                cv2.CAP_PROP_FPS: values["fps"],
+                cv2.CAP_PROP_FRAME_COUNT: values["frames"],
+                cv2.CAP_PROP_FRAME_WIDTH: values["width"],
+                cv2.CAP_PROP_FRAME_HEIGHT: values["height"],
+            }
             with self.subTest(values=values), patch("cv2.VideoCapture") as constructor:
                 capture = constructor.return_value
                 capture.isOpened.return_value = True
@@ -208,15 +251,22 @@ class AnalysisJobsTests(unittest.TestCase):
     def test_calibration_rejects_bad_coordinates_and_preserves_retry(self):
         job = self.upload()
         self.wait_for(job["id"], {"awaiting_calibration"})
-        for corners in (None, [], [[0, 0]] * 4, [[1, 1], [170, 110], [170, 10], [1, 110]],
-                        [[-1, 1], [170, 110], [170, 10], [10, 10]],
-                        [[float("nan"), 1], [170, 110], [170, 10], [10, 10]],
-                        [[10**500, 1], [170, 110], [170, 10], [10, 10]]):
+        for corners in (
+            None,
+            [],
+            [[0, 0]] * 4,
+            [[1, 1], [170, 110], [170, 10], [1, 110]],
+            [[-1, 1], [170, 110], [170, 10], [10, 10]],
+            [[float("nan"), 1], [170, 110], [170, 10], [10, 10]],
+            [[10**500, 1], [170, 110], [170, 10], [10, 10]],
+        ):
             with self.subTest(corners=corners), self.assertRaises(ValueError):
                 self.jobs.start(job["id"], corners)
             self.assertEqual(self.jobs.get(job["id"])["status"], "awaiting_calibration")
         with self.assertRaises(ValueError):
-            self.jobs.start(job["id"], [[10, 110], [170, 110], [170, 10], [10, 10]], synthetic="true")
+            self.jobs.start(
+                job["id"], [[10, 110], [170, 110], [170, 10], [10, 10]], synthetic="true"
+            )
         self.jobs.start(job["id"], [[10, 110], [170, 110], [170, 10], [10, 10]])
         with self.assertRaises(ValueError):
             self.jobs.start(job["id"], [[10, 110], [170, 110], [170, 10], [10, 10]])
@@ -224,12 +274,14 @@ class AnalysisJobsTests(unittest.TestCase):
 
     def test_cancel_during_analysis_uses_callback_and_never_publishes(self):
         started, proceed = threading.Event(), threading.Event()
+
         def wait_pipeline(source, output, *, config, progress_callback):
             progress_callback("Detecting", 1, 12)
             started.set()
             proceed.wait(timeout=4)
             progress_callback("Detecting", 2, 12)
             self.fail("Cancelled inference must not continue")
+
         self.pipeline.side_effect = wait_pipeline
         job = self.calibrated()
         self.assertTrue(started.wait(timeout=4))
@@ -241,17 +293,19 @@ class AnalysisJobsTests(unittest.TestCase):
         proceed.set()
         deadline = time.monotonic() + 4
         while (self.jobs.uploads / job["id"]).exists() and time.monotonic() < deadline:
-            time.sleep(.02)
+            time.sleep(0.02)
         self.assertFalse((self.jobs.uploads / job["id"]).exists())
         self.assertEqual(list((self.root / "runs").glob("*/stats.json")), [])
 
     def test_preparation_cancel_discards_work_and_close_cancels_pending_jobs(self):
         entered, proceed = threading.Event(), threading.Event()
         from vantage.coaching_jobs import prepare_video
+
         def waiting_prepare(source, destination):
             entered.set()
             proceed.wait(timeout=4)
             return prepare_video(source, destination)
+
         with patch("vantage.coaching_jobs.prepare_video", side_effect=waiting_prepare):
             job = self.upload()
             self.assertTrue(entered.wait(timeout=4))
@@ -266,10 +320,12 @@ class AnalysisJobsTests(unittest.TestCase):
     def test_cancel_after_preview_publication_still_cleans_busy_worker(self):
         ready, proceed = threading.Event(), threading.Event()
         original = self.jobs._prepare
+
         def hold_after_ready(job):
             original(job)
             ready.set()
             proceed.wait(timeout=4)
+
         with patch.object(self.jobs, "_prepare", side_effect=hold_after_ready):
             job = self.upload()
             self.assertTrue(ready.wait(timeout=4))
@@ -284,13 +340,17 @@ class AnalysisJobsTests(unittest.TestCase):
         job = self.upload()
         self.wait_for(job["id"], {"awaiting_calibration"})
         stages = []
+
         def reported_pipeline(source, output, *, config, progress_callback):
             progress_callback("Analyzing", 0, 12)
             stages.append(self.jobs.get(job["id"]))
-            result = fake_pipeline(source, output, config=config, progress_callback=progress_callback)
+            result = fake_pipeline(
+                source, output, config=config, progress_callback=progress_callback
+            )
             progress_callback("Finalizing", 0, 12)
             stages.append(self.jobs.get(job["id"]))
             return result
+
         self.pipeline.side_effect = reported_pipeline
         self.jobs.start(job["id"], [[10, 110], [170, 110], [170, 10], [10, 10]])
         self.wait_for(job["id"], {"completed"})
