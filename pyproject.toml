@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 vantage = "vantage.main:main"
+vantage-app = "vantage.coaching_server:main"
 vantage-coach = "vantage.coaching_server:main"
 
 [dependency-groups]

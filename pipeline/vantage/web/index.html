@@ -4,91 +4,53 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f5f6f8" />
-    <title>AI Coach · Vantage</title>
+    <title>Games · Vantage</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/fonts.css" />
     <link rel="stylesheet" href="/app.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to coaching</a>
-    <aside class="sidebar" aria-label="Workspace">
-      <a class="brand" href="#main" aria-label="Vantage home">VANTAGE</a>
-      <div class="workspace-label">WORKSPACE</div>
-      <nav class="navigation" aria-label="Coaching sections">
-        <a class="nav-item active" href="#main" aria-current="page"
-          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="3" width="16" height="18" rx="2" />
-            <path d="M4 9h16M4 15h16M12 3v18" /></svg
-          >AI Coach</a
-        >
-        <a class="nav-item" href="#review"
-          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="3" />
-            <path d="m10 8 6 4-6 4z" /></svg
-          >Review moments</a
-        >
-        <a class="nav-item" href="#practice"
-          ><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="5" y="4" width="14" height="17" rx="2" />
-            <path d="M9 4V2h6v2M9 12l2 2 4-4" /></svg
-          >Practice plan</a
-        >
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" aria-label="Vantage navigation">
+      <a class="brand" href="/games" data-route aria-label="Vantage games">VANTAGE</a>
+      <div class="workspace-label">YOUR APP</div>
+      <nav class="navigation" aria-label="Main navigation">
+        <a id="games-nav" class="nav-item active" href="/games" data-route aria-current="page">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M9 4v16"/></svg>Games
+        </a>
       </nav>
-      <div class="session-picker">
-        <label class="workspace-label" for="session-select"
-          >YOUR SESSIONS</label
-        >
-        <select id="session-select" aria-label="Choose an analyzed session">
-          <option value="">Loading sessions…</option>
-        </select>
+      <div id="game-navigation" class="game-navigation" hidden>
+        <div class="workspace-label">THIS GAME</div>
+        <p id="nav-game-name" class="nav-game-name"></p>
+        <nav class="navigation" aria-label="Current game">
+          <a id="overview-nav" class="nav-item" href="/games" data-route>Overview</a>
+          <a id="coaching-nav" class="nav-item" href="/games" data-route>Coaching</a>
+        </nav>
       </div>
       <div class="sidebar-bottom">
-        <p class="import-note">
-          Upload your game.<br />Get a video coaching review.
-        </p>
-        <button
-          id="upload-button"
-          class="button button-primary button-wide"
-          type="button"
-        >
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6" /></svg
-          >Upload video
+        <p class="import-note">Your games, insights,<br />and next steps. Together.</p>
+        <button id="upload-button" class="button button-primary button-wide" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6"/></svg>Upload video
         </button>
-        <button
-          id="import-button"
-          class="text-button import-existing-button"
-          type="button"
-        >
-          Import existing analysis
-        </button>
-        <input
-          id="stats-file"
-          type="file"
-          accept=".json,application/json"
-          hidden
-        />
-        <button
-          id="sample-button"
-          class="button button-secondary button-wide"
-          type="button"
-        >
-          Try sample session
-        </button>
-        <div class="sidebar-footer">
-          <span class="status-dot"></span> LOCAL WORKSPACE
-        </div>
+        <button id="import-button" class="text-button import-existing-button" type="button">Import existing analysis</button>
+        <input id="stats-file" type="file" accept=".json,application/json" hidden />
+        <button id="sample-button" class="button button-secondary button-wide" type="button">Explore sample game</button>
+        <div class="sidebar-footer"><span class="status-dot"></span> ON THIS COMPUTER</div>
       </div>
     </aside>
     <main id="main" class="main" tabindex="-1">
+      <nav id="game-breadcrumb" class="game-breadcrumb" aria-label="Breadcrumb" hidden>
+        <a href="/games" data-route>← Games</a><span aria-hidden="true">/</span><span id="breadcrumb-name"></span>
+      </nav>
       <header class="page-header">
         <div>
           <div class="eyebrow">VANTAGE</div>
-          <h1>AI Coach</h1>
-          <p>Review your game. Plan your next session.</p>
+          <h1 id="page-title">Games</h1>
+          <p id="page-description">Your game. A clearer picture. A next step.</p>
         </div>
-        <div class="export-control">
+        <button id="header-upload" class="button button-primary" type="button">+ Upload video</button>
+        <div id="export-control" class="export-control" hidden>
           <label class="sr-only" for="export-format">Export format</label>
           <select id="export-format">
             <option value="text">Text report</option>
@@ -127,10 +89,35 @@
         </button>
       </section>
       <div id="loading" class="loading-state" role="status">
-        <span class="loading-ring" aria-hidden="true"></span> Opening your
-        coaching workspace…
+        <span class="loading-ring" aria-hidden="true"></span> <span id="loading-copy">Opening your games…</span>
       </div>
+      <section id="games-page" aria-label="Your games" hidden>
+        <button id="games-upload" class="games-upload" type="button">
+          <span class="upload-tile-icon" aria-hidden="true">↑</span>
+          <span class="upload-tile-copy"><strong>Bring your game into focus.</strong><span>Upload a match video. Review the play. Find your next practice focus.</span></span>
+          <span class="upload-tile-action">Analyze a video <span aria-hidden="true">↗</span></span>
+        </button>
+        <div class="games-heading"><h2>Your games</h2><div class="games-heading-tools"><span id="games-count" class="small-label"></span><button id="games-refresh" class="text-button" type="button">Refresh</button></div></div>
+        <div id="games-empty" class="games-empty" hidden>
+          <div class="empty-court" aria-hidden="true"></div>
+          <h3>Your next game starts here.</h3>
+          <p>Uploaded games and their coaching stay together in this library.</p>
+          <button id="empty-upload" class="button button-primary" type="button">Upload your first video</button>
+          <p class="empty-sample">Just looking around? <a href="/games/sample" data-route>Explore the synthetic sample</a>.</p>
+        </div>
+        <div id="games-list" class="games-grid"></div>
+        <p class="library-note">Analyzed videos are saved on this computer. Imported statistics are temporary and last until this page is reloaded.</p>
+      </section>
+      <section id="game-unavailable" class="games-empty" hidden>
+        <h2>This game is unavailable.</h2>
+        <p id="game-unavailable-copy">Choose a saved game from your library, or import the analysis again.</p>
+        <a class="button button-primary" href="/games" data-route>Back to Games</a>
+      </section>
       <div id="workspace" hidden>
+        <nav id="game-tabs" class="game-tabs" aria-label="Game sections">
+          <a id="overview-tab" href="/games" data-route>Overview</a>
+          <a id="coaching-tab" href="/games" data-route>Coaching</a>
+        </nav>
         <div class="workspace-grid">
           <div class="review-column">
             <section class="session-bar" aria-label="Current session">
@@ -215,10 +202,15 @@
               </div>
             </section>
             <p id="sample-note" class="sample-note" hidden>
-              Synthetic sample · Import your analysis for a review of your
-              session.
+              Synthetic footage · Not a recorded match.
             </p>
-            <div class="focus-control">
+            <p id="temporary-note" class="subtle-banner" hidden>Imported analysis · Available until you reload this page. Attach its matching video to review moments.</p>
+            <section id="coaching-error" class="surface coaching-status" hidden>
+              <h2 id="coaching-error-title">Opening your coaching…</h2>
+              <p id="coaching-error-copy"></p>
+              <button id="coaching-retry" class="button button-secondary" type="button">Try coaching again</button>
+            </section>
+            <div class="focus-control" data-game-panel="coaching" data-needs-report>
               <span id="focus-label" class="small-label">COACHING FOCUS</span>
               <div class="segmented" role="group" aria-labelledby="focus-label">
                 <button
@@ -238,23 +230,19 @@
                 </button>
               </div>
             </div>
-            <nav class="section-tabs" aria-label="Session sections">
-              <a href="#overview" aria-current="location">Overview</a
-              ><a href="#review">Review moments</a
-              ><a href="#practice">Practice plan</a>
-            </nav>
             <section
               id="overview"
               class="overview-section"
               aria-label="Session overview"
             >
-              <div class="small-label">SESSION · BOTH SIDES</div>
+              <div class="small-label" data-game-panel="overview">GAME · BOTH SIDES</div>
               <div
                 id="metric-grid"
+                data-game-panel="overview"
                 class="metric-grid"
                 aria-label="Session measurements"
               ></div>
-              <section class="takeaway-card" aria-labelledby="report-headline">
+              <section class="takeaway-card" data-game-panel="coaching" data-needs-report aria-labelledby="report-headline">
                 <div class="takeaway-copy">
                   <div class="eyebrow">
                     <span class="accent-dot" aria-hidden="true"></span> COACHING
@@ -269,6 +257,7 @@
               </section>
               <section
                 class="insights-section"
+                data-game-panel="coaching" data-needs-report
                 aria-labelledby="insights-title"
               >
                 <div class="section-heading">
@@ -279,6 +268,7 @@
               </section>
               <section
                 class="court-section surface"
+                data-game-panel="overview"
                 aria-labelledby="court-title"
               >
                 <div class="section-heading">
@@ -358,6 +348,7 @@
             </section>
             <section
               id="review"
+              data-game-panel="coaching" data-needs-report
               class="surface review-section"
               aria-labelledby="review-title"
             >
@@ -372,6 +363,7 @@
             </section>
             <section
               id="practice"
+              data-game-panel="coaching" data-needs-report
               class="surface practice-section"
               aria-labelledby="practice-title"
             >
@@ -409,8 +401,15 @@
               </details>
             </section>
           </div>
-          <aside class="coach-column" aria-label="Coach conversation">
-            <section class="coach-card">
+          <aside class="coach-column" aria-label="Game guidance">
+            <section class="game-coach-card surface" data-game-panel="overview">
+              <span class="small-label"><span class="status-dot" aria-hidden="true"></span> YOUR NEXT STEP</span>
+              <h2>Make this game count.</h2>
+              <p>Review the moments behind the numbers and take a focused plan into your next session.</p>
+              <a id="game-coach-link" class="button button-primary button-wide" href="/games" data-route>Open game coaching <span aria-hidden="true">→</span></a>
+              <span class="coaching-context">Built from this game's analysis.</span>
+            </section>
+            <section class="coach-card" data-game-panel="coaching" data-needs-report>
               <header class="coach-header">
                 <span class="coach-avatar" aria-hidden="true"
                   ><svg class="icon" viewBox="0 0 24 24">
@@ -503,7 +502,7 @@
         </div>
         <footer class="page-footer">
           <span class="footer-brand">VANTAGE</span
-          ><span>Desktop coaching · Session-level estimates</span>
+          ><span>Your game, reviewed · Session-level estimates</span>
         </footer>
       </div>
     </main>

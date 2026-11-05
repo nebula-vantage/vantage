@@ -4,11 +4,11 @@ A Python CLI that runs pretrained YOLO26 nano with ByteTrack for players and
 a separate motion tracker for the ball on one fixed-camera video. It calibrates
 the court with four clicks and exports an annotated video and estimated statistics.
 No model training or real-time requirements. The optional
-[desktop/web coaching workspace](COACHING.md) lets you upload a video, calibrate
-the court in your browser, run analysis, and review the resulting coaching:
+[desktop/web app](COACHING.md) lets you upload a video, calibrate the court in your
+browser, and run analysis. Open a saved game for playback, statistics, and its Coaching tab:
 
 ```sh
-uv run vantage-coach --runs-dir output --open
+uv run vantage-app --runs-dir output --open
 ```
 
 The on-device iPhone app (Core ML detector, saved runs, playback with detection

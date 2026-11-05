@@ -1,7 +1,8 @@
-"""Local desktop coaching workspace. No detector, cloud account or web build required."""
+"""Vantage desktop/web app: one games library, analysis flow, and in-game coach."""
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -20,6 +21,7 @@ from vantage.coaching_video import PlaybackCache
 
 WEB_ROOT = Path(__file__).with_name("web")
 MAX_BODY = 2 * 1024 * 1024
+APP_ROUTE = re.compile(r"/games(?:/(?:[0-9a-f]{20}|sample)(?:/coaching)?)?/?")
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.css": ("app.css", "text/css; charset=utf-8"),
@@ -74,20 +76,41 @@ class SessionLibrary:
         sessions, errors = [], []
         for session_id, directory in self.directories().items():
             try:
-                stats = read_stats(directory / "stats.json")
-                sessions.append({"id": session_id, "name": stats.get("session_name") or directory.name})
+                stats_path = directory / "stats.json"
+                stats = read_stats(stats_path)
+                quality = stats["quality"]
+                supported = quality["status"] != "insufficient_evidence"
+                # List cards use saved metadata only: never decode or transcode every video.
+                has_video = any(self._media_file(directory, name) for name in ("annotated.mp4", "prepared.mp4"))
+                thumbnail = self._media_file(directory, "thumbnail.png")
+                sessions.append({
+                    "id": session_id, "name": stats.get("session_name") or directory.name,
+                    "is_demo": stats.get("synthetic", False),
+                    "duration_s": stats["video"]["duration_s"],
+                    # This is the analysis file's timestamp, not when the match was played.
+                    "analyzed_at": datetime.fromtimestamp(stats_path.stat().st_mtime, timezone.utc).isoformat(),
+                    "quality": {"status": quality["status"], "coverage": quality["ball_detection_coverage"]},
+                    "rally_count": stats["rally_count"] if supported else None,
+                    "shot_count": stats["shot_count"] if supported else None,
+                    "has_video": has_video,
+                    "thumbnail_url": f"/media/{session_id}/thumbnail.png" if thumbnail else None,
+                })
             except (OSError, ValueError):
                 errors.append(f"Could not load {directory.name}: check its stats.json export.")
+        sessions.sort(key=lambda session: (session["analyzed_at"], session["id"]), reverse=True)
         return {"sessions": sessions, "errors": errors}
 
+    def _media_file(self, directory: Path, name: str):
+        path = directory / name
+        return path if path.is_file() and self._inside(path) else None
+
     def media(self, session_id: str, name: str):
-        if name not in ("annotated.mp4", "prepared.mp4", "landing_heatmap.png"):
+        if name not in ("annotated.mp4", "prepared.mp4", "landing_heatmap.png", "thumbnail.png"):
             return None
         directory = self.directories().get(session_id)
         if directory is None:
             return None
-        path = directory / name
-        return path if path.is_file() and self._inside(path) else None
+        return self._media_file(directory, name)
 
     def session(self, session_id: str):
         directory = self.directories().get(session_id)
@@ -122,7 +145,7 @@ class CoachingServer(ThreadingHTTPServer):
 
 
 class CoachingHandler(BaseHTTPRequestHandler):
-    server_version = "VantageCoach/1"
+    server_version = "VantageApp/1"
 
     def setup(self):
         super().setup()
@@ -221,6 +244,8 @@ class CoachingHandler(BaseHTTPRequestHandler):
             if path in STATIC_FILES:
                 filename, content_type = STATIC_FILES[path]
                 return self._file(WEB_ROOT / filename, content_type)
+            if APP_ROUTE.fullmatch(path):
+                return self._file(WEB_ROOT / "index.html", "text/html; charset=utf-8")
             if path == "/api/config":
                 return self._json({**configuration(), **self.server.jobs.config()})
             if path.startswith("/api/analysis/"):
@@ -339,21 +364,21 @@ class CoachingHandler(BaseHTTPRequestHandler):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Open Vantage's local desktop/web coaching workspace.")
+    parser = argparse.ArgumentParser(description="Open Vantage's desktop/web app: Games, analysis, and coaching.")
     parser.add_argument("--runs-dir", type=Path, default=Path("output"),
                         help="Completed run directory or directory of runs (default: output).")
     parser.add_argument("--port", type=int, default=8765)
-    parser.add_argument("--open", action="store_true", help="Open the workspace in your default browser.")
+    parser.add_argument("--open", action="store_true", help="Open Vantage in your default browser.")
     args = parser.parse_args(argv)
     if not 0 <= args.port <= 65535:
         parser.error("--port must be between 0 and 65535")
     try:
         server = CoachingServer(("127.0.0.1", args.port), args.runs_dir)
     except OSError as exc:
-        print(f"Could not start coaching: {exc}. Try a different --port.", file=sys.stderr)
+        print(f"Could not start Vantage: {exc}. Try a different --port.", file=sys.stderr)
         return 1
-    url = f"http://127.0.0.1:{server.server_port}"
-    print(f"Vantage Coach: {url}\nReading completed runs from {args.runs_dir.resolve()}\nPress Ctrl+C to stop.", flush=True)
+    url = f"http://127.0.0.1:{server.server_port}/games"
+    print(f"Vantage: {url}\nReading completed games from {args.runs_dir.resolve()}\nPress Ctrl+C to stop.", flush=True)
     if args.open:
         webbrowser.open(url)
     try:

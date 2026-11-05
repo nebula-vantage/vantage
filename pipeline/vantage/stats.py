@@ -216,7 +216,9 @@ def aggregate(records, samples, bounces, fps, width, height, config):
         "shots_per_rally": [r.shots for r in rallies],
         "longest_rally": max((r.shots for r in rallies), default=0),
         "avg_ball_speed_kmh": average,
-        "in_out_calls": [asdict(b) for b in bounces],
+        # Statistics are also consumed directly by coaching before a JSON round
+        # trip. Dataclass points are tuples; keep this public result JSON-native.
+        "in_out_calls": [{**asdict(b), "pixel": list(b.pixel), "court": list(b.court)} for b in bounces],
         "bounce_candidate_count": len(bounces),
         "rallies": rally_details,
         "tracking_summary": tracking_summary(records, fps),

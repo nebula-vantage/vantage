@@ -278,6 +278,14 @@ def build_report(stats, focus="consistency"):
     elif focus == "review":
         headline = "Find one useful pattern in the replay"
         summary = f"Use the timestamped evidence from this {duration} session to review an exchange, check the tracking, and choose one thing to repeat in practice."
+    elif not rallies:
+        headline = "Review the recording before choosing a practice goal"
+        summary = (f"There is no supported exchange to highlight from this {duration} session. "
+                   "Missing detections can hide play; zero estimates do not mean no play occurred. "
+                   "Review the recording and ball tracking before choosing a general practice exercise.")
+        for drill in drills:
+            if drill["id"] == "replay-one-pattern":
+                drill["steps"][0] = "Choose a short part of your recording and watch it once at normal speed, then replay it slowly."
     else:
         headline = "Build your next session around a repeatable rally"
         summary = f"This {duration} session contains {stats['rally_count']} estimated rallies and {stats['shot_count']} supported net crossings. Review a reference exchange, then practice keeping a controlled rally going."
