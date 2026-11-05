@@ -13,8 +13,8 @@ from vantage.tracking_cache import file_digest, load_cached_tracks, source_signa
 
 
 def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, detector_factory=None,
-                 reanalyze=False, stream_output=None, prepare=False):
-    """Process a video; detector_factory is an injection point for offline tests."""
+                 reanalyze=False, stream_output=None, prepare=False, progress_callback=None):
+    """Process a video; optional progress callbacks also permit cooperative cancellation."""
     config = CONFIG if config is None else config
     input_path, output_dir = Path(input_path), Path(output_dir)
     if not input_path.is_file():
@@ -47,6 +47,8 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
 
     def progress(stage, count, total):
         nonlocal last_progress
+        if progress_callback is not None:
+            progress_callback(stage, count, total)
         now = time.monotonic()
         if now - last_progress >= config["runtime"]["progress_every_s"]:
             print(f"{stage}: {count}/{total or '?'} frames", file=sys.stderr)
@@ -80,6 +82,8 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
             emit(motion.metadata())
             records = cached if cached is not None else []
             if cached is None:
+                if progress_callback is not None:
+                    progress_callback("Loading model", 0, total)
                 with contextlib.redirect_stdout(sys.stderr):
                     detector = detector_factory(config, width, height, fps, staging)
             else:
@@ -110,6 +114,8 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
                 raise RuntimeError(f"Video stopped decoding at {len(records)} of {total} advertised frames. "
                                    "Phone recordings often report extra frames; retry with --prepare.")
             print(f"Analyzing {len(records)} frames...", file=sys.stderr)
+            if progress_callback is not None:
+                progress_callback("Analyzing", 0, len(records))
             samples = build_trajectory(records, homography, width, height, config)
             bounces = detect_bounces(records, samples, homography, width, height, config)
             stats, rallies, speeds = aggregate(records, samples, bounces, fps, width, height, config)
@@ -129,6 +135,8 @@ def run_pipeline(input_path, output_dir, recalibrate=False, *, config=None, dete
                 stats["quality"]["warnings"].append("One black edge pixel was added to odd dimensions for MPEG-4 encoding.")
             render_video(input_path, staging / "annotated.mp4", records, samples, bounces,
                          rallies, speeds, width, height, fps, config, progress)
+            if progress_callback is not None:
+                progress_callback("Finalizing", len(records), len(records))
             if source_signature(input_path) != source:
                 raise RuntimeError("Input changed during processing; run again.")
             (staging / "stats.json").write_text(json.dumps(stats, indent=2, allow_nan=False) + "\n")
