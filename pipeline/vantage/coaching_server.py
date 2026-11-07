@@ -8,7 +8,9 @@ import json
 import re
 import sys
 import tempfile
+import threading
 import webbrowser
+from collections import OrderedDict
 from contextlib import ExitStack
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -21,17 +23,19 @@ from vantage.coaching import build_report, validate_stats
 from vantage.coaching_ai import answer_question, configuration
 from vantage.coaching_jobs import AnalysisJobs
 from vantage.coaching_video import PlaybackCache
+from vantage.replay import ReplayUnavailable, build_replay, demo_replay
 from vantage.video_coach import CoachService, SessionUnavailable
 
 WEB_ROOT = Path(__file__).with_name("web")
 MAX_BODY = 2 * 1024 * 1024
-APP_ROUTE = re.compile(r"/games(?:/(?:[0-9a-f]{20}|sample)(?:/coaching)?)?/?")
+APP_ROUTE = re.compile(r"/games(?:/(?:[0-9a-f]{20}|sample)(?:/coaching|/replay)?)?/?")
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.css": ("app.css", "text/css; charset=utf-8"),
     "/fonts.css": ("fonts.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/api.js": ("api.js", "text/javascript; charset=utf-8"),
+    "/replay.js": ("replay.js", "text/javascript; charset=utf-8"),
     "/favicon.svg": ("favicon.svg", "image/svg+xml"),
     "/fonts/bricolage-grotesque-variable.woff2": (
         "fonts/bricolage-grotesque-variable.woff2",
@@ -157,12 +161,50 @@ class SessionLibrary:
         }
 
 
+class ReplayCache:
+    """Build each saved game's 3-D replay once; rebuild when its analysis files change."""
+
+    INPUTS = ("stats.json", "calibration.json", "tracks.jsonl", "events.jsonl")
+
+    def __init__(self, library: SessionLibrary, limit: int = 6):
+        self._library, self._limit = library, limit
+        self._entries = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, session_id: str):
+        directory = self._library.directories().get(session_id)
+        if directory is None:
+            return None
+        signature = []
+        for name in self.INPUTS:
+            path = directory / name
+            if not path.exists():
+                signature.append(None)
+                continue
+            if not self._library._inside(path):
+                raise ReplayUnavailable("This game's analysis files are outside your library.")
+            info = path.stat()
+            signature.append((info.st_size, info.st_mtime_ns))
+        key = (session_id, tuple(signature))
+        with self._lock:
+            if key in self._entries:
+                self._entries.move_to_end(key)
+                return self._entries[key]
+        replay = build_replay(directory)
+        with self._lock:
+            self._entries[key] = replay
+            while len(self._entries) > self._limit:
+                self._entries.popitem(last=False)
+        return replay
+
+
 class CoachingServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, address, runs_dir: Path):
         self._resources = ExitStack()
         self.library = SessionLibrary(runs_dir)
+        self.replays = ReplayCache(self.library)
         try:
             super().__init__(address, CoachingHandler)
             self.playback_dir = tempfile.TemporaryDirectory(prefix="vantage-coach-")
@@ -327,6 +369,11 @@ class CoachingHandler(BaseHTTPRequestHandler):
                         "heatmap_url": None,
                     }
                 )
+            if path == "/api/demo/replay":
+                return self._json(demo_replay(read_stats(WEB_ROOT / "demo-stats.json")))
+            parts = path.split("/")
+            if len(parts) == 5 and path.startswith("/api/sessions/") and parts[4] == "replay":
+                return self._replay(parts[3])
             if path.startswith("/api/sessions/"):
                 session = self.server.library.session(path.removeprefix("/api/sessions/"))
                 if session:
@@ -445,6 +492,15 @@ class CoachingHandler(BaseHTTPRequestHandler):
         except Exception:
             # Keep imported data, local paths and provider credentials out of errors.
             self._json({"error": "Coaching is temporarily unavailable. Please try again."}, 500)
+
+    def _replay(self, session_id):
+        try:
+            replay = self.server.replays.get(session_id)
+        except ReplayUnavailable as exc:
+            return self._json({"error": str(exc)}, 422)
+        if replay is None:
+            return self._json({"error": "This game is unavailable for a 3D replay."}, 404)
+        return self._json(replay)
 
     def _coach(self, parts, body=None):
         """GET /api/coach/<sid> and POST /api/coach/<sid>/<action>, with deliberate, safe errors."""
