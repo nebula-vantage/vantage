@@ -26,3 +26,15 @@ The earlier combined-ByteTrack results are preserved under `output/ball-diagnost
 and documented in [the original findings](ball-detection-findings.md). Those results
 were captured before the motion-tracker change; the current diagnostic measures the
 new pipeline and will not reproduce the legacy post-ByteTrack stage.
+
+## Two-camera line-calling simulation
+
+```sh
+uv run python pipeline/diagnostics/two_camera_feasibility.py --self-check
+uv run python pipeline/diagnostics/two_camera_feasibility.py --experiments all
+```
+
+A Monte Carlo study, not a video diagnostic: it simulates pickleball bounces near the
+lines and compares today's bounce estimate with one- and two-camera contact fits. Results
+go to `output/two-camera-feasibility/summary.json`; `--tables` reprints them. See
+[two-camera line calling](two-camera-line-calling.md) for the findings.
