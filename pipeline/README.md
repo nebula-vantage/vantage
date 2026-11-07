@@ -227,6 +227,10 @@ accuracy; visual or labeled evaluation is needed to assess false positives.
 See [motion-tracker results and validation](diagnostics/ball-motion-findings.md) for
 the existing recording’s before/after comparison.
 
+See [two-camera line calling](diagnostics/two-camera-line-calling.md) for a simulated
+feasibility study of in/out calls from one versus two synchronized cameras, including
+the current bounce estimate's systematic bias and where a second camera must go.
+
 ## Combined video and statistics
 
 Normal runs produce player IDs, independent ball IDs, a ball trail, cumulative
