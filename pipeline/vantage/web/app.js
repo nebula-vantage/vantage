@@ -112,16 +112,15 @@ const api = globalThis.VantageAPI.request;
 
 function gamePath(id, tab = "overview") {
   const key = id === "demo" ? "sample" : id;
-  return `/games/${encodeURIComponent(key)}${tab === "coaching" ? "/coaching" : ""}`;
+  return `/games/${encodeURIComponent(key)}${tab === "overview" ? "" : `/${tab}`}`;
 }
 
 function readRoute() {
   const path = window.location.pathname.replace(/\/$/, "") || "/";
   if (path === "/" || path === "/games") return { kind: "games" };
-  const match = /^\/games\/(sample|[a-f0-9]{20})(\/coaching)?$/.exec(path);
+  const match = /^\/games\/(sample|[a-f0-9]{20})(?:\/(coaching|replay))?$/.exec(path);
   if (!match) return { kind: "missing" };
-  return { kind: "game", id: match[1] === "sample" ? "demo" : match[1],
-    tab: match[2] ? "coaching" : "overview" };
+  return { kind: "game", id: match[1] === "sample" ? "demo" : match[1], tab: match[2] || "overview" };
 }
 
 async function navigate(path, replace = false) {
@@ -175,6 +174,7 @@ function applyAppLayout() {
   const home = route.kind === "games";
   const ready = route.kind === "game" && state.session?.id === route.id && !state.routeError;
   const coaching = ready && route.tab === "coaching";
+  const replaying = ready && route.tab === "replay";
   $("games-page").hidden = !home;
   $("workspace").hidden = !ready;
   $("game-unavailable").hidden = !state.routeError;
@@ -184,19 +184,22 @@ function applyAppLayout() {
   $("header-upload").hidden = !home;
   $("export-control").hidden = !ready;
   $("export-button").disabled = !state.report || state.reportLoading;
-  $("page-title").textContent = home ? "Games" : state.routeError ? "Game unavailable" : coaching ? "Game coaching" : "Game review";
+  $("page-title").textContent = home ? "Games" : state.routeError ? "Game unavailable"
+    : coaching ? "Game coaching" : replaying ? "3D replay" : "Game review";
   $("page-description").textContent = home
     ? "Your game. A clearer picture. A next step."
     : coaching ? "Review the evidence. Plan your next session."
-      : "Your replay, measurements, and coaching in one place.";
+      : replaying ? "Watch the whole game from any angle, and see how you moved with the play."
+        : "Your replay, measurements, and coaching in one place.";
   $("breadcrumb-name").textContent = ready ? state.session.name : "Game";
-  document.title = home ? "Games · Vantage" : `${ready ? state.session.name : "Game"} · ${coaching ? "Coaching · " : ""}Vantage`;
+  document.title = home ? "Games · Vantage"
+    : `${ready ? state.session.name : "Game"} · ${coaching ? "Coaching · " : replaying ? "3D replay · " : ""}Vantage`;
   $("games-nav").classList.toggle("active", home);
   if (home) $("games-nav").setAttribute("aria-current", "page");
   else $("games-nav").removeAttribute("aria-current");
   if (ready) {
     $("nav-game-name").textContent = state.session.name;
-    for (const tab of ["overview", "coaching"]) {
+    for (const tab of ["overview", "replay", "coaching"]) {
       for (const suffix of ["nav", "tab"]) {
         const link = $(`${tab}-${suffix}`);
         link.href = gamePath(state.session.id, tab);
@@ -206,6 +209,7 @@ function applyAppLayout() {
       }
     }
     $("game-coach-link").href = gamePath(state.session.id, "coaching");
+    $("replay-link").href = gamePath(state.session.id, "replay");
     $("temporary-note").hidden = !state.session.is_temporary;
   }
   document.querySelectorAll("[data-game-panel]").forEach((node) => {
@@ -218,6 +222,14 @@ function applyAppLayout() {
     ? "Building a review from this game's observations."
     : `${state.reportError} Your video and measured overview are still available.`;
   $("coaching-retry").hidden = state.reportLoading;
+  $("workspace").dataset.tab = ready ? route.tab : "";
+  // The replay brings its own synced copy of the recording; the main player waits.
+  if (replaying) $("session-video").pause();
+  globalThis.VantageReplay?.sync({
+    active: replaying,
+    session: ready ? state.session : null,
+    startAt: $("session-video").currentTime || 0,
+  });
 }
 
 function libraryEntries() {

@@ -18,6 +18,9 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
   writes a review, and answers follow-ups. It runs through your local Claude Code or Codex
   sign-in, or an `ANTHROPIC_API_KEY`, and sends those stills and measurements to that
   provider. Start with `uv run vantage-app --open` ([setup, privacy, and scope](pipeline/COACHING.md)).
+  Each saved game also has a **3D replay** you can watch from any angle (original camera,
+  overhead, sideline, or behind you), showing your court position against the play.
+  Positions and ball heights are estimated from the single camera ([how](pipeline/COACHING.md#3d-replay)).
 - **Desktop pipeline:** player and ball tracking, court calibration, estimated shot/rally
   stats, bounce calls, and a landing heatmap from one fixed-camera video.
 - **iPhone app:** runs the detector and ball tracker on-device on imported videos, with

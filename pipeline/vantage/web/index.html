@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/fonts.css" />
     <link rel="stylesheet" href="/app.css" />
     <script src="/api.js" defer></script>
+    <script src="/replay.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -26,6 +27,7 @@
         <p id="nav-game-name" class="nav-game-name"></p>
         <nav class="navigation" aria-label="Current game">
           <a id="overview-nav" class="nav-item" href="/games" data-route>Overview</a>
+          <a id="replay-nav" class="nav-item" href="/games" data-route>3D replay</a>
           <a id="coaching-nav" class="nav-item" href="/games" data-route>Coaching</a>
         </nav>
       </div>
@@ -117,6 +119,7 @@
       <div id="workspace" hidden>
         <nav id="game-tabs" class="game-tabs" aria-label="Game sections">
           <a id="overview-tab" href="/games" data-route>Overview</a>
+          <a id="replay-tab" href="/games" data-route>3D replay</a>
           <a id="coaching-tab" href="/games" data-route>Coaching</a>
         </nav>
         <div class="workspace-grid">
@@ -132,6 +135,70 @@
                   <span id="demo-badge" class="badge badge-muted" hidden
                     >SAMPLE</span
                   >
+                </div>
+              </div>
+            </section>
+            <section id="replay" class="replay-card" data-game-panel="replay" aria-labelledby="replay-title">
+              <div class="perspective-note" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 32 32"><path d="M5 23C3 8 18 4 24 11c5 6-2 14-7 9s1-12 7-9M22 4l3 7 7-1" /></svg>
+                <span>Same game.<br />A whole new angle.</span>
+              </div>
+              <div class="replay-heading">
+                <h2 id="replay-title"><span class="replay-dot" aria-hidden="true"></span>A different point of view</h2>
+                <div class="replay-views" role="group" aria-label="Camera view">
+                  <button type="button" data-replay-view="camera" aria-pressed="false" title="The recording's own viewpoint (1)">Original</button
+                  ><button type="button" data-replay-view="angle" aria-pressed="true" title="Angled view (2)">Angled</button
+                  ><button type="button" data-replay-view="top" aria-pressed="false" title="Overhead view (3)">Overhead</button
+                  ><button type="button" data-replay-view="side" aria-pressed="false" title="Sideline view (4)">Sideline</button
+                  ><button type="button" data-replay-view="you" aria-pressed="false" title="Follow your player (5)" disabled>Behind you</button>
+                </div>
+              </div>
+              <div
+                id="replay-stage"
+                class="replay-stage"
+                tabindex="0"
+                aria-label="3D replay. Drag to orbit, pinch or scroll to zoom, Shift-drag to pan, click a player to pick yourself. Space plays or pauses; arrow keys skip; 1 to 5 change the camera."
+              >
+                <canvas id="replay-canvas" role="img" aria-label="Estimated 3D reconstruction of this game's players and ball"></canvas>
+                <div id="replay-coordinate" class="replay-coordinate" aria-hidden="true"></div>
+                <figure id="replay-inset" class="replay-inset" hidden>
+                  <video id="replay-video" muted playsinline preload="metadata" aria-label="Original recording, synced to the replay"></video>
+                  <figcaption>Original view</figcaption>
+                </figure>
+                <p id="replay-caption" class="replay-caption" hidden><span class="replay-dot" aria-hidden="true"></span><span id="replay-caption-text"></span></p>
+                <p class="replay-hint" aria-hidden="true">Drag to orbit · Pinch, or click then scroll, to zoom · Shift-drag to pan · Click a player to pick yourself</p>
+                <div id="replay-message" class="replay-message" hidden>
+                  <span id="replay-message-ring" class="loading-ring" aria-hidden="true"></span>
+                  <strong id="replay-message-title" role="status"></strong>
+                  <p id="replay-message-copy"></p>
+                </div>
+              </div>
+              <div class="replay-controls">
+                <div class="replay-playback">
+                  <button id="replay-play" class="replay-play" type="button" aria-label="Play replay" aria-pressed="false">
+                    <svg class="icon replay-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z" /></svg>
+                    <svg class="icon replay-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+                  </button>
+                  <div class="replay-scrubber">
+                    <div id="replay-track" class="replay-track" aria-hidden="true"></div>
+                    <label class="sr-only" for="replay-progress">Replay position</label>
+                    <input id="replay-progress" type="range" min="0" max="1000" step="1" value="0" />
+                  </div>
+                  <span class="replay-time"><span id="replay-current">00:00</span> <span>/ <span id="replay-duration">00:00</span></span></span>
+                </div>
+                <div class="replay-options">
+                  <div class="replay-toggles">
+                    <button type="button" class="replay-toggle" data-replay-toggle="ball" aria-pressed="true"><span aria-hidden="true"></span>Ball path</button
+                    ><button type="button" class="replay-toggle" data-replay-toggle="players" aria-pressed="true"><span aria-hidden="true"></span>Players</button
+                    ><button type="button" class="replay-toggle" data-replay-toggle="video" aria-pressed="true" hidden><span aria-hidden="true"></span>Video</button
+                    ><button type="button" class="replay-toggle" data-replay-toggle="footage" aria-pressed="false" hidden><span aria-hidden="true"></span>Line up with footage</button>
+                  </div>
+                  <div class="replay-transport">
+                    <button id="replay-prev" class="replay-small" type="button" aria-label="Previous rally" title="Previous rally ([)">‹ Rally</button
+                    ><button id="replay-speed" class="replay-small" type="button" aria-label="Playback speed 1 times" title="Playback speed">1×</button
+                    ><button id="replay-next" class="replay-small" type="button" aria-label="Next rally" title="Next rally (])">Rally ›</button>
+                  </div>
+                  <span id="replay-label" class="replay-label">Estimated reconstruction</span>
                 </div>
               </div>
             </section>
@@ -460,12 +527,37 @@
             </section>
           </div>
           <aside class="coach-column" aria-label="Game guidance">
+            <section id="replay-you" class="surface replay-you" data-game-panel="replay" aria-labelledby="replay-you-title">
+              <span class="small-label"><span class="status-dot" aria-hidden="true"></span> YOU ON COURT</span>
+              <h2 id="replay-you-title">Which player are you?</h2>
+              <p id="replay-you-copy" class="replay-you-copy"></p>
+              <div id="replay-players" class="replay-players" role="group" aria-label="Choose your court position"></div>
+              <p id="replay-players-empty" class="replay-you-copy" hidden>No players were tracked on this court.</p>
+              <dl id="replay-live" class="replay-live" aria-label="Your position right now" hidden></dl>
+              <div id="replay-summary" class="replay-summary" hidden>
+                <h3>Across this game</h3>
+                <div id="replay-zone-bar" class="replay-zone-bar" role="img" aria-label="Share of tracked time in each court zone"></div>
+                <ul id="replay-zone-legend" class="replay-zone-legend"></ul>
+                <dl id="replay-totals" class="replay-totals"></dl>
+              </div>
+            </section>
+            <section class="surface replay-about" data-game-panel="replay" aria-labelledby="replay-about-title">
+              <h2 id="replay-about-title">How this replay is built</h2>
+              <p>Your four court corners also pin down where the camera stood, so the game can be redrawn from any angle. Players stand where their feet meet the court. The ball's height comes from fitting gravity to its flight in the video.</p>
+              <ul id="replay-about-list"></ul>
+            </section>
             <section class="game-coach-card surface" data-game-panel="overview">
               <span class="small-label"><span class="status-dot" aria-hidden="true"></span> YOUR NEXT STEP</span>
               <h2 id="game-coach-title">Make this game count.</h2>
               <p id="game-coach-copy">Review the moments behind the numbers and take a focused plan into your next session.</p>
               <a id="game-coach-link" class="button button-primary button-wide" href="/games" data-route>Open game coaching <span aria-hidden="true">→</span></a>
               <span class="coaching-context">Built from this game's analysis.</span>
+            </section>
+            <section class="replay-teaser" data-game-panel="overview">
+              <span class="small-label"><span class="status-dot" aria-hidden="true"></span> NEW · 3D REPLAY</span>
+              <h2>Same game. A whole new angle.</h2>
+              <p>Replay the match from above, the sideline, or behind yourself, and see where you stood against the play.</p>
+              <a id="replay-link" class="button button-secondary button-wide" href="/games" data-route>Open 3D replay <span aria-hidden="true">→</span></a>
             </section>
             <section id="coach-card" class="coach-card" data-game-panel="coaching" data-needs-report>
               <header class="coach-header">

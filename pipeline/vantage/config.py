@@ -98,6 +98,50 @@ CONFIG = {
         "pixels_per_m": 60,  # Same scale on both axes; preserves court proportions.
         "kitchen_depth_m": 2.1336,  # Seven feet on each side of the net.
     },
+    "replay": {
+        "sample_rate_hz": 30.0,  # Player positions sent to the 3-D replay; the ball is analytic.
+        "gravity_m_s2": 9.81,
+        "net_post_height_m": 0.914,  # 36 in at the posts.
+        "net_center_height_m": 0.864,  # 34 in at the centre.
+        "focal_range_widths": (0.3, 4.0),  # Plausible focal lengths, in image widths.
+        "default_focal_widths": 0.75,  # Typical phone main lens when the court can't tell.
+        "min_perspective_ratio": 1.15,  # Far/near court depth needed to estimate the lens.
+        "min_camera_height_m": 0.2,  # A camera at or below the court plane is a bad calibration.
+        "player_side_margin_m": 1.5,  # People this far past a sideline can still be players.
+        "player_end_margin_m": 2.5,  # ...and this far behind a baseline.
+        "players_per_side": 2,  # Doubles; singles leaves one slot per side unused.
+        "player_continuity_bonus_m": 1.0,  # Prefer the detection a slot already follows.
+        "player_max_speed_m_s": 9.0,  # Reject slot jumps faster than a sprint.
+        "player_jump_slack_m": 0.75,  # Box jitter allowance on top of the speed limit.
+        "player_reacquire_s": 2.0,  # After this loss, a slot may pick up anyone on its side.
+        "player_min_fragment_s": 0.3,  # Drop shorter flickers of a slot.
+        "player_gap_fill_s": 0.5,  # Interpolate slot positions across shorter gaps.
+        "player_foot_jitter_heights": 0.03,  # Box-bottom jitter as a fraction of box height.
+        "player_accel_m_s2": 6.0,  # Smoother's typical player acceleration.
+        "player_gate_sigmas": 3.5,  # Ignore foot positions this far from the smoothed path...
+        "player_gate_reset_s": 0.2,  # ...unless they persist this long.
+        "player_min_coverage": 0.15,  # Hide slots seen for less of the video.
+        "player_height_range_m": (1.4, 2.1),  # Clamp heights estimated from box tops.
+        "ball_max_gap_s": 0.20,  # Longer ball losses end a flight arc.
+        "ball_min_observations": 3,  # Smallest arc worth fitting.
+        "ball_fit_min_observations": 6,  # Fewer observations make an arc approximate...
+        "ball_fit_min_span_s": 0.15,  # ...as does a shorter arc.
+        "ball_pixel_sigma_diagonals": 0.0015,  # Expected detection jitter.
+        "ball_point_tolerance_diagonals": 0.0035,  # Residual that marks a point as off the arc.
+        "ball_fitted_rms_diagonals": 0.002,  # A trusted arc's RMS residual stays below this.
+        "ball_break_run_s": 0.05,  # Consecutive off-arc points for this long end the arc.
+        "ball_height_prior_m": 1.0,  # Typical rally height, used as a weak prior.
+        "ball_height_prior_sigma_m": 1.5,  # Weak: long arcs are fixed by gravity, not the prior.
+        "ball_fallback_sigma_m": 0.35,  # Strong prior for arcs gravity alone can't place.
+        "bounce_anchor_sigma_m": 0.25,  # Bounce candidates pin nearby arc ends to the court.
+        "bounce_anchor_reach_s": 0.3,  # ...including across this much unobserved flight.
+        "ball_ground_tolerance_m": 0.25,  # Allow fit noise slightly below the court.
+        "ball_max_height_m": 8.0,  # Reject arcs above any plausible lob.
+        "ball_max_speed_m_s": 40.0,  # Reject arcs faster than any plausible drive.
+        "ball_estimated_max_speed_m_s": 25.0,  # Stricter for approximate and bridged flight.
+        "ball_court_margin_m": 4.0,  # Reject arcs this far outside the court.
+        "bridge_max_gap_s": 0.8,  # Join arcs across shorter gaps with ballistic flight.
+    },
     "visual": {
         "trail_length": 15,  # Last positions in a continuous trajectory.
         "codec": "mp4v",  # Widely supported OpenCV MP4 encoder.

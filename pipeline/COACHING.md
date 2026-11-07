@@ -24,7 +24,8 @@ Node installation, or frontend build is needed for the local coaching review. Th
 video coach additionally needs Claude Code, Codex, or an Anthropic API key (see below).
 The previous `vantage-coach` command remains an alias for this same app.
 
-Saved games have direct links at `/games/:id` and `/games/:id/coaching`. Reloading,
+Saved games have direct links at `/games/:id`, `/games/:id/replay`, and
+`/games/:id/coaching`. Reloading,
 browser Back/Forward, and returning to Games preserve the selected route. The
 library lists completed analyses from `--runs-dir`, with duration, tracking
 coverage, and thumbnails when available. Its date is the analysis file's timestamp,
@@ -101,6 +102,8 @@ statistics does not analyze a raw video.
 - A local evidence assistant and optional generative AI follow-up questions.
 - An AI video coach for saved games with video: a written review grounded in key-moment
   stills, and a chat that can look at the moment you paused on.
+- A [3D replay](#3d-replay) of the whole game that you can watch from any angle, with
+  your own court position measured against the play.
 - A downloadable report/plan for taking the review to the next practice. When an AI
   coach review exists, the export includes it.
 
@@ -116,6 +119,55 @@ The desktop interface follows the mobile mockups and `Theme.swift`: cool gray
 surfaces, white cards, black actions, a dark video panel, and restrained orange
 and teal indicators. Bricolage Grotesque, IBM Plex Sans, and IBM Plex Mono are
 bundled locally, with their licenses in `vantage/web/fonts/`. No font CDN is needed.
+
+## 3D replay
+
+Each saved game's **3D replay** tab redraws the match on an illustrated court that you can
+orbit, zoom, and pan, in the style of the landing page's replay card. Play it through or
+scrub the timeline, which marks rallies (or, without rallies, stretches of tracked ball
+flight) and bounce candidates. Camera buttons switch between:
+
+- **Original**: the recording's own viewpoint. With **Line up with footage**, the video
+  plays underneath the reconstruction so you can check how well they agree.
+- **Angled**, **Overhead**, and **Sideline**: the sideline view shows how high the ball flew
+  over the net.
+- **Behind you**: follows your court position from behind, looking across the net.
+
+Pick your court position (Near left, Near right, Far left, Far right), or click yourself in
+the replay. The replay then draws your recent movement, your distance to your kitchen line,
+and your spacing from your partner. The side panel shows, for the current moment, your court
+zone, your distance to the kitchen line, partner spacing, how far away and how high the ball
+is, and your speed. For the whole game it shows the share of time you spent at the kitchen
+line, in the transition zone, and at the baseline, plus distance covered and average partner
+spacing. Your choice is remembered per game in this browser. A synced inset of the original
+video plays alongside; click it to hide it.
+
+Keyboard, while focus is anywhere in the replay or its side panel: Space plays or pauses,
+←/→ skip 2 s (Shift for 1/30 s), `[`/`]` jump between rallies, 1–5 switch cameras, and +/−
+zoom. Scrolling only zooms after you click the replay, so the page still scrolls past it.
+
+How it is built (`vantage/replay.py`): the four calibration corners fix the court plane and,
+assuming square pixels and a centred lens, the camera's focal length and pose. If the court
+doesn't recede enough to tell, a typical phone lens is assumed and the replay says so.
+Players stand where their box bottoms meet the court. Up to two court slots per side follow
+them across tracker ID changes, and a smoother weights each position by how many metres a
+pixel covers there. The ball is airborne, so its height comes from fitting gravity-only
+flight arcs to consecutive observations. A bounce candidate at an arc's end, or across a
+short gap, pins that arc to the court. Short arcs lean on an assumed 1 m rally height and
+are drawn fainter with shorter dashes, as are brief gaps bridged with estimated flight.
+
+Every position is an estimate from one camera, not a measurement. Ball flying straight at
+the camera is the hardest case: its height is least certain there. Court slots are not
+identities, so partners who cross over can swap labels. The sample game's replay is
+generated play that follows its rallies, labelled synthetic. Imported analyses have no
+tracking data, so they have no replay. The replay is computed when you first open it
+(about 0.1 s for a 30 s clip) and is cached while its run files are unchanged; nothing is
+written to the run folder.
+
+For automation and recorded demos, `replay.js` exposes `VantageReplay`: `seek`, `play`, `speed`,
+`view`, `choose`, `toggle`, `camera`/`preset` (orbit cameras in degrees and metres), and
+`capture(true)` with `step(dt)`, which stops the animation loop so time, camera moves, and the
+synced video advance one exact frame at a time.
 
 ## AI video coach
 
@@ -340,10 +392,11 @@ the video. The demo is synthetic and must never be mistaken for an analyzed matc
 | `vantage/coaching_jobs.py` | Local video uploads, preparation, calibrated pipeline jobs, and cancellation |
 | `vantage/coaching_server.py` | Shared app routes, game library, local HTTP API, and range-aware video serving |
 | `vantage/coaching_video.py` | Temporary H.264 playback copies of annotated videos |
+| `vantage/replay.py` | 3D replay: camera pose from the calibration, court-slot player tracks, gravity-fitted ball flight, and the synthetic sample replay |
 | `vantage/coach_evidence.py` | AI coach evidence: on-court player positions from `tracks.jsonl`, key-moment selection, and court-cropped stills in `.coach/` (deterministic, no AI) |
 | `vantage/coach_engines.py` | Runs one request (text, JPEG stills, strict JSON schema) through the `claude` CLI, the `codex` CLI, or the Anthropic API, with cancel, timeouts, and safe error messages |
 | `vantage/video_coach.py` | AI coach prompts and answer schemas, sanitising answers, the background review worker and saved reviews, and chat |
-| `vantage/web/` | Games, Overview, and Coaching views in one browser app; no framework or build step |
+| `vantage/web/` | Games, Overview, 3D replay, and Coaching views in one browser app; no framework or build step. `replay.js` draws the replay with Canvas 2D |
 
 The pure Python engine depends only on the standard library. It accepts desktop
 statistics schemas 1 and 2 and produces coaching schema 1. Validation drops local
@@ -367,6 +420,8 @@ consumes this contract rather than embedding coaching logic in its components.
 | `GET /api/sessions` | Completed games with summary metadata and optional thumbnail URLs; unreadable-run notices |
 | `GET /api/sessions/:id` | One run's validated statistics and optional media URLs |
 | `GET /api/demo` | Explicitly synthetic sample |
+| `GET /api/sessions/:id/replay` | A saved game's 3D replay: court, recorded camera, player samples, ball flight pieces (`p0`, `v0`, and quality per time span), events, and warnings. 422 explains what is missing (no tracking, bad calibration) |
+| `GET /api/demo/replay` | Synthetic 3D replay for the sample game |
 | `POST /api/session` | Validate `{stats, name}` for a browser import |
 | `POST /api/report` | Build a report from `{stats, focus}` |
 | `POST /api/chat` | Answer `{stats, focus, message, history, use_ai}` |
@@ -402,6 +457,7 @@ personal performance claims can be made.
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_coaching*.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_coach_*.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_video_coach.py' -v
+uv run --locked python -m unittest discover -s pipeline/tests -p 'test_replay.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests
 ```
 
@@ -413,4 +469,6 @@ isolation. AI coach tests build a small synthetic run (video, calibration, track
 cover position zones, moment selection, stills, cache invalidation, engine command
 lines and error mapping, cancellation and timeouts, answer sanitising, the review
 worker, chat frames, and the HTTP routes. They use fake CLIs and fake clients: no test
-runs `claude` or `codex`, calls a provider, or spends API credits.
+runs `claude` or `codex`, calls a provider, or spends API credits. Replay tests view
+synthetic games through a known camera and check that the camera, ball flight heights,
+bounce bridges, and player slots come back within tolerance.

@@ -11,7 +11,9 @@ from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from replay_fixtures import doubles, write_run
 from vantage.coaching_server import WEB_ROOT, CoachingServer
+from vantage.replay import build_replay
 
 
 class AppIntegrationTests(unittest.TestCase):
@@ -71,8 +73,10 @@ class AppIntegrationTests(unittest.TestCase):
             "/games",
             f"/games/{self.sid}",
             f"/games/{self.sid}/coaching",
+            f"/games/{self.sid}/replay",
             "/games/sample",
             "/games/sample/coaching",
+            "/games/sample/replay",
         )
         for route in routes:
             with self.subTest(route=route):
@@ -93,6 +97,7 @@ class AppIntegrationTests(unittest.TestCase):
             "/games/" + "a" * 21,
             "/games/" + "A" * 20,
             f"/games/{self.sid}/private",
+            f"/games/{self.sid}/replay/extra",
             "/games/sample/source.mp4",
             "/games/../../pyproject.toml",
             "/games/%2e%2e/pyproject.toml",
@@ -100,6 +105,39 @@ class AppIntegrationTests(unittest.TestCase):
             with self.subTest(route=route):
                 self.assertEqual(self.request("GET", route)[0], 404)
                 self.assertEqual(self.request("HEAD", route)[0], 404)
+
+    def test_replay_is_built_from_saved_tracking_once_and_rebuilt_when_it_changes(self):
+        write_run(self.run, fps=30.0, frames=30, players=doubles)
+        with patch("vantage.coaching_server.build_replay", wraps=build_replay) as built:
+            status, replay, _ = self.request("GET", f"/api/sessions/{self.sid}/replay")
+            self.assertEqual(status, 200)
+            self.assertEqual(replay["measurement_type"], "estimated_3d_reconstruction")
+            self.assertEqual(len(replay["players"]), 4)
+            self.assertFalse(replay["synthetic"])
+            self.assertEqual(self.request("GET", f"/api/sessions/{self.sid}/replay")[1], replay)
+            self.assertEqual(built.call_count, 1)
+            tracks = self.run / "tracks.jsonl"
+            tracks.write_text(tracks.read_text() + "\n")
+            self.assertEqual(self.request("GET", f"/api/sessions/{self.sid}/replay")[0], 200)
+            self.assertEqual(built.call_count, 2)
+
+    def test_replay_without_tracking_explains_what_is_missing(self):
+        status, body, _ = self.request("GET", f"/api/sessions/{self.sid}/replay")
+        self.assertEqual(status, 422)
+        self.assertIn("Analyze its video again", body["error"])
+        self.assertNotIn(str(self.root), body["error"])
+        status, body, _ = self.request("GET", f"/api/sessions/{'0' * 20}/replay")
+        self.assertEqual(status, 404)
+
+    def test_sample_game_has_a_synthetic_replay_and_the_renderer_is_served(self):
+        status, replay, _ = self.request("GET", "/api/demo/replay")
+        self.assertEqual(status, 200)
+        self.assertTrue(replay["synthetic"])
+        self.assertEqual(len(replay["players"]), 4)
+        status, script, headers = self.request("GET", "/replay.js")
+        self.assertEqual(status, 200)
+        self.assertIn("text/javascript", headers["Content-Type"])
+        self.assertIn(b"VantageReplay", script)
 
     def test_game_summary_shares_saved_measurements_and_analysis_time(self):
         analyzed_at = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
