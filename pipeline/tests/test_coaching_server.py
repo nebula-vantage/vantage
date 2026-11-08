@@ -8,6 +8,7 @@ from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import patch
 
+from helpers import sign_in
 from vantage.coaching_server import MAX_BODY, WEB_ROOT, CoachingServer, decode_json
 
 
@@ -23,6 +24,7 @@ class CoachingServerTests(unittest.TestCase):
         (self.run / "stats.json").write_text(json.dumps(self.stats))
         (self.run / "annotated.mp4").write_bytes(b"0123456789")
         self.server = CoachingServer(("127.0.0.1", 0), self.runs)
+        self.cookie = sign_in(self.server)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.addCleanup(self.stop_server)
@@ -35,7 +37,7 @@ class CoachingServerTests(unittest.TestCase):
     def request(self, method, path, body=None, headers=None):
         conn = HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
         self.addCleanup(conn.close)
-        headers = dict(headers or {})
+        headers = {"Cookie": self.cookie, **(headers or {})}
         if body is not None and not isinstance(body, bytes):
             body = json.dumps(body).encode()
             headers.setdefault("Content-Type", "application/json")

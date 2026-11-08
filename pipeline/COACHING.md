@@ -6,8 +6,9 @@ moments, a practice plan, and questions about the evidence. Saved games with vid
 also get an [AI video coach](#ai-video-coach) that looks at still frames from the
 game and answers follow-up questions. Both tabs share the
 same selected game and video; switching tabs keeps the playback position and
-coaching conversation. The app runs on a local Python server. The iPhone app and
-public marketing site remain separate; this release does not add account syncing.
+coaching conversation. The app runs on a local Python server and you sign in with a
+local account. Its screens, words and sign-in flow match the iPhone app's
+([shared spec](../docs/app-experience.md)); accounts and games aren't synced between them yet.
 
 ## Run it
 
@@ -18,8 +19,10 @@ uv sync --locked
 uv run vantage-app --open
 ```
 
-Open <http://127.0.0.1:8765/games> if you omit `--open`. A new library starts with an
-empty state; **Explore sample game** explicitly opens the synthetic sample. No API key,
+Open <http://127.0.0.1:8765/games> if you omit `--open`. The first visit asks you to
+create an account (see [Your account](#your-account)); after that you sign in. A new
+library starts with an empty state; **Sample game** (next to the game count) or **Explore
+the sample game** explicitly opens the synthetic sample. No API key,
 Node installation, or frontend build is needed for the local coaching review. The AI
 video coach additionally needs Claude Code, Codex, or an Anthropic API key (see below).
 The previous `vantage-coach` command remains an alias for this same app.
@@ -80,12 +83,32 @@ and removed when the server closes. Original analysis files remain unchanged. Us
 to run another workspace on a different port. `python -m vantage.coaching_server`
 is equivalent to the installed entry point.
 
-You can also import a desktop `stats.json` from Games and attach its matching
+You can also import a desktop `stats.json` from Games (**Import analysis**) and attach its matching
 video. Imported games are labeled as temporary and last only for the current tab;
 reload requires importing them again. The video stays in the browser. Use the analyzed, constant-frame-rate video
 so review timestamps align. Browser-attached video must use a supported codec
 (H.264 MP4 is recommended); only server-opened runs receive the playback conversion. Importing
 statistics does not analyze a raw video.
+
+## Your account
+
+Each library (each `--runs-dir`) has one owner account: name, email and password. The
+first visit shows **Create account**; later visits show **Sign in** with your email filled
+in. You stay signed in on that browser for 30 days. Open **Account** from your name at the
+bottom of the sidebar (your initials on a phone) to change your name, email or password,
+or to sign out. Changing the password signs out every other browser.
+
+- The account is stored in `<runs-dir>/.vantage/account.json` (owner-only permissions),
+  with the password hashed by scrypt. Sessions are random tokens; only their SHA-256 is
+  stored, and the browser keeps the token in an HttpOnly, SameSite=Strict cookie.
+- Every game, video, replay and coaching request needs a signed-in session. Only the page
+  itself and the account endpoints work signed out.
+- Five wrong passwords within five minutes lock sign-in for a minute. Wrong current passwords
+  on the Account page count too.
+- The runs directory must be writable, because the account lives inside it.
+- **Forgot password:** stop Vantage, run `uv run vantage-app --reset-account` (add the same
+  `--runs-dir` you normally use), and start it again to create a new account. Your games
+  stay in the library.
 
 ## What is included
 
@@ -390,13 +413,14 @@ the video. The demo is synthetic and must never be mistaken for an analyzed matc
 | `vantage/coaching.py` | Validate pipeline stats, select evidence, build a versioned report, answer local questions |
 | `vantage/coaching_ai.py` | Optional OpenAI text-chat adapter with bounded context and explicit fallback |
 | `vantage/coaching_jobs.py` | Local video uploads, preparation, calibrated pipeline jobs, and cancellation |
-| `vantage/coaching_server.py` | Shared app routes, game library, local HTTP API, and range-aware video serving |
+| `vantage/accounts.py` | The library's local account: validation, scrypt password hashes, sessions, and the sign-in lockout |
+| `vantage/coaching_server.py` | Shared app routes, the sign-in gate, game library, local HTTP API, and range-aware video serving |
 | `vantage/coaching_video.py` | Temporary H.264 playback copies of annotated videos |
 | `vantage/replay.py` | 3D replay: camera pose from the calibration, court-slot player tracks, gravity-fitted ball flight, and the synthetic sample replay |
 | `vantage/coach_evidence.py` | AI coach evidence: on-court player positions from `tracks.jsonl`, key-moment selection, and court-cropped stills in `.coach/` (deterministic, no AI) |
 | `vantage/coach_engines.py` | Runs one request (text, JPEG stills, strict JSON schema) through the `claude` CLI, the `codex` CLI, or the Anthropic API, with cancel, timeouts, and safe error messages |
 | `vantage/video_coach.py` | AI coach prompts and answer schemas, sanitising answers, the background review worker and saved reviews, and chat |
-| `vantage/web/` | Games, Overview, 3D replay, and Coaching views in one browser app; no framework or build step. `replay.js` draws the replay with Canvas 2D |
+| `vantage/web/` | Sign-in, Games, Overview, 3D replay, Coaching, and Account views in one browser app; no framework or build step. `replay.js` draws the replay with Canvas 2D |
 
 The pure Python engine depends only on the standard library. It accepts desktop
 statistics schemas 1 and 2 and produces coaching schema 1. Validation drops local
@@ -411,6 +435,12 @@ consumes this contract rather than embedding coaching logic in its components.
 
 | API | Purpose |
 | --- | --- |
+| `GET /api/account` | Works signed out: `{has_account, account, email, first_name}`. `account` is set only when signed in |
+| `POST /api/account/create` | Create the library's account from `{name, email, password}` and sign in (sets the session cookie). 409 if one exists |
+| `POST /api/account/sign-in` | `{email, password}`; 401 for a mismatch, 429 while locked |
+| `POST /api/account/sign-out` | End this browser's session |
+| `POST /api/account/profile` | Change `{name, email}`; 401 `{"code": "signed_out"}` without a session |
+| `POST /api/account/password` | Change `{current_password, new_password}`; signs out other browsers. A wrong current password counts toward the lockout (429 while locked) |
 | `GET /api/config` | Video-analysis availability and upload limits; OpenAI chat availability; `coach`: each AI coach engine's availability, model, and the default engine. Never credentials |
 | `POST /api/analysis?name=clip.mp4` | Upload raw video bytes as `application/octet-stream` and prepare a job |
 | `GET /api/analysis/:id` | Poll preparation, calibration, processing, completion, or failure |
@@ -431,17 +461,22 @@ consumes this contract rather than embedding coaching logic in its components.
 | `POST /api/coach/:id/chat` | Ask the AI coach `{message, history?, engine?, at_s?, player?}`; waits for the answer (up to 3 minutes) and returns `{answer, moment_ids, time_s, follow_ups, frames, engine, engine_label, model}` |
 | `GET /media/:id/coach/:name` | A coach still (`m01.jpg`, `t-000652.jpg`) from the game's `.coach/frames/` folder |
 
+Every route except `/api/account*` answers 401 with `{"code": "signed_out"}` without a
+valid session; the browser then returns to Sign in and comes back to the same page.
+Account form errors include `field` (`name`, `email`, `password`, `current_password`,
+`new_password`) so the message shows under that field.
+
 AI coach routes answer 404 for games without a saved run on this server (including the
 sample and imports), 400 for invalid input, 422 when the game's video or measurements
 can't be used, and 503 when no engine is available or the engine fails, with a short
 message that says what to do.
 
-This is a **local desktop service**, bound to `127.0.0.1`, with same-origin checks,
-bounded uploads, and an allowlist of files. Uploads and preparation files live
+This is a **local desktop service**, bound to `127.0.0.1`, with a local sign-in,
+same-origin checks, bounded uploads, and an allowlist of files. Uploads and preparation files live
 under the selected runs directory's `.uploads/` folder; completed analyses have
 their own run folders. It is not a multi-user hosted deployment. Do not expose
-it publicly through a proxy. A hosted/mobile rollout needs authentication,
-per-user storage, quotas, and a deployed API. Mobile can reuse the report contract
+it publicly through a proxy. A hosted/mobile rollout needs hosted accounts,
+per-user storage, quotas, and a deployed API; the sign-in screens stay the same. Mobile can reuse the report contract
 and drill/evidence rules; it must keep provider credentials on that server. The AI
 video coach's CLI engines rely on sign-ins on this computer, so a hosted version would
 use the API engine instead. No Swift code or detector changes are included in this release.
@@ -455,6 +490,8 @@ personal performance claims can be made.
 
 ```sh
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_coaching*.py' -v
+uv run --locked python -m unittest discover -s pipeline/tests -p 'test_accounts.py' -v
+uv run --locked python -m unittest discover -s pipeline/tests -p 'test_design_parity.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_coach_*.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_video_coach.py' -v
 uv run --locked python -m unittest discover -s pipeline/tests -p 'test_replay.py' -v

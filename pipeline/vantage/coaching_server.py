@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+from vantage.accounts import SESSION_SECONDS, SIGNED_OUT_ERROR, AccountError, AccountStore
 from vantage.coach_engines import EngineError
 from vantage.coach_evidence import EvidenceError
 from vantage.coaching import build_report, validate_stats
@@ -28,7 +29,11 @@ from vantage.video_coach import CoachService, SessionUnavailable
 
 WEB_ROOT = Path(__file__).with_name("web")
 MAX_BODY = 2 * 1024 * 1024
-APP_ROUTE = re.compile(r"/games(?:/(?:[0-9a-f]{20}|sample)(?:/coaching|/replay)?)?/?")
+# Pages the browser app draws itself; each serves index.html.
+APP_ROUTE = re.compile(
+    r"(?:/games(?:/(?:[0-9a-f]{20}|sample)(?:/coaching|/replay)?)?|/sign-in|/create-account|/account)/?"
+)
+ACCOUNT_ACTIONS = ("create", "sign-in", "sign-out", "profile", "password")
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.css": ("app.css", "text/css; charset=utf-8"),
@@ -204,6 +209,7 @@ class CoachingServer(ThreadingHTTPServer):
     def __init__(self, address, runs_dir: Path):
         self._resources = ExitStack()
         self.library = SessionLibrary(runs_dir)
+        self.accounts = AccountStore(self.library.root)
         self.replays = ReplayCache(self.library)
         try:
             super().__init__(address, CoachingHandler)
@@ -263,11 +269,13 @@ class CoachingHandler(BaseHTTPRequestHandler):
             return False
         return True
 
-    def _json(self, body, status=200):
+    def _json(self, body, status=200, headers=None):
         data = json.dumps(body, allow_nan=False).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(data)
@@ -319,6 +327,35 @@ class CoachingHandler(BaseHTTPRequestHandler):
                 self.wfile.write(chunk)
                 remaining -= len(chunk)
 
+    def _cookie_name(self):
+        # Browsers share cookies across ports, so each server's session has its own name.
+        return f"vantage_session_{self.server.server_port}"
+
+    def _token(self):
+        # Split by hand: other apps on localhost can set cookies that SimpleCookie rejects,
+        # and it then drops every cookie after them, including this one.
+        for part in self.headers.get("Cookie", "").split(";"):
+            name, _, value = part.strip().partition("=")
+            if name == self._cookie_name():
+                return value or None
+        return None
+
+    def _session_cookie(self, token):
+        return (
+            f"{self._cookie_name()}={token or ''}; Path=/; HttpOnly; SameSite=Strict; "
+            f"Max-Age={SESSION_SECONDS if token else 0}"
+        )
+
+    def _signed_in(self):
+        """Games, media and coaching need a signed-in session; otherwise answer 401."""
+        try:
+            if self.server.accounts.account_for(self._token()):
+                return True
+            self._json({"error": SIGNED_OUT_ERROR, "code": "signed_out"}, 401)
+        except AccountError as exc:
+            self._json({"error": str(exc)}, exc.status)
+        return False
+
     def do_HEAD(self):
         self.do_GET()
 
@@ -332,6 +369,10 @@ class CoachingHandler(BaseHTTPRequestHandler):
                 return self._file(WEB_ROOT / filename, content_type)
             if APP_ROUTE.fullmatch(path):
                 return self._file(WEB_ROOT / "index.html", "text/html; charset=utf-8")
+            if path == "/api/account":
+                return self._json(self.server.accounts.status(self._token()))
+            if path.startswith(("/api/", "/media/")) and not self._signed_in():
+                return
             if path == "/api/config":
                 return self._json(
                     {
@@ -362,7 +403,7 @@ class CoachingHandler(BaseHTTPRequestHandler):
                 return self._json(
                     {
                         "id": "demo",
-                        "name": "Demo session",
+                        "name": "Sample game",
                         "is_demo": True,
                         "stats": stats,
                         "video_url": None,
@@ -399,6 +440,8 @@ class CoachingHandler(BaseHTTPRequestHandler):
             self._json({"error": "This session or file is unavailable."}, 404)
         except (BrokenPipeError, ConnectionResetError):
             pass
+        except AccountError as exc:
+            self._json({"error": str(exc)}, exc.status)
         except (OSError, ValueError):
             self._json({"error": "Unable to load this session. Check its stats.json export."}, 400)
         except RuntimeError:
@@ -411,6 +454,10 @@ class CoachingHandler(BaseHTTPRequestHandler):
         if not self._local_request():
             return
         path = urlsplit(self.path).path
+        if path.startswith("/api/account/"):
+            return self._account_action(path.removeprefix("/api/account/"))
+        if not self._signed_in():
+            return
         if path == "/api/analysis":
             return self._upload_video()
         parts = path.split("/")
@@ -492,6 +539,59 @@ class CoachingHandler(BaseHTTPRequestHandler):
         except Exception:
             # Keep imported data, local paths and provider credentials out of errors.
             self._json({"error": "Coaching is temporarily unavailable. Please try again."}, 500)
+
+    def _account_action(self, action):
+        """POST /api/account/<action>: create, sign in, sign out, edit profile, change password."""
+        if action not in ACCOUNT_ACTIONS:
+            return self._json({"error": "Unknown endpoint."}, 404)
+        if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
+            return self._json({"error": "Send application/json."}, 415)
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= MAX_BODY:
+                return self._json({"error": "Request must be between 1 byte and 2 MB."}, 413)
+            body = decode_json(self.rfile.read(length))
+            if not isinstance(body, dict):
+                raise ValueError("Request must be a JSON object.")
+            accounts, token = self.server.accounts, self._token()
+            if action == "sign-out":
+                accounts.sign_out(token)
+                return self._json(
+                    {"signed_out": True}, headers={"Set-Cookie": self._session_cookie(None)}
+                )
+            if action == "profile":
+                account = accounts.update_profile(token, body.get("name"), body.get("email"))
+                return self._json({"account": account})
+            if action == "password":
+                account = accounts.change_password(
+                    token, body.get("current_password"), body.get("new_password")
+                )
+                return self._json({"account": account})
+            if action == "create":
+                account, token = accounts.create(
+                    body.get("name"), body.get("email"), body.get("password")
+                )
+            else:
+                account, token = accounts.sign_in(body.get("email"), body.get("password"))
+            return self._json(
+                {"account": account},
+                201 if action == "create" else 200,
+                headers={"Set-Cookie": self._session_cookie(token)},
+            )
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except AccountError as exc:
+            error = {"error": str(exc)}
+            if exc.field:
+                error["field"] = exc.field
+            if exc.code:
+                error["code"] = exc.code
+            self._json(error, exc.status)
+        except (ValueError, RecursionError):
+            self._json({"error": "Send a valid JSON object."}, 400)
+        except Exception:
+            # Keep passwords, emails and local paths out of errors.
+            self._json({"error": "Your account is temporarily unavailable. Please try again."}, 500)
 
     def _replay(self, session_id):
         try:
@@ -589,9 +689,32 @@ def main(argv=None):
     )
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--open", action="store_true", help="Open Vantage in your default browser.")
+    parser.add_argument(
+        "--reset-account",
+        action="store_true",
+        help="Remove this library's account so you can create a new one, then exit. "
+        "Games are kept.",
+    )
     args = parser.parse_args(argv)
     if not 0 <= args.port <= 65535:
         parser.error("--port must be between 0 and 65535")
+    if args.reset_account:
+        store = AccountStore(args.runs_dir.resolve())
+        existed = store.path.exists()
+        email = store.reset()
+        if email:
+            print(
+                f"Removed the account for {email}. Your games are unchanged. Start Vantage to "
+                "create a new account."
+            )
+        elif existed:
+            print(
+                "Removed an unreadable account file. Your games are unchanged. Start Vantage to "
+                "create a new account."
+            )
+        else:
+            print(f"{args.runs_dir.resolve()} has no account. Start Vantage to create one.")
+        return 0
     try:
         server = CoachingServer(("127.0.0.1", args.port), args.runs_dir)
     except OSError as exc:
@@ -599,7 +722,8 @@ def main(argv=None):
         return 1
     url = f"http://127.0.0.1:{server.server_port}/games"
     print(
-        f"Vantage: {url}\nReading completed games from {args.runs_dir.resolve()}\nPress Ctrl+C to stop.",
+        f"Vantage: {url}\nReading completed games from {args.runs_dir.resolve()}\n"
+        "Sign in, or create your account, in the browser. Press Ctrl+C to stop.",
         flush=True,
     )
     try:

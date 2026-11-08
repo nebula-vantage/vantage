@@ -12,6 +12,9 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 
 ## Current status
 
+- **One app experience:** the web app and the iPhone app share the same sign-in flow, screens,
+  words, and design tokens ([docs/app-experience.md](docs/app-experience.md)). Each keeps a
+  local account and its games on that computer or iPhone; nothing is synced between them yet.
 - **Desktop/web app:** a Games library with video upload and analysis, annotated playback,
   and a Coaching tab inside each game for reviews, practice plans, and questions. Saved games
   also get an AI video coach that studies still frames of key moments plus the measurements,
@@ -38,6 +41,7 @@ Player and ball tracking with the stats overlay (about 20 seconds), from the
 | `ml/` | Ball labeling, accuracy evaluation, dataset building, detector fine-tuning | [ml/README.md](ml/README.md) |
 | `ios/` | iPhone app (SwiftUI) and `VantageKit`, the on-device analysis package | [ios/README.md](ios/README.md) |
 | `site/` | Public landing page with links to the early access signup form | [site/README.md](site/README.md) |
+| `docs/` | The shared web and iPhone experience: structure, sign-in flow, copy, tokens | [docs/app-experience.md](docs/app-experience.md) |
 | `tools/coreml/` | Core ML export of trained models and PyTorch vs Core ML parity checks | [tools/coreml/README.md](tools/coreml/README.md) |
 | `scripts/` | `test.sh` runs every test suite | |
 | `assets/` | Local sample videos (git-ignored; download from the [team Drive](https://drive.google.com/drive/folders/1SdQtkB20qAhdSWJeDpUTPMgY6hVcE1Hu)) | |

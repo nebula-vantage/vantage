@@ -67,7 +67,7 @@ test("invalid JSON and network failures release timers", async () => {
   await assert.rejects(invalid.request("/invalid"), /unreadable response/);
   assert.equal(invalid.timers.size, 0);
   const offline = transport(async () => { throw new Error("offline"); });
-  await assert.rejects(offline.request("/offline"), /offline/);
+  await assert.rejects(offline.request("/offline"), /Couldn't reach Vantage/);
   assert.equal(offline.timers.size, 0);
 });
 
@@ -106,3 +106,44 @@ test("deadline also aborts a stalled response body with the chat allowance", asy
   await rejection;
   assert.equal(timers.size, 0);
 });
+
+test("signed-out responses carry their code and notify the app once per request", async () => {
+  const context = {
+    AbortController, setTimeout, clearTimeout,
+    fetch: async () => response({ error: "Sign in to continue.", code: "signed_out" }, 401),
+  };
+  runInNewContext(source, context);
+  let notified = 0;
+  context.VantageAPI.onSignedOut(() => { notified += 1; });
+  await assert.rejects(context.VantageAPI.request("/api/sessions"), (error) => {
+    assert.equal(error.status, 401);
+    assert.equal(error.code, "signed_out");
+    return true;
+  });
+  assert.equal(notified, 1);
+  // Other failures, including other 401s, don't sign the app out.
+  context.fetch = async () => response({ error: "That email and password don't match." }, 401);
+  await assert.rejects(context.VantageAPI.request("/api/account/sign-in", {}));
+  assert.equal(notified, 1);
+});
+
+test("account form errors keep the field they belong to", async () => {
+  const { request } = transport(async () =>
+    response({ error: "Enter a valid email address.", field: "email" }, 400));
+  await assert.rejects(request("/api/account/create", {}), (error) => {
+    assert.equal(error.field, "email");
+    assert.equal(error.message, "Enter a valid email address.");
+    return true;
+  });
+});
+
+test("an unreachable server gets plain words instead of the browser's fetch error", async () => {
+  const { request, timers } = transport(async () => { throw new TypeError("Failed to fetch"); });
+  await assert.rejects(request("/api/account"), (error) => {
+    assert.equal(error.message, "Couldn't reach Vantage. Check that it's running, then try again.");
+    assert.equal(error.status, undefined);
+    return true;
+  });
+  assert.equal(timers.size, 0);
+});
+

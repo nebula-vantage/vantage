@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f5f6f8" />
-    <title>Games · Vantage</title>
+    <title>Vantage</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/fonts.css" />
     <link rel="stylesheet" href="/app.css" />
@@ -12,47 +12,92 @@
     <script src="/replay.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
-  <body>
+  <body class="is-booting">
     <a class="skip-link" href="#main">Skip to content</a>
+    <svg class="svg-library" aria-hidden="true" focusable="false">
+      <defs>
+        <!-- The landing page's mark; the cut takes the colour of whatever it sits on. -->
+        <symbol id="icon-logo" viewBox="0 0 36 36"><path fill="currentColor" d="M2 5h10l7.2 17.5L26.3 5H36L23 34h-8L2 5Z" /><path d="m1 18 32-9" fill="none" stroke="var(--mark-cut, #fff)" stroke-width="3" /></symbol>
+      </defs>
+    </svg>
+    <section id="auth-page" class="auth" aria-labelledby="auth-title" hidden>
+      <div class="auth-brand">
+        <span class="wordmark wordmark-light" role="img" aria-label="Vantage"><svg class="brand-mark" aria-hidden="true"><use href="#icon-logo" /></svg>vantage<span class="wordmark-period">.</span></span>
+        <div class="auth-brand-copy">
+          <p class="auth-headline">Your game.<br />A new perspective.</p>
+          <ul class="auth-points">
+            <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6" /></svg>Upload a match from one fixed camera.</li>
+            <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M3 12h3m12 0h3M12 3v3m0 12v3" /></svg>See the rally, the ball and the court.</li>
+            <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 9.5 17 19 7" /></svg>Take a focused plan into your next session.</li>
+          </ul>
+        </div>
+        <svg class="auth-court" viewBox="0 0 680 340" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path d="M75 330 232 56h216l157 274Z" fill="#1e2c35" stroke="#405662" stroke-width="1.5" /><path d="M166 171h348M145 210h390M186 136h308M340 56v80M340 210v120" fill="none" stroke="#405662" stroke-width="1.5" /><path d="M159 171h362" stroke="#6e8390" stroke-width="2" /><circle cx="452" cy="118" r="7" fill="#e8590c" /></svg>
+      </div>
+      <div class="auth-panel">
+        <form id="auth-form" class="auth-card" novalidate>
+          <p id="auth-eyebrow" class="eyebrow">GET STARTED</p>
+          <h1 id="auth-title" tabindex="-1">Create your account</h1>
+          <p id="auth-copy" class="auth-copy">Your games, replays and coaching, in one place.</p>
+          <p id="auth-error" class="form-error" role="alert" hidden></p>
+          <button id="auth-retry" class="button button-secondary button-wide" type="button" hidden>Try again</button>
+          <div id="auth-name-field" class="field">
+            <label for="auth-name">Name</label>
+            <input id="auth-name" name="name" type="text" autocomplete="name" placeholder="Your name" maxlength="80" aria-describedby="auth-name-error" />
+            <p id="auth-name-error" class="field-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="auth-email">Email</label>
+            <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" spellcheck="false" autocapitalize="off" aria-describedby="auth-email-error" />
+            <p id="auth-email-error" class="field-error" hidden></p>
+          </div>
+          <div class="field">
+            <div class="field-label-row">
+              <label for="auth-password">Password</label>
+              <button id="auth-forgot" class="link-button" type="button" aria-expanded="false" aria-controls="auth-forgot-help" hidden>Forgot password?</button>
+            </div>
+            <div class="password-input">
+              <input id="auth-password" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" maxlength="128" aria-describedby="auth-password-error" />
+              <button class="reveal-button" type="button" data-reveal="auth-password" data-label="password" aria-label="Show password">Show</button>
+            </div>
+            <p id="auth-password-error" class="field-error" hidden></p>
+          </div>
+          <p id="auth-forgot-help" class="auth-help" hidden>Run <code>uv run vantage-app --reset-account</code> in the terminal where you start Vantage, then reload this page. Your games stay in your library.</p>
+          <button id="auth-submit" class="button button-primary button-wide button-large" type="submit">Create account</button>
+          <p class="auth-footnote"><span class="status-dot" aria-hidden="true"></span>Your account and games are saved on this computer.</p>
+        </form>
+      </div>
+    </section>
     <aside class="sidebar" aria-label="Vantage navigation">
-      <a class="brand" href="/games" data-route aria-label="Vantage games">VANTAGE</a>
-      <div class="workspace-label">YOUR APP</div>
+      <a class="wordmark" href="/games" data-route aria-label="Vantage games"><svg class="brand-mark" aria-hidden="true"><use href="#icon-logo" /></svg>vantage<span class="wordmark-period">.</span></a>
       <nav class="navigation" aria-label="Main navigation">
         <a id="games-nav" class="nav-item active" href="/games" data-route aria-current="page">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M9 4v16"/></svg>Games
         </a>
       </nav>
-      <div id="game-navigation" class="game-navigation" hidden>
-        <div class="workspace-label">THIS GAME</div>
-        <p id="nav-game-name" class="nav-game-name"></p>
-        <nav class="navigation" aria-label="Current game">
-          <a id="overview-nav" class="nav-item" href="/games" data-route>Overview</a>
-          <a id="replay-nav" class="nav-item" href="/games" data-route>3D replay</a>
-          <a id="coaching-nav" class="nav-item" href="/games" data-route>Coaching</a>
-        </nav>
-      </div>
       <div class="sidebar-bottom">
-        <p class="import-note">Your games, insights,<br />and next steps. Together.</p>
         <button id="upload-button" class="button button-primary button-wide" type="button">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-5 5 5-5 5 5M4 14v6h16v-6"/></svg>Upload video
         </button>
-        <button id="import-button" class="text-button import-existing-button" type="button">Import existing analysis</button>
-        <input id="stats-file" type="file" accept=".json,application/json" hidden />
-        <button id="sample-button" class="button button-secondary button-wide" type="button">Explore sample game</button>
-        <div class="sidebar-footer"><span class="status-dot"></span> ON THIS COMPUTER</div>
+        <a id="account-chip" class="account-chip" href="/account" data-route>
+          <span id="account-initials" class="avatar" aria-hidden="true"></span>
+          <span class="account-chip-text"><strong id="account-name"></strong><span>On this computer</span></span>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </a>
       </div>
     </aside>
     <main id="main" class="main" tabindex="-1">
       <nav id="game-breadcrumb" class="game-breadcrumb" aria-label="Breadcrumb" hidden>
-        <a href="/games" data-route>← Games</a><span aria-hidden="true">/</span><span id="breadcrumb-name"></span>
+        <a href="/games" data-route>← Games</a>
       </nav>
       <header class="page-header">
         <div>
-          <div class="eyebrow">VANTAGE</div>
-          <h1 id="page-title">Games</h1>
+          <div id="page-eyebrow" class="eyebrow page-eyebrow"><span class="sport-dot" aria-hidden="true"></span><span id="page-eyebrow-text">YOUR LIBRARY</span></div>
+          <div class="page-title-line">
+            <h1 id="page-title">Games</h1>
+            <span id="demo-badge" class="badge badge-muted" hidden>SYNTHETIC</span>
+          </div>
           <p id="page-description">Your game. A clearer picture. A next step.</p>
         </div>
-        <button id="header-upload" class="button button-primary" type="button">+ Upload video</button>
         <div id="export-control" class="export-control" hidden>
           <label class="sr-only" for="export-format">Export format</label>
           <select id="export-format">
@@ -100,13 +145,12 @@
           <span class="upload-tile-copy"><strong>Bring your game into focus.</strong><span>Upload a match video. Review the play. Find your next practice focus.</span></span>
           <span class="upload-tile-action">Analyze a video <span aria-hidden="true">↗</span></span>
         </button>
-        <div class="games-heading"><h2>Your games</h2><div class="games-heading-tools"><span id="games-count" class="small-label"></span><button id="games-refresh" class="text-button" type="button">Refresh</button></div></div>
+        <div class="games-heading"><h2>Your games</h2><div class="games-heading-tools"><span id="games-count" class="small-label"></span><a id="sample-link" class="text-button" href="/games/sample" data-route>Sample game</a><button id="import-button" class="text-button" type="button">Import analysis</button><input id="stats-file" type="file" accept=".json,application/json" hidden /><button id="games-refresh" class="text-button" type="button">Refresh</button></div></div>
         <div id="games-empty" class="games-empty" hidden>
           <div class="empty-court" aria-hidden="true"></div>
           <h3>Your next game starts here.</h3>
-          <p>Uploaded games and their coaching stay together in this library.</p>
-          <button id="empty-upload" class="button button-primary" type="button">Upload your first video</button>
-          <p class="empty-sample">Just looking around? <a href="/games/sample" data-route>Explore the synthetic sample</a>.</p>
+          <p>Uploaded games and their analysis stay together in this library.</p>
+          <p class="empty-sample">Just looking around? <a href="/games/sample" data-route>Explore the sample game</a>.</p>
         </div>
         <div id="games-list" class="games-grid"></div>
         <p class="library-note">Analyzed videos are saved on this computer. Imported statistics are temporary and last until this page is reloaded.</p>
@@ -116,6 +160,67 @@
         <p id="game-unavailable-copy">Choose a saved game from your library, or import the analysis again.</p>
         <a class="button button-primary" href="/games" data-route>Back to Games</a>
       </section>
+      <section id="account-page" class="account-page" aria-label="Your account" hidden>
+        <div class="account-hero">
+          <span id="account-page-initials" class="avatar avatar-large" aria-hidden="true"></span>
+          <div>
+            <h2 id="account-page-name"></h2>
+            <p id="account-page-email"></p>
+          </div>
+        </div>
+        <form id="profile-form" class="surface account-section" novalidate>
+          <h2>Profile</h2>
+          <div class="account-fields">
+            <div class="field">
+              <label for="profile-name">Name</label>
+              <input id="profile-name" type="text" autocomplete="name" maxlength="80" aria-describedby="profile-name-error" />
+              <p id="profile-name-error" class="field-error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="profile-email">Email</label>
+              <input id="profile-email" type="email" autocomplete="email" maxlength="254" spellcheck="false" autocapitalize="off" aria-describedby="profile-email-error" />
+              <p id="profile-email-error" class="field-error" hidden></p>
+            </div>
+          </div>
+          <div class="account-actions">
+            <button id="profile-save" class="button button-secondary" type="submit" disabled>Save changes</button>
+            <p id="profile-status" class="form-status" role="status"></p>
+          </div>
+        </form>
+        <form id="password-form" class="surface account-section" novalidate>
+          <h2>Password</h2>
+          <input type="email" autocomplete="username" id="password-username" hidden />
+          <div class="account-fields">
+            <div class="field">
+              <label for="current-password">Current password</label>
+              <div class="password-input">
+                <input id="current-password" type="password" autocomplete="current-password" maxlength="128" aria-describedby="current-password-error" />
+                <button class="reveal-button" type="button" data-reveal="current-password" data-label="current password" aria-label="Show current password">Show</button>
+              </div>
+              <p id="current-password-error" class="field-error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="new-password">New password</label>
+              <div class="password-input">
+                <input id="new-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" maxlength="128" aria-describedby="new-password-error" />
+                <button class="reveal-button" type="button" data-reveal="new-password" data-label="new password" aria-label="Show new password">Show</button>
+              </div>
+              <p id="new-password-error" class="field-error" hidden></p>
+            </div>
+          </div>
+          <div class="account-actions">
+            <button id="password-save" class="button button-secondary" type="submit" disabled>Change password</button>
+            <p id="password-status" class="form-status" role="status"></p>
+          </div>
+        </form>
+        <section class="surface account-section" aria-labelledby="storage-title">
+          <h2 id="storage-title">Where your games live</h2>
+          <p class="account-note"><span class="status-dot" aria-hidden="true"></span>Your account and games are saved on this computer. Videos are analyzed here; AI coaching sends still frames only when you ask for a review.</p>
+        </section>
+        <div class="account-signout">
+          <button id="sign-out-button" class="button button-secondary" type="button">Sign out</button>
+        </div>
+      </section>
       <div id="workspace" hidden>
         <nav id="game-tabs" class="game-tabs" aria-label="Game sections">
           <a id="overview-tab" href="/games" data-route>Overview</a>
@@ -124,20 +229,6 @@
         </nav>
         <div class="workspace-grid">
           <div class="review-column">
-            <section class="session-bar" aria-label="Current session">
-              <div class="session-heading">
-                <p class="session-meta-line">
-                  <span class="sport-dot" aria-hidden="true"></span
-                  ><span id="session-meta"></span>
-                </p>
-                <div class="session-title-line">
-                  <h2 id="session-name">Session</h2>
-                  <span id="demo-badge" class="badge badge-muted" hidden
-                    >SAMPLE</span
-                  >
-                </div>
-              </div>
-            </section>
             <section id="replay" class="replay-card" data-game-panel="replay" aria-labelledby="replay-title">
               <div class="perspective-note" aria-hidden="true">
                 <svg class="icon" viewBox="0 0 32 32"><path d="M5 23C3 8 18 4 24 11c5 6-2 14-7 9s1-12 7-9M22 4l3 7 7-1" /></svg>
@@ -551,13 +642,8 @@
               <h2 id="game-coach-title">Make this game count.</h2>
               <p id="game-coach-copy">Review the moments behind the numbers and take a focused plan into your next session.</p>
               <a id="game-coach-link" class="button button-primary button-wide" href="/games" data-route>Open game coaching <span aria-hidden="true">→</span></a>
+              <a id="replay-link" class="button button-secondary button-wide" href="/games" data-route>Watch the 3D replay <span aria-hidden="true">→</span></a>
               <span class="coaching-context">Built from this game's analysis.</span>
-            </section>
-            <section class="replay-teaser" data-game-panel="overview">
-              <span class="small-label"><span class="status-dot" aria-hidden="true"></span> NEW · 3D REPLAY</span>
-              <h2>Same game. A whole new angle.</h2>
-              <p>Replay the match from above, the sideline, or behind yourself, and see where you stood against the play.</p>
-              <a id="replay-link" class="button button-secondary button-wide" href="/games" data-route>Open 3D replay <span aria-hidden="true">→</span></a>
             </section>
             <section id="coach-card" class="coach-card" data-game-panel="coaching" data-needs-report>
               <header class="coach-header">
