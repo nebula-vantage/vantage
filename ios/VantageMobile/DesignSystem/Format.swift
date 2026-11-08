@@ -33,23 +33,15 @@ enum Format {
         fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? missing
     }
 
-    /// Video length as h:mm:ss ("0:38:12").
+    /// Video length as m:ss under an hour ("38:12"), as on the web, then h:mm:ss ("1:02:05").
     static func duration(_ seconds: Double?) -> String {
         guard let seconds, seconds.isFinite else { return missing }
-        return Duration.seconds(seconds.rounded()).formatted(.time(pattern: .hourMinuteSecond))
+        let rounded = seconds.rounded()
+        return Duration.seconds(rounded).formatted(.time(pattern: rounded < 3_600 ? .minuteSecond : .hourMinuteSecond))
     }
 
-    /// "Today, 6:10 PM", "Yesterday, 6:10 PM", "Sat, Oct 3", or "Oct 3, 2025" in another year.
-    static func gameDate(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
-        let time = date.formatted(date: .omitted, time: .shortened)
-        if calendar.isDate(date, inSameDayAs: now) { return "Today, \(time)" }
-        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
-           calendar.isDate(date, inSameDayAs: yesterday) {
-            return "Yesterday, \(time)"
-        }
-        if calendar.isDate(date, equalTo: now, toGranularity: .year) {
-            return date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
-        }
-        return date.formatted(.dateTime.month(.abbreviated).day().year())
+    /// "Analyzed Nov 7, 2026", as on the web app's game cards.
+    static func analyzedDate(_ date: Date) -> String {
+        "Analyzed \(date.formatted(.dateTime.month(.abbreviated).day().year()))"
     }
 }

@@ -29,18 +29,21 @@ struct GameDetailView: View {
         .navigationTitle(run.sourceName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(removing: .title)
+        #if DEBUG
         .toolbar {
+            // Developer tool: debug builds only.
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink(value: GameRoute.debugPlayback(run)) {
                     Label("Debug playback", systemImage: "ladybug")
                 }
             }
         }
+        #endif
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text("Pickleball · \(Format.gameDate(run.createdAt))").monoLabel()
+            Text("Pickleball · \(Format.analyzedDate(run.createdAt))").monoLabel()
             Text(run.sourceName)
                 .font(Theme.Fonts.display)
                 .foregroundStyle(Theme.Colors.ink)

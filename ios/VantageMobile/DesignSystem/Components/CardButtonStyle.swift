@@ -2,13 +2,16 @@ import SwiftUI
 
 /// A whole card that acts as one button or navigation link, with pressed and disabled states.
 struct CardButtonStyle: ButtonStyle {
+    /// See `CardModifier`.
+    var padded = true
+
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(Theme.Colors.ink)
             .frame(minHeight: Theme.Size.minTouch)
-            .card()
+            .card(padded: padded)
             .opacity(isEnabled ? 1 : 0.5)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)
@@ -17,6 +20,7 @@ struct CardButtonStyle: ButtonStyle {
 
 extension ButtonStyle where Self == CardButtonStyle {
     static var card: CardButtonStyle { CardButtonStyle() }
+    static func card(padded: Bool) -> CardButtonStyle { CardButtonStyle(padded: padded) }
 }
 
 #Preview {

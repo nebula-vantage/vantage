@@ -36,10 +36,8 @@ struct PlayerView: View {
         .task {
             await loadTimeline()
             #if DEBUG
-            // UI check hook: `simctl launch ... -openLatestRun -seek 7.5`.
-            let arguments = ProcessInfo.processInfo.arguments
-            if let flag = arguments.firstIndex(of: "-seek"), flag + 1 < arguments.count,
-               let seconds = Double(arguments[flag + 1]) {
+            // UI check hook: `simctl launch ... -openLatestRun -seek 7.5`, once per launch.
+            if let seconds = LaunchHooks.takeValue(after: "-seek").flatMap(Double.init) {
                 controller.seek(to: seconds)
             }
             #endif
