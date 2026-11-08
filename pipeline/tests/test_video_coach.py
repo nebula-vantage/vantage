@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from coach_fixtures import make_run
+from helpers import sign_in
 from vantage import coach_evidence
 from vantage.coach_engines import EngineCancelled, EngineError, Image
 from vantage.coach_evidence import COACH_DIR, FRAMES_DIR, EvidenceError
@@ -581,6 +582,7 @@ class CoachHTTPTests(CoachTestCase):
         super().setUp()
         self.server = CoachingServer(("127.0.0.1", 0), self.runs)
         self.server.coach.engines = self.engines
+        self.cookie = sign_in(self.server)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.addCleanup(self.stop_server)
@@ -592,7 +594,7 @@ class CoachHTTPTests(CoachTestCase):
 
     def request(self, method, path, body=None, headers=None):
         connection = HTTPConnection("127.0.0.1", self.server.server_port, timeout=20)
-        headers = dict(headers or {})
+        headers = {"Cookie": self.cookie, **(headers or {})}
         if body is not None and not isinstance(body, bytes):
             body = json.dumps(body).encode()
             headers.setdefault("Content-Type", "application/json")

@@ -1,13 +1,17 @@
 import SwiftUI
 
-/// The raised white surface that holds a game, a tile or a group of stats.
+/// The raised white surface that holds a game, a tile or a group of stats. Unpadded, the content
+/// reaches the edges and is clipped to the rounded corners (a game card's cover), and pads itself.
 struct CardModifier: ViewModifier {
+    var padded = true
+
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
         content
-            .padding(Theme.Spacing.l)
+            .padding(padded ? Theme.Spacing.l : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.Colors.surface, in: shape)
+            .background(Theme.Colors.surface)
+            .clipShape(shape)
             .overlay { shape.strokeBorder(Theme.Colors.hairline, lineWidth: Theme.Size.hairline) }
             .contentShape(shape)
             .contentShape(.contextMenuPreview, shape)
@@ -15,7 +19,7 @@ struct CardModifier: ViewModifier {
 }
 
 extension View {
-    func card() -> some View { modifier(CardModifier()) }
+    func card(padded: Bool = true) -> some View { modifier(CardModifier(padded: padded)) }
 }
 
 #Preview {

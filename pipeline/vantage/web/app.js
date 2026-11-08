@@ -16,6 +16,7 @@ const state = {
   route: null,
   routeError: "",
   libraryError: false,
+  libraryLoaded: false,
   booting: true,
   reportGeneration: 0,
   reportLoading: false,
@@ -110,6 +111,272 @@ function showError(message) {
 
 const api = globalThis.VantageAPI.request;
 
+// Accounts. The server owns the account and its session cookie; the browser keeps only what
+// the screens show. Every string here matches the iPhone app (docs/app-experience.md).
+const account = {
+  status: null, busy: false, nextPath: "/games", leaving: false, started: false, unavailable: false,
+};
+const ACCOUNT_RULES = {
+  name: (value) => {
+    const name = value.trim().replace(/\s+/g, " ");
+    return name && name.length <= 80 ? "" : "Enter your name.";
+  },
+  email: (value) => {
+    const email = value.trim().toLowerCase();
+    return email.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)
+      ? "" : "Enter a valid email address.";
+  },
+  password: (value) => value.length >= 8 && value.length <= 128 ? "" : "Use at least 8 characters.",
+};
+
+function signedInAccount() {
+  return account.status?.account || null;
+}
+function authKind() {
+  return account.status?.has_account ? "sign-in" : "create-account";
+}
+// Only Vantage's own pages are valid places to return to after signing in.
+function safeNext(path) {
+  const clean = typeof path === "string" ? path.replace(/(.)\/$/, "$1") : "";
+  return /^\/(?:games(?:\/[a-z0-9]+(?:\/(?:coaching|replay))?)?|account)$/.test(clean) ? clean : "/games";
+}
+
+function fieldError(prefix, field, message) {
+  const input = $(`${prefix}-${field.replace("_", "-")}`);
+  const error = $(`${prefix}-${field.replace("_", "-")}-error`);
+  if (!input || !error) return false;
+  error.textContent = message;
+  error.hidden = !message;
+  if (message) input.setAttribute("aria-invalid", "true");
+  else input.removeAttribute("aria-invalid");
+  return true;
+}
+function clearFieldErrors(form) {
+  form.querySelectorAll(".field-error").forEach((node) => { node.hidden = true; node.textContent = ""; });
+  form.querySelectorAll("[aria-invalid]").forEach((node) => node.removeAttribute("aria-invalid"));
+}
+// Check fields with the shared rules; show each message and focus the first invalid field.
+function validateFields(prefix, rules) {
+  let first = null;
+  for (const [field, rule] of rules) {
+    const message = ACCOUNT_RULES[rule]($(`${prefix}-${field}`).value);
+    fieldError(prefix, field, message);
+    if (message && !first) first = field;
+  }
+  if (first) $(`${prefix}-${first}`).focus();
+  return !first;
+}
+
+function renderAuth() {
+  const creating = authKind() === "create-account";
+  const status = account.status;
+  $("auth-eyebrow").textContent = account.unavailable ? "VANTAGE" : creating ? "GET STARTED" : "WELCOME BACK";
+  $("auth-title").textContent = account.unavailable ? "Vantage can't open your account"
+    : creating ? "Create your account" : "Sign in to Vantage";
+  $("auth-copy").hidden = account.unavailable;
+  $("auth-copy").textContent = creating
+    ? "Your games, replays and coaching, in one place."
+    : status?.first_name ? `Pick up where you left off, ${status.first_name}.` : "Pick up where you left off.";
+  $("auth-name-field").hidden = !creating;
+  $("auth-forgot").hidden = creating;
+  if (creating) $("auth-forgot-help").hidden = true;
+  $("auth-password").autocomplete = creating ? "new-password" : "current-password";
+  $("auth-password").placeholder = creating ? "At least 8 characters" : "";
+  $("auth-submit").textContent = account.busy
+    ? creating ? "Creating account…" : "Signing in…"
+    : creating ? "Create account" : "Sign in";
+  $("auth-submit").disabled = account.busy;
+  document.title = `${creating ? "Create account" : "Sign in"} · Vantage`;
+}
+
+function showAuth(error = "", { unavailable = false } = {}) {
+  const kind = authKind();
+  const params = new URLSearchParams(window.location.search);
+  const current = readRoute();
+  account.nextPath = safeNext(current.kind === "sign-in" || current.kind === "create-account"
+    ? params.get("next") : window.location.pathname);
+  const query = account.nextPath === "/games" ? "" : `?next=${encodeURIComponent(account.nextPath)}`;
+  window.history.replaceState({}, "", `/${kind}${query}`);
+  state.route = { kind };
+  document.body.classList.remove("is-booting");
+  document.body.classList.add("is-auth");
+  $("auth-page").hidden = false;
+  if (kind === "sign-in" && !$("auth-email").value && account.status?.email) {
+    $("auth-email").value = account.status.email;
+  }
+  $("auth-error").textContent = error;
+  $("auth-error").hidden = !error;
+  // When Vantage can't say whether an account exists, offer a retry instead of a form.
+  account.unavailable = unavailable;
+  $("auth-retry").hidden = !unavailable;
+  $("auth-form").classList.toggle("is-unavailable", unavailable);
+  renderAuth();
+  if (unavailable) {
+    $("auth-retry").focus({ preventScroll: true });
+    return;
+  }
+  const focus = kind === "create-account" ? "auth-name" : $("auth-email").value ? "auth-password" : "auth-email";
+  $(focus).focus({ preventScroll: true });
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  if (account.busy) return;
+  const creating = authKind() === "create-account";
+  clearFieldErrors($("auth-form"));
+  $("auth-error").hidden = true;
+  if (!validateFields("auth", creating
+    ? [["name", "name"], ["email", "email"], ["password", "password"]]
+    : [["email", "email"]])) return;
+  // An empty password is never sent, so it can't count as a wrong attempt. The button stays
+  // enabled because browsers hide autofilled passwords from scripts until you interact.
+  if (!creating && !$("auth-password").value) {
+    $("auth-password").focus();
+    return;
+  }
+  const body = { email: $("auth-email").value, password: $("auth-password").value };
+  if (creating) body.name = $("auth-name").value;
+  account.busy = true;
+  renderAuth();
+  try {
+    const result = await api(creating ? "/api/account/create" : "/api/account/sign-in", body);
+    account.status = { has_account: true, account: result.account, email: result.account.email,
+      first_name: result.account.name.split(" ")[0] };
+    $("auth-password").value = "";
+    account.busy = false;
+    await enterApp();
+  } catch (error) {
+    account.busy = false;
+    if (error.status === 409) {
+      // The account was created in another tab, which may have signed this browser in too.
+      try {
+        account.status = await api("/api/account");
+      } catch {
+        account.status = { ...account.status, has_account: true };
+      }
+      if (signedInAccount()) {
+        await enterApp();
+        return;
+      }
+      $("auth-email").value = "";
+      showAuth(error.message);
+      return;
+    }
+    if (!error.field || !fieldError("auth", error.field, error.message)) {
+      $("auth-error").textContent = error.message || "Couldn't reach Vantage. Check that it's running.";
+      $("auth-error").hidden = false;
+    }
+    ($(`auth-${error.field}`) || $("auth-password")).focus();
+    renderAuth();
+  }
+}
+
+async function enterApp() {
+  window.history.replaceState({}, "", account.nextPath);
+  document.body.classList.remove("is-auth", "is-booting");
+  $("auth-page").hidden = true;
+  renderAccount();
+  await startApp();
+}
+
+// Sign-out, an expired session and a reset account all start over from a fresh page, so no
+// game, video or conversation from the previous session stays in memory.
+function leaveForSignIn(next = window.location.pathname) {
+  if (account.leaving) return;
+  account.leaving = true;
+  const target = safeNext(next);
+  window.location.replace(target === "/games" ? "/sign-in" : `/sign-in?next=${encodeURIComponent(target)}`);
+}
+globalThis.VantageAPI.onSignedOut(() => leaveForSignIn());
+
+function renderAccount() {
+  const me = signedInAccount();
+  if (!me) return;
+  $("account-initials").textContent = me.initials;
+  $("account-name").textContent = me.name;
+  // On phones the chip shows only the initials, so its name comes from this label.
+  $("account-chip").setAttribute("aria-label", `Account, ${me.name}`);
+  $("account-page-initials").textContent = me.initials;
+  $("account-page-name").textContent = me.name;
+  $("account-page-email").textContent = me.email;
+  $("password-username").value = me.email;
+  if (!$("profile-form").contains(document.activeElement)) {
+    $("profile-name").value = me.name;
+    $("profile-email").value = me.email;
+  }
+  renderAccountButtons();
+}
+
+// Save changes waits for an edit and Change password for both fields, as on iPhone.
+function renderAccountButtons() {
+  const me = signedInAccount();
+  const name = $("profile-name").value.trim().replace(/\s+/g, " ");
+  const email = $("profile-email").value.trim().toLowerCase();
+  $("profile-save").disabled = !me || (name === me.name && email === me.email);
+  $("password-save").disabled = !$("current-password").value || !$("new-password").value;
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const form = $("profile-form");
+  clearFieldErrors(form);
+  $("profile-status").textContent = "";
+  if (!validateFields("profile", [["name", "name"], ["email", "email"]])) return;
+  $("profile-save").disabled = true;
+  try {
+    const result = await api("/api/account/profile", { name: $("profile-name").value, email: $("profile-email").value });
+    account.status = { ...account.status, account: result.account, email: result.account.email };
+    document.activeElement?.blur();
+    renderAccount();
+    $("profile-status").textContent = "Profile saved.";
+  } catch (error) {
+    if (!error.field || !fieldError("profile", error.field, error.message)) $("profile-status").textContent = error.message;
+  } finally {
+    renderAccountButtons();
+  }
+}
+
+async function changePassword(event) {
+  event.preventDefault();
+  const form = $("password-form");
+  clearFieldErrors(form);
+  $("password-status").textContent = "";
+  const message = ACCOUNT_RULES.password($("new-password").value);
+  if (message) {
+    fieldError("new", "password", message);
+    $("new-password").focus();
+    return;
+  }
+  $("password-save").disabled = true;
+  try {
+    await api("/api/account/password", {
+      current_password: $("current-password").value, new_password: $("new-password").value,
+    });
+    $("current-password").value = "";
+    $("new-password").value = "";
+    renderAccountButtons();
+    $("password-status").textContent = "Password changed.";
+  } catch (error) {
+    const [prefix, field] = error.field === "current_password" ? ["current", "password"]
+      : error.field === "new_password" ? ["new", "password"] : [null, null];
+    if (!prefix || !fieldError(prefix, field, error.message)) $("password-status").textContent = error.message;
+    else $(`${prefix}-password`).focus();
+  } finally {
+    renderAccountButtons();
+  }
+}
+
+async function signOut() {
+  $("sign-out-button").disabled = true;
+  try {
+    await api("/api/account/sign-out", {});
+    leaveForSignIn("/games");
+  } catch (error) {
+    $("sign-out-button").disabled = false;
+    notice(error.message || "Couldn't sign out. Try again.");
+  }
+}
+
 function gamePath(id, tab = "overview") {
   const key = id === "demo" ? "sample" : id;
   return `/games/${encodeURIComponent(key)}${tab === "overview" ? "" : `/${tab}`}`;
@@ -118,6 +385,7 @@ function gamePath(id, tab = "overview") {
 function readRoute() {
   const path = window.location.pathname.replace(/\/$/, "") || "/";
   if (path === "/" || path === "/games") return { kind: "games" };
+  if (path === "/sign-in" || path === "/create-account" || path === "/account") return { kind: path.slice(1) };
   const match = /^\/games\/(sample|[a-f0-9]{20})(?:\/(coaching|replay))?$/.exec(path);
   if (!match) return { kind: "missing" };
   return { kind: "game", id: match[1] === "sample" ? "demo" : match[1], tab: match[2] || "overview" };
@@ -137,10 +405,16 @@ async function applyRoute() {
   state.route = readRoute();
   state.routeError = "";
   showError("");
-  if (state.route.kind === "games") {
+  if (state.route.kind === "sign-in" || state.route.kind === "create-account") {
+    // Already signed in: the library is the place to be.
+    window.history.replaceState({}, "", "/games");
+    state.route = { kind: "games" };
+  }
+  if (state.route.kind === "games" || state.route.kind === "account") {
     $("session-video").pause();
     stopCoachPolling();
-    renderLibrary();
+    if (state.route.kind === "games") renderLibrary();
+    else renderAccount();
     applyAppLayout();
     return true;
   }
@@ -172,41 +446,50 @@ async function applyRoute() {
 function applyAppLayout() {
   const route = state.route || { kind: "games" };
   const home = route.kind === "games";
+  const accountPage = route.kind === "account";
   const ready = route.kind === "game" && state.session?.id === route.id && !state.routeError;
   const coaching = ready && route.tab === "coaching";
   const replaying = ready && route.tab === "replay";
-  $("games-page").hidden = !home;
+  const name = ready ? state.session.name || "Analyzed game" : "Game";
+  // The library shows once its list arrives, without waiting for the rest of startup.
+  $("games-page").hidden = !home || !state.libraryLoaded;
+  $("account-page").hidden = !accountPage;
   $("workspace").hidden = !ready;
   $("game-unavailable").hidden = !state.routeError;
   $("game-unavailable-copy").textContent = state.routeError;
-  $("game-breadcrumb").hidden = home;
-  $("game-navigation").hidden = !ready;
-  $("header-upload").hidden = !home;
+  $("game-breadcrumb").hidden = home || accountPage;
   $("export-control").hidden = !ready;
   $("export-button").disabled = !state.report || state.reportLoading;
-  $("page-title").textContent = home ? "Games" : state.routeError ? "Game unavailable"
-    : coaching ? "Game coaching" : replaying ? "3D replay" : "Game review";
+  // One header: the page's place in the app, then its name. A game's header is the game.
+  $("page-eyebrow-text").textContent = home ? "YOUR LIBRARY" : accountPage ? "SAVED ON THIS COMPUTER"
+    : ready ? gameEyebrow(state.session) : "PICKLEBALL";
+  $("page-eyebrow").querySelector(".sport-dot").hidden = home;
+  $("page-title").textContent = home ? "Games" : accountPage ? "Account"
+    : state.routeError ? "Game unavailable" : name;
+  // The sample's name already says so; other synthetic games carry a badge.
+  $("demo-badge").hidden = !ready || !state.session.is_demo || state.session.id === "demo";
   $("page-description").textContent = home
     ? "Your game. A clearer picture. A next step."
-    : coaching ? "Review the evidence. Plan your next session."
-      : replaying ? "Watch the whole game from any angle, and see how you moved with the play."
-        : "Your replay, measurements, and coaching in one place.";
-  $("breadcrumb-name").textContent = ready ? state.session.name : "Game";
-  document.title = home ? "Games · Vantage"
-    : `${ready ? state.session.name : "Game"} · ${coaching ? "Coaching · " : replaying ? "3D replay · " : ""}Vantage`;
-  $("games-nav").classList.toggle("active", home);
+    : accountPage ? "Your profile, your password, and where your games are saved."
+      : coaching ? "Review the evidence. Plan your next session."
+        : replaying ? "Watch the whole game from any angle, and see how you moved with the play."
+          : "Your replay, measurements, and coaching in one place.";
+  document.title = home ? "Games · Vantage" : accountPage ? "Account · Vantage"
+    : `${name} · ${coaching ? "Coaching · " : replaying ? "3D replay · " : ""}Vantage`;
+  // A game lives inside Games, so Games stays highlighted while one is open.
+  $("games-nav").classList.toggle("active", !accountPage);
   if (home) $("games-nav").setAttribute("aria-current", "page");
   else $("games-nav").removeAttribute("aria-current");
+  $("account-chip").classList.toggle("active", accountPage);
+  if (accountPage) $("account-chip").setAttribute("aria-current", "page");
+  else $("account-chip").removeAttribute("aria-current");
   if (ready) {
-    $("nav-game-name").textContent = state.session.name;
     for (const tab of ["overview", "replay", "coaching"]) {
-      for (const suffix of ["nav", "tab"]) {
-        const link = $(`${tab}-${suffix}`);
-        link.href = gamePath(state.session.id, tab);
-        link.classList.toggle("active", route.tab === tab);
-        if (route.tab === tab) link.setAttribute("aria-current", "page");
-        else link.removeAttribute("aria-current");
-      }
+      const link = $(`${tab}-tab`);
+      link.href = gamePath(state.session.id, tab);
+      link.classList.toggle("active", route.tab === tab);
+      if (route.tab === tab) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
     }
     $("game-coach-link").href = gamePath(state.session.id, "coaching");
     $("replay-link").href = gamePath(state.session.id, "replay");
@@ -223,6 +506,7 @@ function applyAppLayout() {
     : `${state.reportError} Your video and measured overview are still available.`;
   $("coaching-retry").hidden = state.reportLoading;
   $("workspace").dataset.tab = ready ? route.tab : "";
+  syncLoading();
   // The replay brings its own synced copy of the recording; the main player waits.
   if (replaying) $("session-video").pause();
   globalThis.VantageReplay?.sync({
@@ -242,6 +526,13 @@ function libraryEntries() {
   return [...temporary, ...state.sessions];
 }
 
+function gameEyebrow(session) {
+  if (session.id === "demo") return "PICKLEBALL · SYNTHETIC FOOTAGE";
+  if (session.is_temporary) return "PICKLEBALL · IMPORTED";
+  const listed = state.sessions.find((game) => game.id === session.id);
+  return `PICKLEBALL · ${listed ? analyzedDate(listed.analyzed_at).toUpperCase() : "ANALYZED GAME"}`;
+}
+
 function analyzedDate(value) {
   const date = new Date(value);
   if (!value || !Number.isFinite(date.getTime())) return "Saved analysis";
@@ -252,6 +543,8 @@ function renderLibrary() {
   const games = libraryEntries();
   $("games-count").textContent = `${games.length} ${games.length === 1 ? "game" : "games"}`;
   $("games-empty").hidden = games.length > 0 || state.libraryError;
+  // An empty library offers the sample in its empty state instead.
+  $("sample-link").hidden = !$("games-empty").hidden;
   replace("games-list", games.map((game) => {
     const card = element("a", "game-card");
     card.href = gamePath(game.id);
@@ -292,6 +585,17 @@ function renderLibrary() {
 
 async function refreshLibrary() {
   try {
+    return await loadLibrary();
+  } finally {
+    if (!state.libraryLoaded) {
+      state.libraryLoaded = true;
+      applyAppLayout();
+    }
+  }
+}
+
+async function loadLibrary() {
+  try {
     const library = await api("/api/sessions");
     state.sessions = library.sessions || [];
     state.libraryError = false;
@@ -310,9 +614,15 @@ async function refreshLibrary() {
 
 function loading(active) {
   document.body.classList.toggle("is-loading", active);
-  $("loading").hidden = !active || Boolean(state.session) || (state.route?.kind === "games" && !state.booting);
-  $("loading-copy").textContent = state.booting ? "Opening your games…" : "Opening your game…";
+  syncLoading();
   $("export-button").disabled = active || !state.report;
+}
+// The spinner depends on the route as well as on loading, so route changes re-check it.
+function syncLoading() {
+  const active = document.body.classList.contains("is-loading");
+  $("loading").hidden = !active || Boolean(state.session) || state.route?.kind === "account" ||
+    (state.route?.kind === "games" && state.libraryLoaded);
+  $("loading-copy").textContent = state.booting ? "Opening your games…" : "Opening your game…";
 }
 
 function rememberCurrentGame() {
@@ -433,10 +743,7 @@ function qualityForGame() {
 
 function render() {
   const { session, report } = state;
-  $("session-name").textContent = session.name || "Analyzed game";
-  $("demo-badge").hidden = !session.is_demo;
   $("sample-note").hidden = !session.is_demo;
-  $("session-meta").textContent = "PICKLEBALL · ANALYZED GAME";
   $("video-duration").textContent = `${time(session.stats.video?.duration_s)} analysis`;
   $("video-coverage").textContent = `${percent(qualityForGame().coverage)} of frames observed`;
   document.querySelectorAll("[data-focus]").forEach((button) => {
@@ -1885,7 +2192,6 @@ async function submitCoachQuestion(raw, { moment = false } = {}) {
   }
 }
 
-$("sample-button").addEventListener("click", () => navigate("/games/sample"));
 $("import-button").addEventListener("click", () => $("stats-file").click());
 $("stats-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
@@ -2316,6 +2622,14 @@ async function uploadAnalysisVideo(file) {
   analysis.uploadName = file.name;
   renderAnalysis();
   try {
+    // A server that refuses the upload closes the connection mid-file, which looks like a
+    // network error, so check the session before sending hundreds of megabytes.
+    const session = await api("/api/account").catch(() => null);
+    if (session && !session.account) {
+      analysis.uploading = false;
+      leaveForSignIn();
+      return;
+    }
     const job = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       analysis.xhr = xhr;
@@ -2341,7 +2655,10 @@ async function uploadAnalysisVideo(file) {
           return;
         }
         if (xhr.status >= 200 && xhr.status < 300) resolve(response);
-        else
+        else if (xhr.status === 401 && response.code === "signed_out") {
+          leaveForSignIn();
+          reject(new Error(response.error));
+        } else
           reject(
             new Error(
               response.error ||
@@ -2553,7 +2870,7 @@ async function openCompletedAnalysis() {
   }
 }
 
-for (const id of ["upload-button", "header-upload", "games-upload", "empty-upload"]) {
+for (const id of ["upload-button", "games-upload"]) {
   $(id).addEventListener("click", openAnalysisPanel);
 }
 $("games-refresh").addEventListener("click", () => { void refreshLibrary(); });
@@ -2683,8 +3000,60 @@ $("analysis-retry").addEventListener("click", async () => {
   renderAnalysis();
 });
 
+$("auth-form").addEventListener("submit", (event) => { void submitAuth(event); });
+$("auth-retry").addEventListener("click", () => window.location.reload());
+$("auth-forgot").addEventListener("click", () => {
+  const help = $("auth-forgot-help");
+  help.hidden = !help.hidden;
+  $("auth-forgot").setAttribute("aria-expanded", String(!help.hidden));
+});
+$("profile-form").addEventListener("submit", (event) => { void saveProfile(event); });
+$("password-form").addEventListener("submit", (event) => { void changePassword(event); });
+$("sign-out-button").addEventListener("click", () => { void signOut(); });
+document.querySelectorAll("[data-reveal]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = $(button.dataset.reveal);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "Hide" : "Show";
+    button.setAttribute("aria-label", `${show ? "Hide" : "Show"} ${button.dataset.label}`);
+  });
+});
+for (const form of ["auth-form", "profile-form", "password-form"]) {
+  // Typing in a field clears its message; the next submit checks it again.
+  $(form).addEventListener("input", (event) => {
+    const error = $(`${event.target.id}-error`);
+    if (error) {
+      error.hidden = true;
+      error.textContent = "";
+      event.target.removeAttribute("aria-invalid");
+    }
+    if (form !== "auth-form") renderAccountButtons();
+  });
+}
+
 async function initialize() {
   if (window.location.pathname === "/") window.history.replaceState({}, "", "/games");
+  state.route = readRoute();
+  try {
+    account.status = await api("/api/account");
+  } catch (error) {
+    account.status = null;
+    showAuth(error.message || "Couldn't reach Vantage. Check that it's running, then try again.",
+      { unavailable: true });
+    return;
+  }
+  if (!signedInAccount()) {
+    showAuth();
+    return;
+  }
+  account.nextPath = safeNext(window.location.pathname);
+  await enterApp();
+}
+
+async function startApp() {
+  if (account.started) return applyRoute();
+  account.started = true;
   state.route = readRoute();
   applyAppLayout();
   loading(true);
@@ -2709,4 +3078,4 @@ async function initialize() {
   await applyRoute();
 }
 
-initialize();
+void initialize();

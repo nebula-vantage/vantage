@@ -8,6 +8,7 @@ from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from helpers import sign_in
 from vantage.coaching_server import CoachingServer
 
 
@@ -54,6 +55,7 @@ class CoachingUploadAPITests(unittest.TestCase):
         factory.start()
         self.addCleanup(factory.stop)
         self.server = CoachingServer(("127.0.0.1", 0), self.root / "runs")
+        self.cookie = sign_in(self.server)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.addCleanup(self.stop_server)
@@ -65,7 +67,7 @@ class CoachingUploadAPITests(unittest.TestCase):
         self.jobs.close.assert_called_once()
 
     def request(self, method, path, body=None, headers=None):
-        headers = dict(headers or {})
+        headers = {"Cookie": self.cookie, **(headers or {})}
         if body is not None and not isinstance(body, bytes):
             body = json.dumps(body).encode()
             headers.setdefault("Content-Type", "application/json")

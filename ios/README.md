@@ -11,14 +11,19 @@ ios/
 ├── VantageMobile.xcodeproj
 ├── Config/                   Signing.xcconfig (committed) + your Local.xcconfig (git-ignored)
 ├── VantageMobile/            App sources (folder-synced: new files build automatically)
-│   ├── App/                  App entry point and run list (import + history)
+│   ├── App/                  App entry point: signed out → Create account / Sign in, signed in → Games
+│   ├── Account/              The local account (profile JSON + Keychain password hash)
+│   ├── DesignSystem/         Theme tokens, formatting, shared components (wordmark, buttons, fields)
+│   ├── Features/             Sign-in screens, Account, Games, Game detail
 │   ├── Library/              Saved runs on disk (Documents/Runs/<id>/)
-│   └── Playback/             Video player with detection/track overlay
+│   ├── Playback/             Video player with detection/track overlay
+│   └── Resources/Fonts/      Bricolage Grotesque, IBM Plex Sans/Mono (the web app's WOFF2 files)
 ├── VantageKit/               Swift package: UI-free logic, testable on the Mac
 │   ├── Sources/VantageKit/       Detection records, Core ML detector, video analyzer,
-│   │                             ball tracker + trajectory, playback timeline
+│   │                             ball tracker + trajectory, playback timeline, account
+│   │                             validation, password hashing, sign-in throttle
 │   ├── Sources/vantage-analyze/  Mac CLI running the same analysis on a video
-│   └── Tests/                    Tracker parity (vs Python), behavior, timeline
+│   └── Tests/                    Tracker parity (vs Python), behavior, timeline, accounts
 └── scripts/run_on_iphone.sh  Build, sign, install, and launch on a connected iPhone
 ```
 
@@ -38,19 +43,39 @@ On the held-out topcorner clip it tracks the ball in 61.6% of visible-ball frame
 
 ## iPhone app
 
-Current features:
+The screens, words and design tokens match the web app; [`docs/app-experience.md`](../docs/app-experience.md)
+is the shared spec. Current features:
 
-- Import a video from Files and run the detector on every frame on-device, with
-  progress and cancel. The screen stays awake during analysis; keep the app open.
+- A local account, one per iPhone: Create account on first launch, then Sign in. The profile is
+  stored in Application Support (left out of backups) and the PBKDF2-SHA256 password hash
+  (600,000 iterations) in the Keychain (this device only). "Forgot password?" resets the account
+  and keeps the games.
+- Account (your initials in the Games header) edits your name and email, changes your password,
+  and signs out, back to Sign in with your email filled in.
+- Five wrong passwords within five minutes, at sign-in or as the current password when changing
+  it, lock both for a minute. The count is kept in memory, so relaunching clears it.
+- You stay signed in until you sign out. A `signed-in` file next to the profile records it, and
+  signing out deletes that file, which works even on a full disk. If it still can't be deleted,
+  Account says "Couldn't sign out. Try again." rather than showing Sign in while the next launch
+  would open Games.
+- iOS can launch the app after a restart, before the first unlock, when the account file and the
+  games can't be read yet. The app then shows its wordmark and a spinner instead of Create account,
+  and reads them again once the iPhone is unlocked or the app becomes active.
+- Import a video from Photos (the upload tile on Games) and run the detector on every frame
+  on-device, with progress and cancel. The screen stays awake during analysis; keep the app open.
 - Each analysis is saved as a run (`Documents/Runs/<id>/`: the copied video,
-  `detections.jsonl`, `thumbnail.jpg`, `run.json`). Runs are listed on the home
-  screen; swipe to delete. Interrupted analyses are discarded on next launch.
-- Playback: tap a run to watch the video with players (green), the tracked ball
-  (yellow ring with track ID and confidence; orange dashed when interpolated), a
-  0.5 s trail of that one track, and paddles (cyan) drawn on top. Raw ball
-  candidates can be shown from the overlay menu to judge the detector. Play/pause (or tap the video), scrub, step frame by frame, and
-  slow down to 0.5× / 0.25×. The overlay toggles live in the toolbar menu; the
-  share button exports `detections.jsonl`.
+  `detections.jsonl`, `thumbnail.jpg`, `run.json`, and `stats.json` once the engine writes it).
+  Games are listed on the Games screen, each with a cover from its video. Touch and hold a game
+  for Delete (with a confirmation) and, in debug builds, Debug playback. Interrupted analyses are
+  discarded on next launch.
+- Tap a game to open its Game screen: the video with the detection overlays (tap to play or
+  pause), then its stats, which read "—" until the engine has measured them.
+- Debug playback (debug builds only: the ladybug button on a Game screen, or Debug playback in a
+  game's menu) shows players (green), the tracked ball (yellow ring with track ID and confidence;
+  orange dashed when interpolated), a 0.5 s trail of that one track, and paddles (cyan). Raw ball
+  candidates can be shown from the overlay menu to judge the detector. Play/pause (or tap the
+  video), scrub, step frame by frame, and slow down to 0.5× / 0.25×. The overlay toggles live in
+  the toolbar menu; the share button exports `detections.jsonl`.
 
 The overlay reads the player's current time every display frame and looks up the
 analyzed frame by source timestamp, so boxes stay aligned when scrubbing or stepping.
@@ -157,9 +182,29 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
 ```
 
 Core ML runs on CPU in the simulator, so timings there are not representative.
-Debug builds accept `-openLatestRun` (open the newest run) and `-seek <seconds>`
-launch arguments for screenshot checks without UI interaction:
-`xcrun simctl launch <sim> <your bundle ID> -openLatestRun -seek 3.06`.
+Debug builds accept launch arguments for screenshot checks without UI interaction. Each fires at
+most once per launch, so signing out and back in during a check doesn't trigger it again, and
+none of them exist in Release builds:
+
+| Argument | Effect |
+| --- | --- |
+| `-resetAccount` | Remove the account: Create account |
+| `-seedSignedOut` | An account for Alex Rivera (alex@example.com, password `pickleball`), signed out: Sign in |
+| `-seedSignedIn` | The same account, signed in: Games |
+| `-email <value>` | Fill in Sign in's email field (`-email alex@ -password pickleball -submitForm` shows the email error) |
+| `-password <value>` | Fill in Sign in's password field |
+| `-submitForm` | Submit whichever sign-in screen is showing (`-resetAccount -submitForm` shows Create account's errors, `-seedSignedOut -password nope1234 -submitForm` the sign-in error) |
+| `-forgotPassword` | Open Sign in's reset confirmation |
+| `-openAccount` | Open the Account sheet from Games |
+| `-scrollToBottom` | Open the sign-in screens, Games and Account scrolled to the end, each the first time it's shown |
+| `-openLatestGame` / `-openLatestRun` | Open the newest game / its debug playback |
+| `-seek <seconds>` | Start debug playback at a time |
+
+For example: `xcrun simctl launch <sim> <your bundle ID> -seedSignedIn -openLatestRun -seek 3.06`.
+
+Debug builds also log, at launch, the font each bundled face name opens and its variation axes,
+so a face falling back to the system font shows up:
+`xcrun simctl spawn <sim> log show --last 5m --predicate 'subsystem == "Vantage" AND category == "Fonts"'`.
 
 ### Tests and Mac tools
 

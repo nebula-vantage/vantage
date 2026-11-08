@@ -11,6 +11,7 @@ from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from helpers import sign_in
 from replay_fixtures import doubles, write_run
 from vantage.coaching_server import WEB_ROOT, CoachingServer
 from vantage.replay import build_replay
@@ -32,6 +33,7 @@ class AppIntegrationTests(unittest.TestCase):
         jobs.start()
         self.addCleanup(jobs.stop)
         self.server = CoachingServer(("127.0.0.1", 0), self.runs)
+        self.cookie = sign_in(self.server)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.addCleanup(self.stop_server)
@@ -47,7 +49,7 @@ class AppIntegrationTests(unittest.TestCase):
     def request(self, method, path, headers=None):
         connection = HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
         try:
-            connection.request(method, path, headers=headers or {})
+            connection.request(method, path, headers={"Cookie": self.cookie, **(headers or {})})
             response = connection.getresponse()
             raw = response.read()
             body = (
