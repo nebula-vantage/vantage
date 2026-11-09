@@ -167,6 +167,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -188,6 +189,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 000000000000000000000040 /* Signing.xcconfig */;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
